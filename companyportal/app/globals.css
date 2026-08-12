@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fafafa;
+  --foreground: #0b1f2a;
+  --brand-blue: #0090b5;
+  --brand-blue-light: #00bbe6;
+  --nav-link: #13537b;
+  --hero-gradient-start: #025a7c;
+  --hero-gradient-end: #01161e;
+  --page-max-width: 1440px;
+  --page-dark-background: linear-gradient(180deg, var(--hero-gradient-start) 0%, var(--hero-gradient-end) 100%);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
+}
+
+@font-face {
+  font-family: "Absolutely Silent DEMO";
+  src: url("/fonts/Absolutely Silent DEMO.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--page-dark-background);
+}
+
+body {
+  margin: 0;
+  background: var(--page-dark-background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    font: inherit;
+  }
+}
+
