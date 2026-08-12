@@ -3,6 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --hero-gradient-start: #025a7c;
+  --hero-gradient-end: #01161e;
+  --page-dark-background: linear-gradient(180deg, var(--hero-gradient-start) 0%, var(--hero-gradient-end) 100%);
 }
 
 @theme inline {

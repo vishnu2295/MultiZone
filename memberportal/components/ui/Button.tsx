@@ -5,6 +5,11 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
   variant?: "primary" | "ghost";
   href?: string;
+  /**
+   * Render a plain <a> instead of next/link. Required for the Auth0 routes
+   * (/auth/login, /auth/logout) — client-side navigation breaks the redirect.
+   */
+  external?: boolean;
 };
 
 export default function Button({
@@ -12,6 +17,7 @@ export default function Button({
   variant = "primary",
   className = "",
   href,
+  external = false,
   ...props
 }: ButtonProps) {
   const base =
@@ -25,7 +31,11 @@ export default function Button({
   const classes = `${base} ${styles} ${className}`.trim();
 
   if (href) {
-    return (
+    return external ? (
+      <a href={href} className={classes}>
+        {children}
+      </a>
+    ) : (
       <Link href={href} className={classes}>
         {children}
       </Link>
