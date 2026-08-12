@@ -32,13 +32,13 @@ export default function Dashboard() {
                   </Button>
                   <p className="text-[14px] font-semibold text-white">
                     {siteContent.secondaryCtaPrefix}{" "}
-                    <Link
+                    <a
                       href="/home"
                       style={{ color: "#FFB300" }}
                       className="inline-block border-b border-[#FFB300] pb-[1px] leading-none transition hover:opacity-80"
                     >
                       {siteContent.secondaryCta}
-                    </Link>
+                    </a>
                   </p>
                 </div>
               </div>
