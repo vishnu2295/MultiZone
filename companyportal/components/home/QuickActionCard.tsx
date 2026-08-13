@@ -1,8 +1,24 @@
+"use client";
+
 import Link from "next/link";
+import { getAccessToken } from "@auth0/nextjs-auth0";
 import { ArrowUpRightIcon, quickActionIcons } from "@/components/home/icons";
 import type { homeContent } from "@/content/site";
+import apiService from "@/lib/api/apiService";
 
 type QuickAction = (typeof homeContent)["quickActions"][number];
+
+function decodeJwtPayload(token: string): Record<string, unknown> {
+  const payload = token.split(".")[1];
+  const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+  const json = decodeURIComponent(
+    atob(base64)
+      .split("")
+      .map((char) => "%" + char.charCodeAt(0).toString(16).padStart(2, "0"))
+      .join(""),
+  );
+  return JSON.parse(json);
+}
 
 export default function QuickActionCard({
   icon,
@@ -13,9 +29,27 @@ export default function QuickActionCard({
 }: QuickAction) {
   const Icon = quickActionIcons[icon];
 
+  const handleClick = async () => {
+    if (href !== "/home/policies") return;
+
+    const token = await getAccessToken();
+    const claims = decodeJwtPayload(token);
+    const profileIdentifier =
+      claims["https://rma.com/claims/profile_identifier"];
+
+    const response = await apiService.get(
+      `/default/api/mobileApp/coid/employer/${profileIdentifier}/policies`,
+      {
+        token,
+      },
+    );
+    console.log("Policies response:", response);
+  };
+
   return (
     <Link
       href={href}
+      onClick={handleClick}
       className={`group relative flex h-[267px] w-full flex-col rounded-xl bg-white p-5 transition ${
         highlighted
           ? "shadow-[13px_20px_28px_rgba(18,46,77,0.14)]"

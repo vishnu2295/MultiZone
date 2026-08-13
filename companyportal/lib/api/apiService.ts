@@ -2,8 +2,6 @@
 
 const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
-const AUTH_TOKEN_STORAGE_KEY = "authToken";
-
 export type QueryParamValue =
   | string
   | number
@@ -17,6 +15,15 @@ export interface ApiRequestOptions extends Omit<RequestInit, "body" | "method"> 
   params?: Record<string, QueryParamValue>;
   /** Override the configured base URL for this request. */
   baseUrl?: string;
+  /**
+   * Access token to send as `Authorization: Bearer <token>`.
+   *
+   * Auth0 keeps tokens in an encrypted httpOnly cookie, so they can't be read
+   * from JS. Get one with `auth0.getAccessToken()` on the server (see
+   * `serverApiService`), or `getAccessToken()` from `@auth0/nextjs-auth0` in a
+   * client component.
+   */
+  token?: string;
   /** Skip auto-attaching the Authorization header for this request. */
   skipAuth?: boolean;
 }
@@ -42,20 +49,6 @@ export class ApiError<TData = unknown> extends Error {
     this.statusText = options.statusText;
     this.data = options.data;
     this.url = options.url;
-  }
-}
-
-function getAuthToken(): string | null {
-  if (typeof window === "undefined") {
-    // No browser storage available on the server. Wire up a server-side
-    // token source here (e.g. cookies() from next/headers) if/when needed.
-    return null;
-  }
-  try {
-    return window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
-  } catch {
-    // localStorage can throw in private-browsing/blocked-storage contexts.
-    return null;
   }
 }
 
@@ -112,7 +105,7 @@ async function request<TResponse>(
   path: string,
   options: ApiRequestOptionsWithBody = {}
 ): Promise<TResponse> {
-  const { params, baseUrl, skipAuth, headers, body, ...fetchOptions } = options;
+  const { params, baseUrl, token, skipAuth, headers, body, ...fetchOptions } = options;
 
   const url = buildUrl(path, baseUrl ?? DEFAULT_BASE_URL, params);
 
@@ -123,9 +116,8 @@ async function request<TResponse>(
     requestHeaders.set("Content-Type", "application/json");
   }
 
-  if (!skipAuth) {
-    const token = getAuthToken();
-    if (token) requestHeaders.set("Authorization", `Bearer ${token}`);
+  if (!skipAuth && token && !requestHeaders.has("Authorization")) {
+    requestHeaders.set("Authorization", `Bearer ${token}`);
   }
 
   const response = await fetch(url, {
