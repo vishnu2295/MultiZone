@@ -1,3 +1,5 @@
+"use-client";
+
 import Dashboard from "@/components/landing/Dashboard";
 import Navbar from "@/components/landing/Navbar";
 

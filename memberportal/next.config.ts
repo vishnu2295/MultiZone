@@ -16,10 +16,18 @@ const nextConfig: NextConfig = {
       //   source: "/company/:path*",
       //   destination: "http://localhost:3001/company/:path*",
       // },
-      // {
-      //   source: "/company-static/:path*",
-      //   destination: "http://localhost:3001/company-static/:path*",
-      // },
+      {
+        source: "/broker",
+        destination: "https://cctest.randmutual.co.za",
+      },
+      {
+        source: "/broker/:path*",
+        destination: "https://cctest.randmutual.co.za/:path*",
+      },
+      {
+        source: "/api/auth/:path*",
+        destination: "https://cctest.randmutual.co.za/api/auth/:path*",
+      },
       {
         source: "/home/:path*",
         destination: "http://localhost:3001/home/:path*",
