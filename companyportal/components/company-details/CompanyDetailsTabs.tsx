@@ -30,7 +30,7 @@ export default function CompanyDetailsTabs() {
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className={`rounded-md px-4 py-1.5 text-[12px] font-semibold leading-[18px] transition ${
+            className={`rounded-md px-4 py-1.5 text-[12px] font-semibold leading-[18px] transition cursor-pointer ${
               activeTab === tab
                 ? "bg-[#F59E0B] text-white shadow-[0px_4px_12px_rgba(10,102,255,0.25)]"
                 : "border border-black/8 bg-white text-[#64748B] hover:text-[#13537B]"

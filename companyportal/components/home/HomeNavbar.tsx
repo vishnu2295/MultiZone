@@ -12,7 +12,11 @@ export default function HomeNavbar() {
   return (
     <header className="fixed left-0 top-0 z-30 h-[72px] w-full bg-[#11252D]">
       <div className="mx-auto flex h-full w-full max-w-[1440px] items-center px-4 sm:px-6 lg:px-14">
-        <Link href="/" aria-label="RMA home" className="flex shrink-0 items-center gap-[19px]">
+        <Link
+          href="/"
+          aria-label="RMA home"
+          className="flex shrink-0 items-center gap-[19px]"
+        >
           <Image
             src="/company/brand/rma-logo.svg"
             alt="RMA"
@@ -20,7 +24,10 @@ export default function HomeNavbar() {
             height={29}
             priority
           />
-          <span className="hidden h-5 w-px bg-[#F3F7FA]/40 sm:block" aria-hidden />
+          <span
+            className="hidden h-5 w-px bg-[#F3F7FA]/40 sm:block"
+            aria-hidden
+          />
           <span className="hidden text-[15.8px] font-bold leading-[19px] text-white sm:block">
             {homeContent.brand}
           </span>
@@ -39,7 +46,7 @@ export default function HomeNavbar() {
 
           <button
             type="button"
-            className="flex items-center gap-1 text-[14px] font-normal leading-[17px] text-[#F3F7FA] opacity-90 transition hover:opacity-100"
+            className="flex items-center gap-1 text-[14px] font-normal leading-[17px] text-[#F3F7FA] opacity-90 transition hover:opacity-100 cursor-pointer"
           >
             {homeContent.profileLabel}
             <ChevronDownIcon className="h-4 w-4" />

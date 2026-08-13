@@ -18,7 +18,7 @@ export default function DocumentsPanel() {
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className="rounded-lg bg-[#07C1E9] px-5 py-2.5 text-[13px] font-bold text-white shadow-[0px_4px_16px_rgba(7,193,233,0.35)] transition hover:brightness-95"
+          className="rounded-lg cursor-pointer bg-[#07C1E9] px-5 py-2.5 text-[13px] font-bold text-white shadow-[0px_4px_16px_rgba(7,193,233,0.35)] transition hover:brightness-95"
         >
           Upload Documents
         </button>
@@ -52,7 +52,7 @@ export default function DocumentsPanel() {
             <button
               type="button"
               aria-label="Download document"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA]"
+              className="flex h-10 w-10 cursor-pointer shrink-0 items-center justify-center rounded-lg border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA]"
             >
               <DownloadIcon className="h-4 w-4" />
             </button>

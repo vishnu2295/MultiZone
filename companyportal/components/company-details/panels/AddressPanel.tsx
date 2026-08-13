@@ -43,7 +43,7 @@ export default function AddressPanel() {
             <button
               type="button"
               onClick={() => setEditingIndex(index)}
-              className="flex items-center gap-1.5 rounded-md border border-[#07C1E9]/12 bg-[#F0FAFE] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#07C1E9]/10"
+              className="flex items-center cursor-pointer gap-1.5 rounded-md border border-[#07C1E9]/12 bg-[#F0FAFE] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#07C1E9]/10"
             >
               <EditIcon className="h-[13px] w-[13px]" />
               Edit
@@ -60,7 +60,9 @@ export default function AddressPanel() {
         onSave={(updated) => {
           if (editingIndex === null) return;
           setAddresses((prev) =>
-            prev.map((item, index) => (index === editingIndex ? updated : item))
+            prev.map((item, index) =>
+              index === editingIndex ? updated : item,
+            ),
           );
           setEditingIndex(null);
         }}
