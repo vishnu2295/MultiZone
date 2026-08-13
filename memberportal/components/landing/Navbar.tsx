@@ -117,7 +117,11 @@ export default function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  target={link.label === "Go to randmutual.co.za" ? "_blank" : undefined}
+                  target={
+                    link.label === "Go to randmutual.co.za"
+                      ? "_blank"
+                      : undefined
+                  }
                   rel={
                     link.label === "Go to randmutual.co.za"
                       ? "noopener noreferrer"
