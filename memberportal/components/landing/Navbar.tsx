@@ -3,11 +3,16 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useUser } from "@auth0/nextjs-auth0";
 import Button from "@/components/ui/Button";
 import { siteContent } from "@/content/site";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { user } = useUser();
+
+  const authHref = user ? "/auth/logout" : "/auth/login";
+  const authLabel = user ? "Logout" : siteContent.loginButton;
 
   return (
     <header className="absolute left-0 top-0 z-20 w-full border-b border-[#E9E9E9] bg-white">
@@ -16,8 +21,9 @@ export default function Navbar() {
           <Image
             src="/company/brand/rma-logo.svg"
             alt="RMA"
-            width={72}
-            height={22}
+            width={96}
+            height={30}
+            className="h-5.5 w-auto"
             priority
           />
         </Link>
@@ -41,14 +47,22 @@ export default function Navbar() {
             ))}
           </nav>
 
-          <Button className="h-8 min-w-[100px] px-4 text-[12px] font-semibold">
-            {siteContent.loginButton}
+          <Button
+            href={authHref}
+            external
+            className="h-8 min-w-[100px] px-4 text-[12px] font-semibold"
+          >
+            {authLabel}
           </Button>
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
-          <Button className="h-8 min-w-[100px] px-4 text-[12px] font-semibold">
-            {siteContent.loginButton}
+          <Button
+            href={authHref}
+            external
+            className="h-8 min-w-[100px] px-4 text-[12px] font-semibold"
+          >
+            {authLabel}
           </Button>
 
           <button
