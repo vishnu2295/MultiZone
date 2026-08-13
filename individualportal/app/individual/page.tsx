@@ -1,7 +1,10 @@
 "use client";
 
+import { useUser } from "@auth0/nextjs-auth0";
+
 export default function Home() {
-  
+  const { user } = useUser();
+
 const navigateTo = () => {
   window.location.href = `/`;
 };
@@ -10,11 +13,19 @@ const navigateTo = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 px-6 py-10">
   <main className="mx-auto max-w-6xl">
     {/* Header */}
-   
+
     <div className="mb-10">
-       <button onClick= {navigateTo} className="text-blue-600 hover:text-blue-700 cursor-pointer mb-6 text-sm font-semibold transition-colors">
+      <div className="mb-6 flex items-center justify-between">
+        <button onClick= {navigateTo} className="text-blue-600 hover:text-blue-700 cursor-pointer text-sm font-semibold transition-colors">
       Go to Home Page
     </button>
+        <a
+          href={user ? "/auth/logout" : "/auth/login"}
+          className="text-blue-600 hover:text-blue-700 cursor-pointer text-sm font-semibold transition-colors"
+        >
+          {user ? "Logout" : "Login"}
+        </a>
+      </div>
       <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-blue-600">
         Individual Portal
       </p>

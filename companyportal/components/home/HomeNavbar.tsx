@@ -3,11 +3,16 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useUser } from "@auth0/nextjs-auth0";
 import { homeContent } from "@/content/site";
 import { ChevronDownIcon, CloseIcon, MenuIcon } from "@/components/home/icons";
 
 export default function HomeNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user } = useUser();
+
+  const authHref = user ? "/auth/logout" : "/auth/login";
+  const authLabel = user ? "Logout" : homeContent.profileLabel;
 
   return (
     <header className="fixed left-0 top-0 z-30 h-[72px] w-full bg-[#11252D]">
@@ -44,13 +49,13 @@ export default function HomeNavbar() {
             </Link>
           ))}
 
-          <button
-            type="button"
-            className="flex items-center gap-1 text-[14px] font-normal leading-[17px] text-[#F3F7FA] opacity-90 transition hover:opacity-100 cursor-pointer"
+          <Link
+            href={authHref}
+            className="flex items-center gap-1 text-[14px] font-normal leading-[17px] text-[#F3F7FA] opacity-90 transition hover:opacity-100"
           >
-            {homeContent.profileLabel}
+            {authLabel}
             <ChevronDownIcon className="h-4 w-4" />
-          </button>
+          </Link>
         </nav>
 
         <button
@@ -103,13 +108,14 @@ export default function HomeNavbar() {
 
           <span className="h-px w-full bg-white/10" aria-hidden />
 
-          <button
-            type="button"
+          <Link
+            href={authHref}
+            onClick={() => setIsMenuOpen(false)}
             className="flex items-center gap-1 text-[15px] font-normal text-white/90 transition hover:text-white"
           >
-            {homeContent.profileLabel}
+            {authLabel}
             <ChevronDownIcon className="h-4 w-4" />
-          </button>
+          </Link>
         </nav>
       </aside>
     </header>
