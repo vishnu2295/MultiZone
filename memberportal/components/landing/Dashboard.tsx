@@ -16,8 +16,8 @@ export default function Dashboard() {
                   {siteContent.heroTitle}
                 </h1>
                 <p
-                  className="mt-2 text-[clamp(2.9rem,4.0vw,4.7rem)] font-normal leading-[0.9] text-[#FDC11A]"
-                  style={{ fontFamily: '"Absolutely Silent DEMO", cursive' }}
+                  className="mt-3 text-[clamp(2.9rem,4.0vw,4.7rem)] font-normal leading-[0.9] text-[#FDC11A]"
+                  style={{ fontFamily: '"Absolutely Silent", cursive' }}
                 >
                   {siteContent.heroTitleAccent}
                 </p>
