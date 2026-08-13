@@ -47,7 +47,7 @@ export default function InvoicesPanel() {
             <button
               type="button"
               aria-label="Download invoice"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA]"
+              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA]"
             >
               <DownloadIcon className="h-[15px] w-[15px]" />
             </button>

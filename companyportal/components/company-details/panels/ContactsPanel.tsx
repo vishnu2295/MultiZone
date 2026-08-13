@@ -51,7 +51,7 @@ export default function ContactsPanel() {
             <button
               type="button"
               onClick={() => setEditingIndex(index)}
-              className="flex items-center gap-1.5 rounded-md border border-[#07C1E9]/12 bg-[#F0FAFE] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#07C1E9]/10"
+              className="flex items-center cursor-pointer gap-1.5 rounded-md border border-[#07C1E9]/12 bg-[#F0FAFE] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#07C1E9]/10"
             >
               <EditIcon className="h-[13px] w-[13px]" />
               Edit
@@ -59,7 +59,7 @@ export default function ContactsPanel() {
             <button
               type="button"
               onClick={() => setDeletingIndex(index)}
-              className="flex items-center gap-1.5 rounded-md border border-[#E90707]/12 bg-[#FFF6F6] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#E90707]/10"
+              className="flex items-center cursor-pointer gap-1.5 rounded-md border border-[#E90707]/12 bg-[#FFF6F6] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#E90707]/10"
             >
               <TrashIcon className="h-4 w-4 text-[#E77B7B]" />
               Delete
@@ -76,7 +76,9 @@ export default function ContactsPanel() {
         onSave={(updated) => {
           if (editingIndex === null) return;
           setContacts((prev) =>
-            prev.map((item, index) => (index === editingIndex ? updated : item))
+            prev.map((item, index) =>
+              index === editingIndex ? updated : item,
+            ),
           );
           setEditingIndex(null);
         }}
@@ -92,15 +94,16 @@ export default function ContactsPanel() {
               <span className="font-semibold text-[#13537B]">
                 {deletingContact.name.replace(/^\w+\.?\s+/, "")}
               </span>
-              ?
-              This action cannot be undone.
+              ? This action cannot be undone.
             </>
           ) : null
         }
         onCancel={() => setDeletingIndex(null)}
         onConfirm={() => {
           if (deletingIndex === null) return;
-          setContacts((prev) => prev.filter((_, index) => index !== deletingIndex));
+          setContacts((prev) =>
+            prev.filter((_, index) => index !== deletingIndex),
+          );
           setDeletingIndex(null);
         }}
       />
