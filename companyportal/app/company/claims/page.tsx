@@ -21,7 +21,7 @@ export default function MyClaimsPage() {
         </div>
 
         <Link
-          href="/home"
+          href="/company"
           className="relative z-10 inline-flex items-center gap-2 text-[14px] font-bold leading-[28px] text-[#13537B]"
         >
           <BackArrowIcon className="h-5 w-5" />

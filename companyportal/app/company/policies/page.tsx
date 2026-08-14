@@ -11,7 +11,7 @@ export default function PoliciesPage() {
 
       <div className="mx-auto w-full max-w-[1440px] px-4 pb-16 pt-[112px] sm:px-6 lg:px-14">
         <Link
-          href="/home"
+          href="/company"
           className="inline-flex items-center gap-2 text-[14px] font-bold leading-[28px] text-[#13537B]"
         >
           <BackArrowIcon className="h-5 w-5" />
