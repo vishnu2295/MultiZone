@@ -26,7 +26,7 @@ export default function Dashboard() {
                   {siteContent.heroDescription}
                 </p>
 
-                <div className="mt-6 flex flex-wrap items-center gap-5">
+                {/* <div className="mt-6 flex flex-wrap items-center gap-5">
                   <Button className="h-10 min-w-[110px] px-6 text-[14px]">
                     {siteContent.primaryCta}
                   </Button>
@@ -40,7 +40,7 @@ export default function Dashboard() {
                       {siteContent.secondaryCta}
                     </a>
                   </p>
-                </div>
+                </div> */}
               </div>
             </div>
 
