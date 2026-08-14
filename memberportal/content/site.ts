@@ -43,7 +43,7 @@ export const homeContent = {
       title: "Policy Details",
       description:
         "View your policies, coverage details, benefits, premiums, and policy documents in one place.",
-      href: "/home/policies",
+      href: "/company/policies",
       highlighted: false,
     },
     {
@@ -51,7 +51,7 @@ export const homeContent = {
       title: "Company Details",
       description:
         "Access your company details such as addresses, back accounts, members etc.",
-      href: "/home/company-details",
+      href: "/company/company-details",
       highlighted: true,
     },
     {
@@ -59,7 +59,7 @@ export const homeContent = {
       title: "My Claims",
       description:
         "Track your submitted claims, view their status, and review claim history.",
-      href: "/home/claims",
+      href: "/company/claims",
       highlighted: false,
     },
     {

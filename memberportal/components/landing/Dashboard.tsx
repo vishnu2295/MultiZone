@@ -33,7 +33,7 @@ export default function Dashboard() {
                   <p className="text-[14px] font-semibold text-white">
                     {siteContent.secondaryCtaPrefix}{" "}
                     <a
-                      href="/home"
+                      href="/company"
                       style={{ color: "#FFB300" }}
                       className="inline-block border-b border-[#FFB300] pb-[1px] leading-none transition hover:opacity-80"
                     >

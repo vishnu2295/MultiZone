@@ -30,7 +30,7 @@ export default function QuickActionCard({
   const Icon = quickActionIcons[icon];
 
   const handleClick = async () => {
-    if (href !== "/home/policies") return;
+    if (href !== "/company/policies") return;
 
     const token = await getAccessToken();
     const claims = decodeJwtPayload(token);
