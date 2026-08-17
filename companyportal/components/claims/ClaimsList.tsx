@@ -9,12 +9,11 @@ import {
 } from "@/content/claims";
 import ClaimCard from "@/components/claims/ClaimCard";
 import Pagination from "@/components/ui/Pagination";
-import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import Skeleton from "../ui/Skeleton";
 
 type Tab = (typeof claimsContent.tabs)[number];
-
 function ClaimCardSkeleton() {
   return (
     <div className="rounded-2xl bg-white p-6 shadow-[0px_2px_16px_rgba(0,0,0,0.07)]">
@@ -32,7 +31,6 @@ function ClaimCardSkeleton() {
     </div>
   );
 }
-
 const tabIsActive: Record<Tab, boolean> = {
   "Active Claims": true,
   "Past Claims": false,
@@ -125,7 +123,11 @@ export default function ClaimsList() {
 
       <div className="mt-auto pt-6">
         {!isLoading && (
-          <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
+          <Pagination
+            page={page}
+            pageCount={pageCount}
+            onPageChange={setPage}
+          />
         )}
       </div>
     </div>
