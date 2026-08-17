@@ -103,3 +103,29 @@ export const policiesContent = {
 };
 
 export type Policy = (typeof policiesContent.policies)[number];
+
+export interface ApiPolicy {
+  policyId: number;
+  policyNumber: string;
+  productName: string;
+  premium: number;
+  coverAmount: number;
+  status: string;
+}
+
+const DEFAULT_ACTIONS = ["Remittance", "Policy Schedule"];
+
+export function mapApiPolicy(policy: ApiPolicy): Policy {
+  return {
+    title: policy.productName,
+    policyNumber: policy.policyNumber,
+    compliant: true,
+    productOption: policy.productName,
+    annualPremium: `R ${policy.coverAmount.toLocaleString("en-ZA")}`,
+    premium: `R ${policy.premium.toLocaleString("en-ZA")}/mo`,
+    inceptionDate: "-",
+    expiryDate: "-",
+    actions: DEFAULT_ACTIONS,
+    status: policy.status.toLowerCase() === "active" ? "active" : "inactive",
+  };
+}

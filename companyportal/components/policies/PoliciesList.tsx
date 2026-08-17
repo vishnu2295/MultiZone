@@ -1,8 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { policiesContent } from "@/content/policies";
+import { useEffect, useState } from "react";
+import {
+  policiesContent,
+  mapApiPolicy,
+  type ApiPolicy,
+  type Policy,
+} from "@/content/policies";
 import PolicyCard from "@/components/policies/PolicyCard";
+import apiService from "@/lib/api/apiService";
+import { getEmployerCoidId } from "@/lib/auth/employerClaims";
 
 type Tab = (typeof policiesContent.tabs)[number];
 
@@ -13,9 +20,36 @@ const tabStatus: Record<Tab, "active" | "inactive"> = {
 
 export default function PoliciesList() {
   const [activeTab, setActiveTab] = useState<Tab>(policiesContent.tabs[0]);
-  const visiblePolicies = policiesContent.policies.filter(
-    (policy) => policy.status === tabStatus[activeTab]
-  );
+  const [policies, setPolicies] = useState<Policy[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+
+    async function loadPolicies() {
+      try {
+        const { token, coidId } = await getEmployerCoidId();
+        if (!coidId) return;
+
+        const response = await apiService.get<ApiPolicy[]>(
+          `/employer/${coidId}/policies`,
+          { token, params: { isActive: tabStatus[activeTab] === "active" } },
+        );
+
+        if (!cancelled) setPolicies(response.map(mapApiPolicy));
+      } catch (error) {
+        console.error("Failed to load policies:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadPolicies();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab]);
 
   return (
     <div>
@@ -37,8 +71,12 @@ export default function PoliciesList() {
       </div>
 
       <div className="mt-6 flex flex-col gap-5">
-        {visiblePolicies.length > 0 ? (
-          visiblePolicies.map((policy, index) => (
+        {isLoading ? (
+          <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(0,0,0,0.07)]">
+            Loading policies...
+          </div>
+        ) : policies.length > 0 ? (
+          policies.map((policy, index) => (
             <PolicyCard key={`${policy.title}-${index}`} policy={policy} />
           ))
         ) : (

@@ -1,27 +1,57 @@
-import { companyDetailsContent } from "@/content/companyDetails";
+"use client";
 
-const infoRows: Array<{ label: string; value: string }> = [
-  { label: "Industry Class", value: companyDetailsContent.company.industryClass },
-  { label: "Industry", value: companyDetailsContent.company.industry },
-  { label: "VAT Reg. No", value: companyDetailsContent.company.vatRegNo },
-  {
-    label: "Compensation Fund Ref",
-    value: companyDetailsContent.company.compensationFundRef,
-  },
-  {
-    label: "Compensation Fund Reg",
-    value: companyDetailsContent.company.compensationFundReg,
-  },
-  {
-    label: "Compensation Fund Status",
-    value: companyDetailsContent.company.compensationFundStatus,
-  },
-  { label: "Nature of Business", value: companyDetailsContent.company.natureOfBusiness },
-  { label: "Created Date", value: companyDetailsContent.company.createdDate },
-];
+import { useEffect, useState } from "react";
+import {
+  companyDetailsContent,
+  mapApiCompanyDetails,
+  type ApiCompanyDetails,
+  type CompanyInfo,
+} from "@/content/companyDetails";
+import apiService from "@/lib/api/apiService";
+import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+
+function buildInfoRows(company: CompanyInfo): Array<{ label: string; value: string }> {
+  return [
+    { label: "Industry Class", value: company.industryClass },
+    { label: "Industry", value: company.industry },
+    { label: "VAT Reg. No", value: company.vatRegNo },
+    { label: "Compensation Fund Ref", value: company.compensationFundRef },
+    { label: "Compensation Fund Reg", value: company.compensationFundReg },
+    { label: "Compensation Fund Status", value: company.compensationFundStatus },
+    { label: "Nature of Business", value: company.natureOfBusiness },
+    { label: "Created Date", value: company.createdDate },
+  ];
+}
 
 export default function CompanyInfoCard() {
-  const { company } = companyDetailsContent;
+  const [company, setCompany] = useState<CompanyInfo>(companyDetailsContent.company);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCompanyDetails() {
+      try {
+        const { token, coidId } = await getEmployerCoidId();
+        if (!coidId) return;
+
+        const response = await apiService.get<ApiCompanyDetails>(
+          `/employer/${coidId}/companyDetails`,
+          { token }
+        );
+
+        if (!cancelled) setCompany(mapApiCompanyDetails(response));
+      } catch (error) {
+        console.error("Failed to load company details:", error);
+      }
+    }
+
+    loadCompanyDetails();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const infoRows = buildInfoRows(company);
 
   return (
     <aside className="w-full shrink-0 rounded-xl bg-white p-4 shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px]">
