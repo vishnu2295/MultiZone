@@ -63,25 +63,3 @@ export const homeContent = {
     },
   ],
 };
-
-export const myClaimsContent = {
-  tabs: ["Active Claims", "Past Claims"] as const,
-  claims: [
-    {
-      title: "Workplace Accident Claim",
-      reference: "CLM-2024-003",
-      eventDate: "Mar 10, 2024",
-      reportedDate: "Jul 10, 2026",
-      employee: "John Andrew Doe (8212051392372)",
-      status: "Pending",
-    },
-    {
-      title: "Workplace Accident Claim",
-      reference: "CLM-2024-003",
-      eventDate: "Mar 10, 2024",
-      reportedDate: "Jul 10, 2026",
-      employee: "John Andrew Doe (8212051392372)",
-      status: "Completed",
-    },
-  ],
-};
