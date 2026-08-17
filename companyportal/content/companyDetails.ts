@@ -34,6 +34,80 @@ export type CompanyDocument = {
   date: string;
 };
 
+export type CompanyInfo = typeof companyDetailsContent.company;
+
+export interface ApiCompanyDetails {
+  industryClass?: string;
+  industryType?: string;
+  registrationType?: string;
+  companyRegistrationNumber?: string;
+  compensationFundReferenceNumber?: string;
+  compensationFundRegistrationNumber?: string;
+  vatRegistrationNumber?: string;
+  compensationFundStatus?: string;
+  companyLevel?: string;
+  natureOfBusiness?: string;
+}
+
+export interface ApiAddressDetails {
+  type: string;
+  effectiveFrom?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  province?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+}
+
+const orDash = (value: string | undefined | null): string =>
+  value && value.trim() ? value : "-";
+
+export function mapApiCompanyDetails(api: ApiCompanyDetails): CompanyInfo {
+  return {
+    code: "-",
+    status: "-",
+    name: "-",
+    regNo: orDash(api.companyRegistrationNumber),
+    industryClass: orDash(api.industryClass),
+    industry: orDash(api.industryType),
+    vatRegNo: orDash(api.vatRegistrationNumber),
+    compensationFundRef: orDash(api.compensationFundReferenceNumber),
+    compensationFundReg: orDash(api.compensationFundRegistrationNumber),
+    compensationFundStatus: orDash(api.compensationFundStatus),
+    natureOfBusiness: orDash(api.natureOfBusiness),
+    createdDate: "-",
+  };
+}
+
+export function mapApiAddress(api: ApiAddressDetails): CompanyAddress & {
+  effectiveFrom: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  stateProvince: string;
+  postalCode: string;
+  country: string;
+} {
+  const line =
+    [api.addressLine1, api.addressLine2, api.city, api.province, api.postalCode]
+      .filter(Boolean)
+      .join(", ") || "-";
+
+  return {
+    type: api.type === "Physical" ? "Physical" : "Postal",
+    line,
+    primary: true,
+    effectiveFrom: api.effectiveFrom ? api.effectiveFrom.slice(0, 10) : "-",
+    addressLine1: api.addressLine1 ?? "",
+    addressLine2: api.addressLine2 ?? "",
+    city: api.city ?? "",
+    stateProvince: api.province ?? "",
+    postalCode: api.postalCode ?? "",
+    country: api.country ?? "",
+  };
+}
+
 export const companyDetailsContent = {
   tabs: [
     "Address Details",

@@ -1,19 +1,58 @@
 "use client";
 
-import { useState } from "react";
-import { companyDetailsContent } from "@/content/companyDetails";
+import { useEffect, useState } from "react";
+import {
+  mapApiAddress,
+  type ApiAddressDetails,
+} from "@/content/companyDetails";
 import { EditIcon, PinIcon } from "@/components/home/icons";
 import EditAddressModal, {
   type EditableAddress,
 } from "@/components/company-details/EditAddressModal";
+import apiService from "@/lib/api/apiService";
+import { getEmployerCoidId } from "@/lib/auth/employerClaims";
 
 export default function AddressPanel() {
-  const [addresses, setAddresses] = useState<EditableAddress[]>(
-    companyDetailsContent.addresses
-  );
+  const [addresses, setAddresses] = useState<EditableAddress[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadAddress() {
+      try {
+        const { token, coidId } = await getEmployerCoidId();
+        if (!coidId) return;
+
+        const response = await apiService.get<ApiAddressDetails>(
+          `/employer/${coidId}/addressDetails`,
+          { token }
+        );
+
+        if (!cancelled) setAddresses([mapApiAddress(response)]);
+      } catch (error) {
+        console.error("Failed to load address details:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadAddress();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const editingAddress = editingIndex !== null ? addresses[editingIndex] : null;
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl bg-white p-3 text-center text-[13.5px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
+        Loading address...
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2.5">
