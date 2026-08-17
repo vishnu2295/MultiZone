@@ -94,19 +94,16 @@ async function parseResponseBody(response: Response): Promise<unknown> {
   const contentLength = response.headers.get("content-length");
   if (contentLength === "0") return undefined;
 
-  const contentType = response.headers.get("content-type") ?? "";
   const text = await response.text();
   if (!text) return undefined;
 
-  if (contentType.includes("application/json")) {
-    try {
-      return JSON.parse(text);
-    } catch {
-      return text;
-    }
+  // Some endpoints return JSON without an `application/json` content-type,
+  // so attempt to parse regardless rather than trusting the header.
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
   }
-
-  return text;
 }
 
 async function request<TResponse>(

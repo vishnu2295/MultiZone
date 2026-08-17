@@ -20,18 +20,26 @@ export type CompanyBankingDetail = {
   branchCode: string;
 };
 
+export interface ApiInvoiceAttachment {
+  fileName: string;
+  fileType: string;
+  content: string;
+}
+
 export type CompanyInvoice = {
   invoiceNumber: string;
   invoiceNumberFull: string;
   collectionCycle: string;
   amount: string;
   status: string;
+  attachment?: ApiInvoiceAttachment;
 };
 
 export type CompanyDocument = {
   name: string;
   documentType: string;
   date: string;
+  documentId?: string;
 };
 
 export type CompanyInfo = typeof companyDetailsContent.company;
@@ -70,6 +78,45 @@ export interface ApiBankDetails {
   accountNumber?: string;
   effectiveFrom?: string;
 }
+
+export interface ApiInvoice {
+  invoiceId: number;
+  invoiceNumber: string;
+  invoiceDate: string;
+  dateSubmitted: string;
+  invoiceStatus: number;
+  invoiceAmount: number;
+  authorisedAmount: number;
+  isPreauthorised: boolean;
+  claimReferenceNumber: string;
+  attachments?: ApiInvoiceAttachment;
+}
+
+export interface ApiInvoicesResponse {
+  data: ApiInvoice[];
+  rowCount: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+}
+
+export interface ApiDocument {
+  documentId: string;
+  documentName: string;
+  uploadDate: string;
+  fileType: string;
+}
+
+export interface ApiDocumentSet {
+  setName: string;
+  documents: ApiDocument[];
+}
+
+const INVOICE_STATUS_LABEL: Record<number, string> = {
+  0: "Pending",
+  1: "Approved",
+  2: "Paid",
+};
 
 const orDash = (value: string | undefined | null): string =>
   value && value.trim() ? value : "-";
@@ -117,6 +164,35 @@ export function mapApiAddress(api: ApiAddressDetails): CompanyAddress & {
     postalCode: api.postalCode ?? "",
     country: api.country ?? "",
   };
+}
+
+export function mapApiInvoice(api: ApiInvoice): CompanyInvoice {
+  return {
+    invoiceNumber: api.invoiceNumber,
+    invoiceNumberFull: api.claimReferenceNumber,
+    collectionCycle: new Date(api.invoiceDate).toLocaleDateString("en-GB"),
+    amount: `R ${api.invoiceAmount.toLocaleString("en-ZA", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`,
+    status: INVOICE_STATUS_LABEL[api.invoiceStatus] ?? "Pending",
+    attachment: api.attachments,
+  };
+}
+
+export function mapApiDocumentSets(sets: ApiDocumentSet[]): CompanyDocument[] {
+  return sets.flatMap((set) =>
+    set.documents.map((doc) => ({
+      name: doc.documentName,
+      documentType: set.setName,
+      date: `${new Date(doc.uploadDate).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })} · ${doc.fileType}`,
+      documentId: doc.documentId,
+    })),
+  );
 }
 
 export function mapApiBankDetails(api: ApiBankDetails): CompanyBankingDetail {
@@ -206,30 +282,6 @@ export const companyDetailsContent = {
       branchCode: "49344",
     },
   ] satisfies CompanyBankingDetail[],
-
-  invoices: [
-    {
-      invoiceNumber: "INV-2024-001",
-      invoiceNumberFull: "58934503495",
-      collectionCycle: "26/07/2026",
-      amount: "R 4,250.00",
-      status: "Paid",
-    },
-    {
-      invoiceNumber: "INV-2024-002",
-      invoiceNumberFull: "58934503495",
-      collectionCycle: "26/07/2026",
-      amount: "R 4,250.00",
-      status: "Paid",
-    },
-    {
-      invoiceNumber: "INV-2024-003",
-      invoiceNumberFull: "58934503812",
-      collectionCycle: "26/06/2026",
-      amount: "R 3,980.00",
-      status: "Overdue",
-    },
-  ] satisfies CompanyInvoice[],
 
   documentTypes: [
     "Acute Medication",
