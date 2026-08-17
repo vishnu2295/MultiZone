@@ -7,6 +7,7 @@ import {
   type CompanyInvoice,
 } from "@/content/companyDetails";
 import { InvoiceIcon, CheckCircleIcon, DownloadIcon } from "@/components/home/icons";
+import Pagination from "@/components/ui/Pagination";
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
 import { downloadBase64File } from "@/lib/utils/downloadFile";
@@ -18,12 +19,17 @@ const statusStyles: Record<string, string> = {
   Overdue: "bg-[#FFF6F6] text-[#E90707]",
 };
 
+const PAGE_SIZE = 5;
+
 export default function InvoicesPanel() {
+  const [page, setPage] = useState(1);
+  const [pageCount, setPageCount] = useState(1);
   const [invoices, setInvoices] = useState<CompanyInvoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+    setIsLoading(true);
 
     async function loadInvoices() {
       try {
@@ -32,10 +38,13 @@ export default function InvoicesPanel() {
 
         const response = await apiService.get<ApiInvoicesResponse>(
           `/employer/${coidId}/invoices`,
-          { token, params: { page: 1, pageSize: 10 } },
+          { token, params: { page, pageSize: PAGE_SIZE } },
         );
 
-        if (!cancelled) setInvoices(response.data.map(mapApiInvoice));
+        if (!cancelled) {
+          setInvoices(response.data.map(mapApiInvoice));
+          setPageCount(response.pageCount || 1);
+        }
       } catch (error) {
         console.error("Failed to load invoices:", error);
       } finally {
@@ -47,7 +56,7 @@ export default function InvoicesPanel() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [page]);
 
   if (isLoading) {
     return (
@@ -121,6 +130,8 @@ export default function InvoicesPanel() {
           </div>
         </div>
       ))}
+
+      <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
     </div>
   );
 }
