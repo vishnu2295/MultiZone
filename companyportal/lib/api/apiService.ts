@@ -54,16 +54,25 @@ export class ApiError<TData = unknown> extends Error {
 
 function buildUrl(path: string, baseUrl: string, params?: Record<string, QueryParamValue>): string {
   const isAbsolute = /^https?:\/\//i.test(path);
-  const base = isAbsolute ? undefined : baseUrl || undefined;
 
-  // URL requires an absolute base when the path is relative; fall back to
-  // window.location.origin in the browser, or a dummy origin on the server
-  // (route handlers/server components should pass a full URL or set
-  // NEXT_PUBLIC_API_BASE_URL to something absolute).
-  const origin =
-    base ?? (typeof window !== "undefined" ? window.location.origin : "http://localhost");
-
-  const url = isAbsolute ? new URL(path) : new URL(path, origin);
+  let url: URL;
+  if (isAbsolute) {
+    url = new URL(path);
+  } else if (baseUrl) {
+    // `new URL(path, baseUrl)` would treat a leading "/" in `path` as
+    // path-absolute and discard any path segment already present in
+    // baseUrl (e.g. an API Gateway stage/base path). Join them manually
+    // so baseUrl's path is preserved.
+    const trimmedBase = baseUrl.replace(/\/+$/, "");
+    const trimmedPath = path.replace(/^\/+/, "");
+    url = new URL(`${trimmedBase}/${trimmedPath}`);
+  } else {
+    // No base URL configured; fall back to window.location.origin in the
+    // browser, or a dummy origin on the server (route handlers/server
+    // components should pass a full URL or set NEXT_PUBLIC_API_BASE_URL).
+    const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
+    url = new URL(path, origin);
+  }
 
   if (params) {
     for (const [key, value] of Object.entries(params)) {

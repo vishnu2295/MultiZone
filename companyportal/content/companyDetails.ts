@@ -60,6 +60,17 @@ export interface ApiAddressDetails {
   country?: string;
 }
 
+export interface ApiBankDetails {
+  purpose?: string;
+  bank?: string;
+  branch?: string;
+  accountType?: string;
+  branchCode?: string;
+  accountHolder?: string;
+  accountNumber?: string;
+  effectiveFrom?: string;
+}
+
 const orDash = (value: string | undefined | null): string =>
   value && value.trim() ? value : "-";
 
@@ -105,6 +116,17 @@ export function mapApiAddress(api: ApiAddressDetails): CompanyAddress & {
     stateProvince: api.province ?? "",
     postalCode: api.postalCode ?? "",
     country: api.country ?? "",
+  };
+}
+
+export function mapApiBankDetails(api: ApiBankDetails): CompanyBankingDetail {
+  return {
+    accountHolder: orDash(api.accountHolder),
+    bank: orDash(api.bank),
+    accountNumber: orDash(api.accountNumber),
+    accountType: orDash(api.accountType),
+    branch: orDash(api.branch),
+    branchCode: orDash(api.branchCode),
   };
 }
 
