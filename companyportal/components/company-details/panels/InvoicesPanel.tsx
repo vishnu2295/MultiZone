@@ -1,15 +1,73 @@
-import { companyDetailsContent } from "@/content/companyDetails";
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  mapApiInvoice,
+  type ApiInvoicesResponse,
+  type CompanyInvoice,
+} from "@/content/companyDetails";
 import { InvoiceIcon, CheckCircleIcon, DownloadIcon } from "@/components/home/icons";
+import apiService from "@/lib/api/apiService";
+import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { downloadBase64File } from "@/lib/utils/downloadFile";
 
 const statusStyles: Record<string, string> = {
   Paid: "bg-[#ECFDF5] text-[#14B86A]",
+  Approved: "bg-[#EFF6FF] text-[#2563EB]",
+  Pending: "bg-[#FFFBEB] text-[#F59E0B]",
   Overdue: "bg-[#FFF6F6] text-[#E90707]",
 };
 
 export default function InvoicesPanel() {
+  const [invoices, setInvoices] = useState<CompanyInvoice[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadInvoices() {
+      try {
+        const { token, coidId } = await getEmployerCoidId();
+        if (!coidId) return;
+
+        const response = await apiService.get<ApiInvoicesResponse>(
+          `/employer/${coidId}/invoices`,
+          { token, params: { page: 1, pageSize: 10 } },
+        );
+
+        if (!cancelled) setInvoices(response.data.map(mapApiInvoice));
+      } catch (error) {
+        console.error("Failed to load invoices:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadInvoices();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(0,0,0,0.07)]">
+        Loading invoices...
+      </div>
+    );
+  }
+
+  if (invoices.length === 0) {
+    return (
+      <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(0,0,0,0.07)]">
+        There are no invoices to display.
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-3">
-      {companyDetailsContent.invoices.map((invoice, index) => (
+      {invoices.map((invoice, index) => (
         <div
           key={`${invoice.invoiceNumber}-${index}`}
           className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-[0px_2px_12px_rgba(0,0,0,0.06)] sm:flex-row sm:items-center"
@@ -47,7 +105,16 @@ export default function InvoicesPanel() {
             <button
               type="button"
               aria-label="Download invoice"
-              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA]"
+              disabled={!invoice.attachment}
+              onClick={() =>
+                invoice.attachment &&
+                downloadBase64File(
+                  invoice.attachment.fileName,
+                  invoice.attachment.fileType,
+                  invoice.attachment.content,
+                )
+              }
+              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <DownloadIcon className="h-[15px] w-[15px]" />
             </button>

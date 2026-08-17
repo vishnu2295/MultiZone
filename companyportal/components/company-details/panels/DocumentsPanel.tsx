@@ -1,13 +1,48 @@
 "use client";
 
-import { useState } from "react";
-import { companyDetailsContent } from "@/content/companyDetails";
+import { useEffect, useState } from "react";
+import {
+  companyDetailsContent,
+  mapApiDocumentSets,
+  type ApiDocumentSet,
+  type CompanyDocument,
+} from "@/content/companyDetails";
 import { DocumentIcon, DownloadIcon } from "@/components/home/icons";
 import UploadDocumentModal from "@/components/company-details/UploadDocumentModal";
+import apiService from "@/lib/api/apiService";
+import { getEmployerCoidId } from "@/lib/auth/employerClaims";
 
 export default function DocumentsPanel() {
-  const [documents, setDocuments] = useState(companyDetailsContent.documents);
+  const [documents, setDocuments] = useState<CompanyDocument[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDocuments() {
+      try {
+        const { token, coidId } = await getEmployerCoidId();
+        if (!coidId) return;
+
+        const response = await apiService.get<ApiDocumentSet[]>(
+          `/employer/${coidId}/documents`,
+          { token },
+        );
+
+        if (!cancelled) setDocuments(mapApiDocumentSets(response));
+      } catch (error) {
+        console.error("Failed to load documents:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadDocuments();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div>
@@ -25,7 +60,16 @@ export default function DocumentsPanel() {
       </div>
 
       <div className="mt-6 flex flex-col gap-4">
-        {documents.map((document, index) => (
+        {isLoading ? (
+          <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
+            Loading documents...
+          </div>
+        ) : documents.length === 0 ? (
+          <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
+            There are no documents to display.
+          </div>
+        ) : (
+          documents.map((document, index) => (
           <div
             key={`${document.name}-${index}`}
             className="flex items-center justify-between gap-4 rounded-2xl bg-white p-4 shadow-[0px_2px_16px_rgba(218,218,218,0.08)]"
@@ -57,7 +101,8 @@ export default function DocumentsPanel() {
               <DownloadIcon className="h-4 w-4" />
             </button>
           </div>
-        ))}
+          ))
+        )}
       </div>
 
       <UploadDocumentModal

@@ -1,8 +1,14 @@
+"use client";
+
+import { useState } from "react";
 import { CheckCircleIcon, DownloadIcon } from "@/components/home/icons";
-import type { Policy } from "@/content/policies";
+import type { ApiRemittanceDocument, Policy } from "@/content/policies";
+import apiService from "@/lib/api/apiService";
+import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { downloadBase64File } from "@/lib/utils/downloadFile";
 
 const infoColumns = (
-  policy: Policy
+  policy: Policy,
 ): Array<{ label: string; value: string }> => [
   { label: "Product Option", value: policy.productOption },
   { label: "Annual Premium", value: policy.annualPremium },
@@ -12,6 +18,37 @@ const infoColumns = (
 ];
 
 export default function PolicyCard({ policy }: { policy: Policy }) {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  async function handleRemittanceDownload() {
+    setIsDownloading(true);
+    try {
+      const { token, coidId } = await getEmployerCoidId();
+      if (!coidId) return;
+
+      const now = new Date().toISOString();
+      const response = await apiService.get<ApiRemittanceDocument[]>(
+        `/employer/${coidId}/remittanceDocument`,
+        { token, params: { fromDate: now, toDate: now } },
+      );
+
+      const remittance = response?.[0];
+      if (!remittance?.base64Content) {
+        throw new Error(`Unexpected remittance document response: ${JSON.stringify(response)}`);
+      }
+
+      downloadBase64File(
+        remittance.fileName,
+        remittance.contentType,
+        remittance.base64Content,
+      );
+    } catch (error) {
+      console.error("Failed to download remittance document:", error);
+    } finally {
+      setIsDownloading(false);
+    }
+  }
+
   return (
     <article className="w-full rounded-2xl bg-white p-4 shadow-[0px_2px_16px_rgba(0,0,0,0.07)] sm:p-6">
       <div className="flex flex-wrap items-center gap-2">
@@ -48,10 +85,16 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
           <button
             key={action}
             type="button"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-black/8 px-4 py-2 text-[12px] font-semibold leading-[18px] text-[#13537B] transition hover:bg-[#F3F7FA]"
+            disabled={action === "Remittance" && isDownloading}
+            onClick={
+              action === "Remittance" ? handleRemittanceDownload : undefined
+            }
+            className="inline-flex items-center gap-1.5 rounded-lg border cursor-pointer border-black/8 px-4 py-2 text-[12px] font-semibold leading-[18px] text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <DownloadIcon className="h-[13px] w-[13px]" />
-            {action}
+            {action === "Remittance" && isDownloading
+              ? "Downloading..."
+              : action}
           </button>
         ))}
       </div>

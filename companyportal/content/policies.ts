@@ -113,6 +113,12 @@ export interface ApiPolicy {
   status: string;
 }
 
+export interface ApiRemittanceDocument {
+  fileName: string;
+  contentType: string;
+  base64Content: string;
+}
+
 const DEFAULT_ACTIONS = ["Remittance", "Policy Schedule"];
 
 export function mapApiPolicy(policy: ApiPolicy): Policy {
