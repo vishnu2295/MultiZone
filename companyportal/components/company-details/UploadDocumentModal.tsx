@@ -1,14 +1,18 @@
 "use client";
 
 import { useRef, useState, type DragEvent } from "react";
-import { ChevronDownIcon, CloseIcon, DocumentIcon, UploadIcon } from "@/components/home/icons";
-import type { CompanyDocument } from "@/content/companyDetails";
+import {
+  ChevronDownIcon,
+  CloseIcon,
+  DocumentIcon,
+  UploadIcon,
+} from "@/components/home/icons";
 
 type UploadDocumentModalProps = {
   open: boolean;
   documentTypes: readonly string[];
   onClose: () => void;
-  onSave: (document: CompanyDocument) => void;
+  onSave: (file: File, documentType: string) => Promise<void>;
 };
 
 export default function UploadDocumentModal({
@@ -20,6 +24,7 @@ export default function UploadDocumentModal({
   const [documentType, setDocumentType] = useState(documentTypes[0]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!open) return null;
@@ -28,6 +33,7 @@ export default function UploadDocumentModal({
     setSelectedFile(null);
     setDocumentType(documentTypes[0]);
     setIsDragging(false);
+    setIsSaving(false);
   };
 
   const handleClose = () => {
@@ -42,21 +48,15 @@ export default function UploadDocumentModal({
     if (file) setSelectedFile(file);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedFile) return;
-    const extension = selectedFile.name.split(".").pop() ?? "";
-    const nameWithoutExtension = selectedFile.name.replace(/\.[^/.]+$/, "");
-
-    onSave({
-      name: `${nameWithoutExtension}.${extension}`,
-      documentType,
-      date: `${new Date().toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })} · ${extension}`,
-    });
-    reset();
+    setIsSaving(true);
+    try {
+      await onSave(selectedFile, documentType);
+      reset();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -68,7 +68,7 @@ export default function UploadDocumentModal({
         className="w-full max-w-[550px] rounded-xl bg-white shadow-xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-black/5 px-6 py-4">
+        <div className="flex cursor-pointer items-center justify-between border-b border-black/5 px-6 py-4">
           <h3 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
             Upload Document
           </h3>
@@ -179,17 +179,17 @@ export default function UploadDocumentModal({
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-md border border-black/10 bg-white px-6 py-2.5 text-[13px] font-semibold text-[#13537B] transition hover:bg-[#F3F7FA]"
+            className="rounded-md border cursor-pointer border-black/10 bg-white px-6 py-2.5 text-[13px] font-semibold text-[#13537B] transition hover:bg-[#F3F7FA]"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSave}
-            disabled={!selectedFile}
-            className="rounded-md bg-[#07C1E9] px-6 py-2.5 text-[13px] font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!selectedFile || isSaving}
+            className="rounded-md cursor-pointer bg-[#07C1E9] px-6 py-2.5 text-[13px] font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Save Changes
+            {isSaving ? "Uploading..." : "Save Changes"}
           </button>
         </div>
       </div>

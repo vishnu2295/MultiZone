@@ -62,7 +62,6 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
           </span>
         )}
       </div>
-
       <p className="mt-1 text-[12.5px] font-normal leading-[19px] text-[#64748B]">
         Policy Number &middot; {policy.policyNumber}
       </p>

@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import {
   mapApiAddress,
   type ApiAddressDetails,
+  type ApiPagedResponse,
 } from "@/content/companyDetails";
 import { EditIcon, PinIcon } from "@/components/home/icons";
 import EditAddressModal, {
+  toApiAddressUpdateRequest,
   type EditableAddress,
 } from "@/components/company-details/EditAddressModal";
 import apiService from "@/lib/api/apiService";
@@ -25,12 +27,12 @@ export default function AddressPanel() {
         const { token, coidId } = await getEmployerCoidId();
         if (!coidId) return;
 
-        const response = await apiService.get<ApiAddressDetails>(
+        const response = await apiService.get<ApiPagedResponse<ApiAddressDetails>>(
           `/employer/${coidId}/addressDetails`,
           { token }
         );
 
-        if (!cancelled) setAddresses([mapApiAddress(response)]);
+        if (!cancelled) setAddresses(response.data.map(mapApiAddress));
       } catch (error) {
         console.error("Failed to load address details:", error);
       } finally {
@@ -96,14 +98,24 @@ export default function AddressPanel() {
         open={editingIndex !== null}
         address={editingAddress}
         onClose={() => setEditingIndex(null)}
-        onSave={(updated) => {
+        onSave={async (updated) => {
           if (editingIndex === null) return;
-          setAddresses((prev) =>
-            prev.map((item, index) =>
-              index === editingIndex ? updated : item,
-            ),
-          );
-          setEditingIndex(null);
+          try {
+            await apiService.put(
+              "/company/api/address",
+              toApiAddressUpdateRequest(updated),
+              { baseUrl: "", skipAuth: true },
+            );
+
+            setAddresses((prev) =>
+              prev.map((item, index) =>
+                index === editingIndex ? updated : item,
+              ),
+            );
+            setEditingIndex(null);
+          } catch (error) {
+            console.error("Failed to update address:", error);
+          }
         }}
       />
     </div>

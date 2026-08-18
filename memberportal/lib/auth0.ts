@@ -1,4 +1,16 @@
+import { NextResponse } from "next/server";
 import { Auth0Client } from "@auth0/nextjs-auth0/server";
+
+const RMA_ROLES_CLAIM = "https://rma.com/claims/rma_roles";
+
+// The roles claim is issued on the access token (audience-scoped), not the ID
+// token, so session.user won't have it. We just received this token straight
+// from Auth0's token endpoint over TLS during this callback, so decoding the
+// payload without re-verifying the signature is safe here.
+function decodeAccessTokenClaims(accessToken: string): Record<string, unknown> {
+  const payload = accessToken.split(".")[1];
+  return JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+}
 
 // Reads AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, AUTH0_SECRET and
 // APP_BASE_URL from the environment. See .env.example for the full list.
@@ -9,5 +21,22 @@ export const auth0 = new Auth0Client({
     audience: process.env.AUTH0_AUDIENCE,
     // offline_access is what makes refresh tokens (and silent renewal) work.
     scope: "openid profile email offline_access",
+  },
+  async onCallback(error, ctx, session) {
+    const baseUrl = ctx.appBaseUrl ?? process.env.APP_BASE_URL ?? "";
+
+    if (error) {
+      return NextResponse.redirect(`${baseUrl}/auth/login`);
+    }
+    const accessToken = session?.tokenSet.accessToken;
+    const claims = accessToken ? decodeAccessTokenClaims(accessToken) : {};
+    const roles = (claims[RMA_ROLES_CLAIM] as string[] | undefined) ?? [];
+    const returnTo = roles.includes("Organization")
+      ? "/company"
+      : roles.includes("Individual")
+        ? "/individual"
+        : (ctx.returnTo ?? "/");
+
+    return NextResponse.redirect(`${baseUrl}${returnTo}`);
   },
 });

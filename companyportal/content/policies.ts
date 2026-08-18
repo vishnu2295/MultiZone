@@ -108,9 +108,13 @@ export interface ApiPolicy {
   policyId: number;
   policyNumber: string;
   productName: string;
+  productOption?: string;
+  annualPremium: number;
   premium: number;
   coverAmount: number;
   status: string;
+  inceptionDate?: string;
+  expiryDate?: string;
 }
 
 export interface ApiRemittanceDocument {
@@ -126,11 +130,15 @@ export function mapApiPolicy(policy: ApiPolicy): Policy {
     title: policy.productName,
     policyNumber: policy.policyNumber,
     compliant: true,
-    productOption: policy.productName,
-    annualPremium: `R ${policy.coverAmount.toLocaleString("en-ZA")}`,
+    productOption: policy.productOption ?? policy.productName,
+    annualPremium: `R ${policy.annualPremium.toLocaleString("en-ZA")}`,
     premium: `R ${policy.premium.toLocaleString("en-ZA")}/mo`,
-    inceptionDate: "-",
-    expiryDate: "-",
+    inceptionDate: policy?.inceptionDate
+      ? new Date(policy.inceptionDate).toLocaleDateString("en-GB")
+      : "-",
+    expiryDate: policy?.expiryDate
+      ? new Date(policy.expiryDate).toLocaleDateString("en-GB")
+      : "-",
     actions: DEFAULT_ACTIONS,
     status: policy.status.toLowerCase() === "active" ? "active" : "inactive",
   };

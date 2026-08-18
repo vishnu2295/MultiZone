@@ -5,32 +5,44 @@ import {
   companyDetailsContent,
   mapApiDocumentSets,
   type ApiDocumentSet,
+  type ApiPagedResponse,
   type CompanyDocument,
 } from "@/content/companyDetails";
 import { DocumentIcon, DownloadIcon } from "@/components/home/icons";
 import UploadDocumentModal from "@/components/company-details/UploadDocumentModal";
+import Pagination from "@/components/ui/Pagination";
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { computePageCount } from "@/lib/utils/pagination";
+
+const PAGE_SIZE = 10;
 
 export default function DocumentsPanel() {
   const [documents, setDocuments] = useState<CompanyDocument[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageCount, setPageCount] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
+    setIsLoading(true);
 
     async function loadDocuments() {
       try {
         const { token, coidId } = await getEmployerCoidId();
         if (!coidId) return;
 
-        const response = await apiService.get<ApiDocumentSet[]>(
+        const response = await apiService.get<ApiPagedResponse<ApiDocumentSet>>(
           `/employer/${coidId}/documents`,
-          { token },
+          { token, params: { page, pageSize: PAGE_SIZE } },
         );
 
-        if (!cancelled) setDocuments(mapApiDocumentSets(response));
+        if (!cancelled) {
+          setDocuments(mapApiDocumentSets(response.data));
+          setPageCount(computePageCount(response.rowCount, PAGE_SIZE));
+        }
       } catch (error) {
         console.error("Failed to load documents:", error);
       } finally {
@@ -42,7 +54,7 @@ export default function DocumentsPanel() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [page, reloadToken]);
 
   return (
     <div>
@@ -105,12 +117,31 @@ export default function DocumentsPanel() {
         )}
       </div>
 
+      {!isLoading && documents.length > 0 && (
+        <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
+      )}
+
       <UploadDocumentModal
         open={isModalOpen}
         documentTypes={companyDetailsContent.documentTypes}
         onClose={() => setIsModalOpen(false)}
-        onSave={(document) => {
-          setDocuments((prev) => [document, ...prev]);
+        onSave={async (file, documentType) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("documentType", documentType);
+
+          try {
+            await apiService.post("/company/api/documents", formData, {
+              baseUrl: "",
+              skipAuth: true,
+            });
+          } catch (error) {
+            console.error("Failed to upload document:", error);
+            throw error;
+          }
+
+          setPage(1);
+          setReloadToken((token) => token + 1);
           setIsModalOpen(false);
         }}
       />

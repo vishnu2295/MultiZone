@@ -1,25 +1,89 @@
 "use client";
 
-import { useState } from "react";
-import { companyDetailsContent } from "@/content/companyDetails";
-import { UserIcon, MailIcon, PhoneIcon, EditIcon, TrashIcon } from "@/components/home/icons";
+import { useEffect, useState } from "react";
+import {
+  mapApiContact,
+  type ApiContactDetails,
+  type ApiPagedResponse,
+} from "@/content/companyDetails";
+import {
+  UserIcon,
+  MailIcon,
+  PhoneIcon,
+  EditIcon,
+  TrashIcon,
+} from "@/components/home/icons";
 import EditContactModal, {
+  toApiContactUpdateRequest,
   type EditableContact,
 } from "@/components/company-details/EditContactModal";
 import DeleteConfirmModal from "@/components/company-details/DeleteConfirmModal";
+import Pagination from "@/components/ui/Pagination";
+import apiService from "@/lib/api/apiService";
+import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { computePageCount } from "@/lib/utils/pagination";
 
+const PAGE_SIZE = 10;
+
+// TODO: hardcoded to employer 1 until the coid comes from elsewhere; the
+// token is still pulled via getEmployerCoidId() but its coidId is unused here.
 export default function ContactsPanel() {
-  const [contacts, setContacts] = useState<EditableContact[]>(
-    companyDetailsContent.contacts
-  );
+  const [contacts, setContacts] = useState<EditableContact[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageCount, setPageCount] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
 
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+
+    async function loadContactDetails() {
+      try {
+        const { token, coidId } = await getEmployerCoidId();
+
+        const response = await apiService.get<ApiPagedResponse<ApiContactDetails>>(
+          `/employer/${coidId}/contactDetails`,
+          { token, params: { page, pageSize: PAGE_SIZE } },
+        );
+
+        if (!cancelled) {
+          setContacts(response.data.map(mapApiContact));
+          setPageCount(computePageCount(response.rowCount, PAGE_SIZE));
+        }
+      } catch (error) {
+        console.error("Failed to load contact details:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadContactDetails();
+    return () => {
+      cancelled = true;
+    };
+  }, [page]);
+
   const editingContact = editingIndex !== null ? contacts[editingIndex] : null;
-  const deletingContact = deletingIndex !== null ? contacts[deletingIndex] : null;
+  const deletingContact =
+    deletingIndex !== null ? contacts[deletingIndex] : null;
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl bg-white p-3 text-center text-[13.5px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
+        Loading contacts...
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2.5">
+      {contacts.length === 0 && (
+        <div className="rounded-xl bg-white p-3 text-center text-[13.5px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
+          There are no contacts to display.
+        </div>
+      )}
       {contacts.map((contact, index) => (
         <div
           key={`${contact.email}-${index}`}
@@ -68,19 +132,33 @@ export default function ContactsPanel() {
         </div>
       ))}
 
+      {contacts.length > 0 && (
+        <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
+      )}
+
       <EditContactModal
         key={editingIndex ?? "closed"}
         open={editingIndex !== null}
         contact={editingContact}
         onClose={() => setEditingIndex(null)}
-        onSave={(updated) => {
+        onSave={async (updated) => {
           if (editingIndex === null) return;
-          setContacts((prev) =>
-            prev.map((item, index) =>
-              index === editingIndex ? updated : item,
-            ),
-          );
-          setEditingIndex(null);
+          try {
+            await apiService.put(
+              "/company/api/contacts",
+              toApiContactUpdateRequest(updated),
+              { baseUrl: "", skipAuth: true },
+            );
+
+            setContacts((prev) =>
+              prev.map((item, index) =>
+                index === editingIndex ? updated : item,
+              ),
+            );
+            setEditingIndex(null);
+          } catch (error) {
+            console.error("Failed to update contact:", error);
+          }
         }}
       />
 

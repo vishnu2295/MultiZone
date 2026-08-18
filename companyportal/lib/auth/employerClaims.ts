@@ -12,7 +12,7 @@ export function decodeJwtPayload(token: string): Record<string, unknown> {
   return JSON.parse(json);
 }
 
-interface RmaId {
+export interface RmaId {
   coidId?: string;
   role?: string;
 }

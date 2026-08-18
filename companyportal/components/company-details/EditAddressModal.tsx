@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronDownIcon, CloseIcon } from "@/components/home/icons";
 import type { CompanyAddress } from "@/content/companyDetails";
 
-const ADDRESS_TYPES: CompanyAddress["type"][] = ["Postal", "Physical"];
+const ADDRESS_TYPES: CompanyAddress["type"][] = ["Postal", "Physical", "Delivery"];
 
 const PROVINCES = [
   "Gauteng",
@@ -29,6 +29,30 @@ export type EditableAddress = CompanyAddress & {
   postalCode?: string;
   country?: string;
 };
+
+export interface ApiAddressUpdateRequest {
+  type: string | null;
+  effectiveFrom: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  province: string | null;
+  city: string | null;
+  postalCode: string | null;
+  country: string | null;
+}
+
+export function toApiAddressUpdateRequest(address: EditableAddress): ApiAddressUpdateRequest {
+  return {
+    type: address.type ?? null,
+    effectiveFrom: address.effectiveFrom || null,
+    addressLine1: address.addressLine1 || null,
+    addressLine2: address.addressLine2 || null,
+    province: address.stateProvince || null,
+    city: address.city || null,
+    postalCode: address.postalCode || null,
+    country: address.country || null,
+  };
+}
 
 type EditAddressModalProps = {
   open: boolean;
