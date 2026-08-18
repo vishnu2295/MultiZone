@@ -1,7 +1,4 @@
-// Single source of truth for the individual portal navbar links — used by the
-// shared Navbar on every individual screen (dashboard and IndividualBackground
-// pages alike). The trailing "My Profile" dropdown is not a link; it comes from
-// `profileLabel` below.
+
 export const individualNavItems = [
   { label: "Claims", href: "/individual/claims" },
   { label: "Pension Services", href: "/individual/pension-services" },
@@ -15,6 +12,8 @@ export const homeContent = {
   profileLabel: "My Profile",
   greeting: "Good Morning,",
   memberName: "John Doe",
+  // Employer/scheme line shown under the member name on the dashboard.
+  organisation: "Impala minerals pvt limited",
   welcomeMessage:
     "Welcome to your individual portal, you can manage your insurance, claims, and documents — all in one place.",
   quickActionsLabel: "Quick Actions",

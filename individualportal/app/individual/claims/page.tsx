@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import IndividualBackground from "@/components/common/IndividualBackground";
+import { ArrowLeftIcon } from "@/components/common/icons";
 
 const claims = [
   {
@@ -27,21 +28,24 @@ const statusColor = {
 export default function MyClaimsPage() {
   return (
     <IndividualBackground>
-      <div className="relative z-10 mx-auto w-full max-w-[1440px] px-[100px] py-10">
+      <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 lg:px-[100px] lg:py-10">
         <Link
           href="/individual"
-          className="inline-flex items-center gap-2 text-[14px] text-[#13537B]"
+          className="inline-flex items-center gap-2 text-[14px] font-bold text-[#13537B] transition hover:opacity-80"
         >
-          <span aria-hidden>←</span> Back
+          <ArrowLeftIcon className="h-4 w-4" aria-hidden />
+          Back
         </Link>
 
-        <h1 className="mt-4 text-[22px] font-bold text-[#13537B]">My Claims</h1>
+        <h1 className="mt-5 text-[20px] font-bold leading-tight text-[#13537B] sm:text-[22px]">
+          My Claims
+        </h1>
 
-        <div className="mt-6 flex flex-col gap-4">
+        <div className="mt-6 flex w-full max-w-[1040px] flex-col gap-4">
           {claims.map((claim, i) => (
             <div
               key={i}
-              className="flex items-center justify-between rounded-xl bg-white px-6 py-5 shadow-[2.8px_2.8px_28px_rgba(18,46,77,0.05)]"
+              className="flex items-center justify-between rounded-xl bg-white px-6 py-5 shadow-[0px_2px_16px_0px_#00000012]"
             >
               <div>
                 <h2 className="text-[15px] font-bold text-[#13537B]">{claim.title}</h2>

@@ -20,7 +20,7 @@ function Meta({ label, value }: { label: string; value: string }) {
 export default function MedicalAuthorizationsPage() {
   return (
     <IndividualBackground>
-      <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 lg:px-14 lg:py-10">
+      <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 py-8 sm:px-6 lg:px-[100px] lg:py-10">
         <Link
           href={content.backHref}
           className="inline-flex items-center gap-2 text-[14px] font-bold text-[#13537B] transition hover:opacity-80"
@@ -38,11 +38,11 @@ export default function MedicalAuthorizationsPage() {
             {content.emptyMessage}
           </p>
         ) : (
-          <ul className="mt-6 flex flex-col gap-4">
+          <ul className="mt-6 flex w-full max-w-[1040px] flex-col gap-4">
             {medicalAuthorizations.map((auth) => (
               <li
                 key={auth.id}
-                className="flex flex-col gap-4 rounded-xl bg-white px-5 py-5 shadow-[2.8px_2.8px_28px_rgba(18,46,77,0.05)] sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6"
+                className="flex flex-col gap-4 rounded-xl bg-white px-5 py-5 shadow-[0px_2px_16px_0px_#00000012] sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6"
               >
                 <div className="min-w-0">
                   <h2 className="text-[15px] font-bold leading-snug text-[#13537B] sm:text-[16px]">
