@@ -185,6 +185,27 @@ export function CloseIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function LogoutIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...props}>
+      <path
+        d="M15 12H5m0 0l3.5-3.5M5 12l3.5 3.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M11 4h6a2 2 0 012 2v12a2 2 0 01-2 2h-6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export const quickActionIcons = {
   shield: ShieldIcon,
   building: BuildingIcon,

@@ -6,6 +6,16 @@ export const individualNavItems = [
   { label: "FAQs", href: "/faq" },
 ];
 
+/** Details shown in the "My Profile" dropdown in the navbar. */
+export const profileMenu = {
+  name: "John Doe",
+  email: "john@gmail.com",
+  /** Falls back to initials derived from `name` when omitted. */
+  initials: "JD",
+  logoutLabel: "Logout",
+  logoutHref: "/auth/logout",
+};
+
 export const homeContent = {
   brand: "Individual Portal",
   navLinks: individualNavItems,
