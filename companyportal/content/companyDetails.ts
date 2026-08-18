@@ -1,5 +1,5 @@
 export type CompanyAddress = {
-  type: "Postal" | "Physical";
+  type: "Postal" | "Physical" | "Delivery";
   line: string;
   primary?: boolean;
 };
@@ -42,9 +42,33 @@ export type CompanyDocument = {
   documentId?: string;
 };
 
-export type CompanyInfo = typeof companyDetailsContent.company;
+export interface CompanyInfo {
+  code: string;
+  status: string;
+  name: string;
+  regNo: string;
+  industryClass: string;
+  industry: string;
+  vatRegNo: string;
+  compensationFundRef: string;
+  compensationFundReg: string;
+  compensationFundStatus: string;
+  natureOfBusiness: string;
+  createdDate: string;
+}
+
+export interface ApiEmployerDetails {
+  memberNumber: string;
+  status: string;
+  memberName: string;
+  joinDate: string;
+  clientType: string;
+  medicalBenefitWaitingPeriod: string;
+  rolePlayerId: number;
+}
 
 export interface ApiCompanyDetails {
+  companyName?: string;
   industryClass?: string;
   industryType?: string;
   registrationType?: string;
@@ -66,6 +90,18 @@ export interface ApiAddressDetails {
   city?: string;
   postalCode?: string;
   country?: string;
+  isPrimary?: boolean;
+}
+
+export interface ApiContactDetails {
+  title?: string;
+  firstname?: string;
+  surname?: string;
+  communicationType?: string;
+  contactNumber?: string;
+  emailAddress?: string;
+  contactDesignation?: string;
+  contactContext?: string;
 }
 
 export interface ApiBankDetails {
@@ -92,13 +128,15 @@ export interface ApiInvoice {
   attachments?: ApiInvoiceAttachment;
 }
 
-export interface ApiInvoicesResponse {
-  data: ApiInvoice[];
+export interface ApiPagedResponse<T> {
+  data: T[];
   rowCount: number;
   page: number;
   pageSize: number;
   pageCount: number;
 }
+
+export type ApiInvoicesResponse = ApiPagedResponse<ApiInvoice>;
 
 export interface ApiDocument {
   documentId: string;
@@ -118,23 +156,35 @@ const INVOICE_STATUS_LABEL: Record<number, string> = {
   2: "Paid",
 };
 
-const orDash = (value: string | undefined | null): string =>
-  value && value.trim() ? value : "-";
+const checkValueExists = (value: string | undefined | null): string =>
+  value && value.trim() ? value : "N/A";
 
-export function mapApiCompanyDetails(api: ApiCompanyDetails): CompanyInfo {
+function initialsFromName(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0].toUpperCase())
+    .join("");
+}
+
+export function mapApiCompanyDetails(
+  res: ApiCompanyDetails & ApiEmployerDetails,
+): CompanyInfo {
   return {
-    code: "-",
-    status: "-",
-    name: "-",
-    regNo: orDash(api.companyRegistrationNumber),
-    industryClass: orDash(api.industryClass),
-    industry: orDash(api.industryType),
-    vatRegNo: orDash(api.vatRegistrationNumber),
-    compensationFundRef: orDash(api.compensationFundReferenceNumber),
-    compensationFundReg: orDash(api.compensationFundRegistrationNumber),
-    compensationFundStatus: orDash(api.compensationFundStatus),
-    natureOfBusiness: orDash(api.natureOfBusiness),
-    createdDate: "-",
+    code: res.companyName ? initialsFromName(res.companyName) : "-",
+    status: checkValueExists(res.status),
+    name: checkValueExists(res.companyName),
+    regNo: checkValueExists(res.companyRegistrationNumber),
+    industryClass: checkValueExists(res.industryClass),
+    industry: checkValueExists(res.industryType),
+    vatRegNo: checkValueExists(res.vatRegistrationNumber),
+    compensationFundRef: checkValueExists(res.compensationFundReferenceNumber),
+    compensationFundReg: checkValueExists(
+      res.compensationFundRegistrationNumber,
+    ),
+    compensationFundStatus: checkValueExists(res.compensationFundStatus),
+    natureOfBusiness: checkValueExists(res.natureOfBusiness),
+    createdDate: res.joinDate ? res.joinDate.slice(0, 10) : "-",
   };
 }
 
@@ -153,9 +203,10 @@ export function mapApiAddress(api: ApiAddressDetails): CompanyAddress & {
       .join(", ") || "-";
 
   return {
-    type: api.type === "Physical" ? "Physical" : "Postal",
+    type:
+      api.type === "Physical" || api.type === "Delivery" ? api.type : "Postal",
     line,
-    primary: true,
+    primary: api.isPrimary ?? false,
     effectiveFrom: api.effectiveFrom ? api.effectiveFrom.slice(0, 10) : "-",
     addressLine1: api.addressLine1 ?? "",
     addressLine2: api.addressLine2 ?? "",
@@ -195,14 +246,42 @@ export function mapApiDocumentSets(sets: ApiDocumentSet[]): CompanyDocument[] {
   );
 }
 
+export function mapApiContact(api: ApiContactDetails): CompanyContact & {
+  title?: string;
+  firstName?: string;
+  surname?: string;
+  communicationType?: string;
+  contactNo?: string;
+  designation?: string;
+  contractContext?: string;
+} {
+  const name = [api.title ? `${api.title}.` : "", api.firstname, api.surname]
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    name: name || "-",
+    badge: api.contactDesignation ? api.contactDesignation.split(" ")[0] : "-",
+    email: checkValueExists(api.emailAddress),
+    phone: checkValueExists(api.contactNumber),
+    title: api.title ?? "",
+    firstName: api.firstname ?? "",
+    surname: api.surname ?? "",
+    communicationType: api.communicationType ?? "",
+    contactNo: api.contactNumber ?? "",
+    designation: api.contactDesignation ?? "",
+    contractContext: api.contactContext ?? "",
+  };
+}
+
 export function mapApiBankDetails(api: ApiBankDetails): CompanyBankingDetail {
   return {
-    accountHolder: orDash(api.accountHolder),
-    bank: orDash(api.bank),
-    accountNumber: orDash(api.accountNumber),
-    accountType: orDash(api.accountType),
-    branch: orDash(api.branch),
-    branchCode: orDash(api.branchCode),
+    accountHolder: checkValueExists(api.accountHolder),
+    bank: checkValueExists(api.bank),
+    accountNumber: checkValueExists(api.accountNumber),
+    accountType: checkValueExists(api.accountType),
+    branch: checkValueExists(api.branch),
+    branchCode: checkValueExists(api.branchCode),
   };
 }
 
@@ -215,101 +294,10 @@ export const companyDetailsContent = {
     "Documents",
   ] as const,
 
-  company: {
-    code: "IP",
-    status: "Active",
-    name: "Impala Platinum Limited",
-    regNo: "1952/071942/06",
-    industryClass: "Mining",
-    industry: "Deep Under Ground Other",
-    vatRegNo: "3842395",
-    compensationFundRef: "12-03-2026",
-    compensationFundReg: "12-03-2026",
-    compensationFundStatus: "Confirmed",
-    natureOfBusiness: "N/A",
-    createdDate: "2026-04-23",
-  },
-
-  addresses: [
-    {
-      type: "Postal",
-      line: "57 Sloane Street,Bryanston, Sandton, Gauteng, 2191",
-      primary: true,
-    },
-    {
-      type: "Postal",
-      line: "57 Sloane Street,Bryanston, Sandton, Gauteng, 2191",
-      primary: true,
-    },
-    {
-      type: "Physical",
-      line: "57 Sloane Street,Bryanston, Sandton, Gauteng, 2191",
-    },
-    {
-      type: "Physical",
-      line: "57 Sloane Street,Bryanston, Sandton, Gauteng, 2191",
-    },
-  ] satisfies CompanyAddress[],
-
-  contacts: [
-    {
-      name: "Mr. Sarah Johnson",
-      badge: "Primary",
-      email: "sarah.johnson@insuretech.co.za",
-      phone: "011 555 0101",
-    },
-    {
-      name: "Mr. Thabo Ngobeni",
-      badge: "Primary",
-      email: "sarah.johnson@insuretech.co.za",
-      phone: "011 555 0101",
-    },
-    {
-      name: "Miss. Lindiwe Masoke",
-      badge: "HR",
-      email: "sarah.johnson@insuretech.co.za",
-      phone: "011 555 0101",
-    },
-  ] satisfies CompanyContact[],
-
-  bankingDetails: [
-    {
-      accountHolder: "Impala Platinum Limited",
-      bank: "FNB",
-      accountNumber: "32798423898452",
-      accountType: "Current",
-      branch: "Universal",
-      branchCode: "49344",
-    },
-  ] satisfies CompanyBankingDetail[],
-
   documentTypes: [
     "Acute Medication",
     "Certificate of Good Standing",
     "COIDA Registration Letter",
     "Compensation Fund Confirmation",
   ],
-
-  documents: [
-    {
-      name: "Compensation Fund Certificate.pdf",
-      documentType: "Acute Medication",
-      date: "10 Jan 2024 · 10:32 am",
-    },
-    {
-      name: "Compensation Fund Certificate.pdf",
-      documentType: "Acute Medication",
-      date: "10 Jan 2024 · 10:32 am",
-    },
-    {
-      name: "Compensation Fund Certificate.pdf",
-      documentType: "Acute Medication",
-      date: "10 Jan 2024 · 10:32 am",
-    },
-    {
-      name: "Compensation Fund Certificate.pdf",
-      documentType: "Acute Medication",
-      date: "10 Jan 2024 · 10:32 am",
-    },
-  ] satisfies CompanyDocument[],
 };

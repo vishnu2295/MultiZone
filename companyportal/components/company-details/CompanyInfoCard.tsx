@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import {
-  companyDetailsContent,
   mapApiCompanyDetails,
   type ApiCompanyDetails,
+  type ApiEmployerDetails,
   type CompanyInfo,
 } from "@/content/companyDetails";
 import apiService from "@/lib/api/apiService";
@@ -24,7 +24,8 @@ function buildInfoRows(company: CompanyInfo): Array<{ label: string; value: stri
 }
 
 export default function CompanyInfoCard() {
-  const [company, setCompany] = useState<CompanyInfo>(companyDetailsContent.company);
+  const [company, setCompany] = useState<CompanyInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,14 +35,18 @@ export default function CompanyInfoCard() {
         const { token, coidId } = await getEmployerCoidId();
         if (!coidId) return;
 
-        const response = await apiService.get<ApiCompanyDetails>(
-          `/employer/${coidId}/companyDetails`,
-          { token }
-        );
+        const [companyDetails, employerDetails] = await Promise.all([
+          apiService.get<ApiCompanyDetails>(`/employer/${coidId}/companyDetails`, { token }),
+          apiService.get<ApiEmployerDetails>(`/employer/${coidId}/employerDetails`, { token }),
+        ]);
 
-        if (!cancelled) setCompany(mapApiCompanyDetails(response));
+        if (!cancelled) {
+          setCompany(mapApiCompanyDetails({ ...companyDetails, ...employerDetails }));
+        }
       } catch (error) {
         console.error("Failed to load company details:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
     }
 
@@ -50,6 +55,14 @@ export default function CompanyInfoCard() {
       cancelled = true;
     };
   }, []);
+
+  if (isLoading || !company) {
+    return (
+      <aside className="w-full shrink-0 rounded-xl bg-white p-4 text-center text-[13.5px] font-normal text-[#64748B] shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px]">
+        {isLoading ? "Loading company details..." : "No company details found."}
+      </aside>
+    );
+  }
 
   const infoRows = buildInfoRows(company);
 
@@ -74,7 +87,9 @@ export default function CompanyInfoCard() {
         </div>
 
         <div className="relative mt-4 flex flex-col gap-2">
-          <p className="text-[16px] font-bold leading-[19px] text-white">{company.name}</p>
+          <p className="text-[16px] font-bold leading-[19px] text-white">
+            {company.name}
+          </p>
           <p className="text-[14px] font-normal leading-[17px] text-white">
             Reg No : {company.regNo}
           </p>

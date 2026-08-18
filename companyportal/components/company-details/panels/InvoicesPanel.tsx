@@ -11,6 +11,7 @@ import Pagination from "@/components/ui/Pagination";
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
 import { downloadBase64File } from "@/lib/utils/downloadFile";
+import { computePageCount } from "@/lib/utils/pagination";
 
 const statusStyles: Record<string, string> = {
   Paid: "bg-[#ECFDF5] text-[#14B86A]",
@@ -43,7 +44,7 @@ export default function InvoicesPanel() {
 
         if (!cancelled) {
           setInvoices(response.data.map(mapApiInvoice));
-          setPageCount(response.pageCount || 1);
+          setPageCount(computePageCount(response.rowCount, PAGE_SIZE));
         }
       } catch (error) {
         console.error("Failed to load invoices:", error);

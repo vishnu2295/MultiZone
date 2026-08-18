@@ -24,6 +24,30 @@ export type EditableContact = CompanyContact & {
   contractContext?: string;
 };
 
+export interface ApiContactUpdateRequest {
+  title: string | null;
+  firstname: string | null;
+  surname: string | null;
+  communicationType: string | null;
+  contactNumber: string | null;
+  emailAddress: string | null;
+  contactDesignation: string | null;
+  contactContext: string | null;
+}
+
+export function toApiContactUpdateRequest(contact: EditableContact): ApiContactUpdateRequest {
+  return {
+    title: contact.title ?? null,
+    firstname: contact.firstName ?? null,
+    surname: contact.surname ?? null,
+    communicationType: contact.communicationType ?? null,
+    contactNumber: contact.contactNo ?? null,
+    emailAddress: contact.email || null,
+    contactDesignation: contact.designation ?? null,
+    contactContext: contact.contractContext ?? null,
+  };
+}
+
 type EditContactModalProps = {
   open: boolean;
   contact: EditableContact | null;
