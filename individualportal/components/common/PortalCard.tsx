@@ -67,7 +67,7 @@ export default function PortalCard({
   }`;
 
   const bubble =
-    "absolute bottom-5 right-5 flex items-center justify-center rounded-full bg-[#F3F7FA] p-[10px] transition group-hover:bg-[#13537B]/10";
+    "absolute bottom-5 cursor-pointer right-5 flex items-center justify-center rounded-full bg-[#F3F7FA] p-[10px] transition group-hover:bg-[#13537B]/10";
 
   const body = (
     <>

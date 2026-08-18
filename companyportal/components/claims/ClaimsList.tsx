@@ -9,10 +9,29 @@ import {
 } from "@/content/claims";
 import ClaimCard from "@/components/claims/ClaimCard";
 import Pagination from "@/components/ui/Pagination";
+import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
 
 type Tab = (typeof claimsContent.tabs)[number];
+
+function ClaimCardSkeleton() {
+  return (
+    <div className="rounded-2xl bg-white p-6 shadow-[0px_2px_16px_rgba(0,0,0,0.07)]">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+        <div className="flex-1">
+          <Skeleton className="h-5 w-56" />
+          <Skeleton className="mt-2 h-3 w-72 max-w-full" />
+          <Skeleton className="mt-2 h-3 w-40" />
+        </div>
+        <div className="flex shrink-0 flex-col items-start gap-1.5 lg:items-end">
+          <Skeleton className="h-3 w-12" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const tabIsActive: Record<Tab, boolean> = {
   "Active Claims": true,
@@ -90,9 +109,9 @@ export default function ClaimsList() {
 
       <div className="mt-6 flex flex-col gap-4">
         {isLoading ? (
-          <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(0,0,0,0.07)]">
-            Loading claims...
-          </div>
+          Array.from({ length: 3 }).map((_, index) => (
+            <ClaimCardSkeleton key={index} />
+          ))
         ) : claims.length > 0 ? (
           claims.map((claim, index) => (
             <ClaimCard key={`${claim.reference}-${index}`} claim={claim} />

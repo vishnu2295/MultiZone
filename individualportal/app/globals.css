@@ -43,3 +43,25 @@ body {
     font: inherit;
   }
 }
+
+@keyframes shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+/** Loading placeholder: a light band sweeping across a gray bar. */
+.shimmer {
+  background-color: #e3eaee;
+  background-image: linear-gradient(
+    90deg,
+    #e3eaee 25%,
+    #f0f4f7 37%,
+    #e3eaee 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}

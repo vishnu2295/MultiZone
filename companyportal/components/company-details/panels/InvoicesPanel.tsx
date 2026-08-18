@@ -8,10 +8,28 @@ import {
 } from "@/content/companyDetails";
 import { InvoiceIcon, CheckCircleIcon, DownloadIcon } from "@/components/home/icons";
 import Pagination from "@/components/ui/Pagination";
+import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
 import { downloadBase64File } from "@/lib/utils/downloadFile";
 import { computePageCount } from "@/lib/utils/pagination";
+
+function InvoiceRowSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-[0px_2px_12px_rgba(0,0,0,0.06)] sm:flex-row sm:items-center">
+      <Skeleton className="h-11 w-11 shrink-0 rounded-lg" />
+      <div className="flex flex-1 flex-col gap-2">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-3 w-44" />
+        <Skeleton className="h-3 w-36" />
+      </div>
+      <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-9 w-9 rounded-full" />
+      </div>
+    </div>
+  );
+}
 
 const statusStyles: Record<string, string> = {
   Paid: "bg-[#ECFDF5] text-[#14B86A]",
@@ -61,8 +79,10 @@ export default function InvoicesPanel() {
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(0,0,0,0.07)]">
-        Loading invoices...
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <InvoiceRowSkeleton key={index} />
+        ))}
       </div>
     );
   }

@@ -19,9 +19,32 @@ import EditContactModal, {
 } from "@/components/company-details/EditContactModal";
 import DeleteConfirmModal from "@/components/company-details/DeleteConfirmModal";
 import Pagination from "@/components/ui/Pagination";
+import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
 import { computePageCount } from "@/lib/utils/pagination";
+
+function ContactRowSkeleton() {
+  return (
+    <div className="flex flex-col gap-3 rounded-xl bg-white px-3 py-2 shadow-[0px_2px_16px_rgba(218,218,218,0.08)] sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start gap-3">
+        <Skeleton className="mt-1 h-3.5 w-3.5 shrink-0 rounded-full" />
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-4 w-32" />
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+            <Skeleton className="h-3 w-36" />
+            <Skeleton className="h-3 w-28" />
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2.5">
+        <Skeleton className="h-6 w-16 rounded-full" />
+        <Skeleton className="h-9 w-20 rounded-md" />
+        <Skeleton className="h-9 w-20 rounded-md" />
+      </div>
+    </div>
+  );
+}
 
 const PAGE_SIZE = 10;
 
@@ -71,8 +94,10 @@ export default function ContactsPanel() {
 
   if (isLoading) {
     return (
-      <div className="rounded-xl bg-white p-3 text-center text-[13.5px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
-        Loading contacts...
+      <div className="flex flex-col gap-2.5">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <ContactRowSkeleton key={index} />
+        ))}
       </div>
     );
   }

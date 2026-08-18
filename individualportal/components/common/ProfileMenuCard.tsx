@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { profileMenu } from "@/content/site";
+import { mapProfile, profileMenu, type ApiProfileResponse } from "@/content/site";
 import { LogoutIcon } from "@/components/common/icons";
+import apiService, { API_ROOT_BASE_URL } from "@/lib/api/apiService";
+import { getEmployeeCoidId } from "@/lib/auth/employeeClaims";
 
 export interface ProfileMenuCardProps {
   name?: string;
@@ -29,14 +32,51 @@ function initialsFrom(name: string) {
  * Rendered inside the navbar's desktop dropdown and mobile drawer.
  */
 export default function ProfileMenuCard({
-  name = profileMenu.name,
-  email = profileMenu.email,
+  name: nameProp,
+  email: emailProp,
   initials = profileMenu.initials,
   logoutLabel = profileMenu.logoutLabel,
   logoutHref = profileMenu.logoutHref,
   onLogout,
   className = "",
 }: ProfileMenuCardProps) {
+  const [profile, setProfile] = useState<{ name: string; email: string } | null>(
+    null,
+  );
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProfile() {
+      try {
+        const { token, coidId } = await getEmployeeCoidId();
+        if (!coidId) return;
+
+        const response = await apiService.get<ApiProfileResponse>(
+          `${API_ROOT_BASE_URL}/profile/individual/${coidId}`,
+          { token },
+        );
+
+        if (!cancelled) setProfile(mapProfile(response));
+      } catch (error) {
+        console.error("Failed to load profile:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Only show the shimmer when we don't already have data to render — an
+  // explicit prop override, or a previously fetched profile.
+  const showSkeleton = isLoading && !nameProp && !profile;
+  const name = nameProp ?? profile?.name ?? profileMenu.name;
+  const email = emailProp ?? profile?.email ?? profileMenu.email;
   const avatarText = initials || initialsFrom(name);
 
   return (
@@ -44,19 +84,35 @@ export default function ProfileMenuCard({
       className={`rounded-2xl bg-white p-5 shadow-[0_12px_32px_rgba(17,37,45,0.18)] sm:p-6 ${className}`}
     >
       <div className="flex items-center gap-4">
-        <span
-          aria-hidden
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#5CAFD6] text-[16px] font-semibold text-white sm:h-14 sm:w-14 sm:text-[18px]"
-        >
-          {avatarText}
-        </span>
+        {showSkeleton ? (
+          <span
+            aria-hidden
+            className="shimmer h-12 w-12 shrink-0 rounded-full sm:h-14 sm:w-14"
+          />
+        ) : (
+          <span
+            aria-hidden
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#5CAFD6] text-[16px] font-semibold text-white sm:h-14 sm:w-14 sm:text-[18px]"
+          >
+            {avatarText}
+          </span>
+        )}
         <div className="min-w-0">
-          <p className="truncate text-[16px] font-medium leading-[20px] text-[#14607D] sm:text-[18px] sm:leading-[22px]">
-            {name}
-          </p>
-          <p className="truncate text-[13px] leading-[18px] text-[#6B7B84] sm:text-[15px] sm:leading-[20px]">
-            {email}
-          </p>
+          {showSkeleton ? (
+            <div className="flex flex-col gap-2">
+              <span className="shimmer h-4 w-32 rounded-full sm:h-[18px] sm:w-40" />
+              <span className="shimmer h-3 w-40 rounded-full sm:h-[15px] sm:w-48" />
+            </div>
+          ) : (
+            <>
+              <p className="truncate text-[16px] font-medium leading-[20px] text-[#14607D] sm:text-[18px] sm:leading-[22px]">
+                {name}
+              </p>
+              <p className="truncate text-[13px] leading-[18px] text-[#6B7B84] sm:text-[15px] sm:leading-[20px]">
+                {email}
+              </p>
+            </>
+          )}
         </div>
       </div>
 

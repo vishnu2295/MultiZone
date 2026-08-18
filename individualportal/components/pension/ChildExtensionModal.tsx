@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { CloseIcon } from "@/components/common/icons";
 import {
-  childExtensionRequest as request,
+  childExtensionModalContent as content,
+  childExtensionStatusFallbackStyle,
   childExtensionStatusStyle,
+  mapChildPensionExtensionDetails,
+  PENSIONER_API_BASE_URL,
+  type ApiChildPensionExtensionDetails,
+  type ChildExtensionField,
 } from "@/content/pensionServices";
+import Skeleton from "@/components/ui/Skeleton";
+import apiService from "@/lib/api/apiService";
+import { getEmployeeCoidId } from "@/lib/auth/employeeClaims";
 
 export interface ChildExtensionModalProps {
   open: boolean;
@@ -23,6 +31,9 @@ export default function ChildExtensionModal({
   onClose,
 }: ChildExtensionModalProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [status, setStatus] = useState<string | null>(null);
+  const [groups, setGroups] = useState<ChildExtensionField[][]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -44,6 +55,44 @@ export default function ChildExtensionModal({
     };
   }, [open, onClose]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    let cancelled = false;
+    setIsLoading(true);
+
+    async function loadDetails() {
+      try {
+        const { token, coidId } = await getEmployeeCoidId();
+        if (!coidId) return;
+
+        const details = await apiService.get<ApiChildPensionExtensionDetails>(
+          `${PENSIONER_API_BASE_URL}/pensioner/${coidId}/childPensionExtensionDetails`,
+          { token },
+        );
+
+        if (!cancelled) {
+          const mapped = mapChildPensionExtensionDetails(details);
+          setStatus(mapped.status);
+          setGroups(mapped.groups);
+        }
+      } catch (error) {
+        console.error("Failed to load child pension extension details:", error);
+        if (!cancelled) {
+          setStatus("N/A");
+          setGroups([]);
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadDetails();
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
   if (!open) return null;
 
   return (
@@ -63,14 +112,19 @@ export default function ChildExtensionModal({
             id="child-extension-modal-title"
             className="text-[16px] font-bold leading-snug text-[#13537B] sm:text-[18px]"
           >
-            {request.title}
+            {content.title}
           </h2>
 
           <div className="flex shrink-0 items-center gap-3 sm:gap-5">
             <span
-              className={`rounded-full px-4 py-1.5 text-[13px] font-bold italic ${childExtensionStatusStyle[request.status]}`}
+              className={`rounded-full px-4 py-1.5 text-[13px] font-bold italic ${
+                status
+                  ? (childExtensionStatusStyle[status] ??
+                    childExtensionStatusFallbackStyle)
+                  : childExtensionStatusFallbackStyle
+              }`}
             >
-              {request.status}
+              {status ?? <Skeleton className="h-3.5 w-16 align-middle" />}
             </span>
             <button
               ref={closeButtonRef}
@@ -86,30 +140,55 @@ export default function ChildExtensionModal({
 
         <div className="px-5 py-6 sm:px-8 sm:py-7">
           <h3 className="text-[16px] font-bold text-[#13537B] sm:text-[18px]">
-            {request.sectionTitle}
+            {content.sectionTitle}
           </h3>
 
-          {request.groups.map((group, groupIndex) => (
-            <div
-              key={groupIndex}
-              className={
-                groupIndex === 0
-                  ? "mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2 lg:grid-cols-4"
-                  : "mt-8 grid grid-cols-1 gap-x-6 gap-y-6 border-t border-[#E5EDF2] pt-8 sm:grid-cols-2 lg:grid-cols-4"
-              }
-            >
-              {group.map((field) => (
-                <div key={field.label} className="min-w-0">
-                  <p className="text-[11px] font-normal uppercase tracking-[0.6px] text-[#6B7F8C]">
-                    {field.label}
-                  </p>
-                  <p className="mt-1.5 break-words text-[15px] font-bold text-[#13537B]">
-                    {field.value}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ))}
+          {isLoading ? (
+            <>
+              <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="min-w-0">
+                    <Skeleton className="h-2.5 w-20" />
+                    <Skeleton className="mt-2 h-4 w-28" />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-8 grid grid-cols-1 gap-x-6 gap-y-6 border-t border-[#E5EDF2] pt-8 sm:grid-cols-2 lg:grid-cols-4">
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <div key={index} className="min-w-0">
+                    <Skeleton className="h-2.5 w-24" />
+                    <Skeleton className="mt-2 h-4 w-20" />
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : groups.length === 0 ? (
+            <p className="mt-6 text-[13px] text-[#6B7F8C]">
+              No details available.
+            </p>
+          ) : (
+            groups.map((group, groupIndex) => (
+              <div
+                key={groupIndex}
+                className={
+                  groupIndex === 0
+                    ? "mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2 lg:grid-cols-4"
+                    : "mt-8 grid grid-cols-1 gap-x-6 gap-y-6 border-t border-[#E5EDF2] pt-8 sm:grid-cols-2 lg:grid-cols-4"
+                }
+              >
+                {group.map((field) => (
+                  <div key={field.label} className="min-w-0">
+                    <p className="text-[11px] font-normal uppercase tracking-[0.6px] text-[#6B7F8C]">
+                      {field.label}
+                    </p>
+                    <p className="mt-1.5 break-words text-[15px] font-bold text-[#13537B]">
+                      {field.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

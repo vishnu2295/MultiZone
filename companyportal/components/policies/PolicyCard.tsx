@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { CheckCircleIcon, DownloadIcon } from "@/components/home/icons";
-import type { ApiRemittanceDocument, Policy } from "@/content/policies";
+import type {
+  ApiLetterOfGoodStanding,
+  ApiRemittanceDocument,
+  Policy,
+} from "@/content/policies";
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
 import { downloadBase64File } from "@/lib/utils/downloadFile";
@@ -18,10 +22,10 @@ const infoColumns = (
 ];
 
 export default function PolicyCard({ policy }: { policy: Policy }) {
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadingAction, setDownloadingAction] = useState<string | null>(null);
 
   async function handleRemittanceDownload() {
-    setIsDownloading(true);
+    setDownloadingAction("Remittance");
     try {
       const { token, coidId } = await getEmployerCoidId();
       if (!coidId) return;
@@ -45,9 +49,44 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
     } catch (error) {
       console.error("Failed to download remittance document:", error);
     } finally {
-      setIsDownloading(false);
+      setDownloadingAction(null);
     }
   }
+
+  async function handleLetterOfGoodStandingDownload() {
+    setDownloadingAction("Letter of Good Standing");
+    try {
+      const { token, coidId } = await getEmployerCoidId();
+      if (!coidId) return;
+
+      const response = await apiService.get<ApiLetterOfGoodStanding>(
+        `/employer/${coidId}/letterOfGoodStanding`,
+        { token },
+      );
+
+      const attachment = response?.attachments;
+      if (!attachment?.content) {
+        throw new Error(
+          `Unexpected letter of good standing response: ${JSON.stringify(response)}`,
+        );
+      }
+
+      downloadBase64File(
+        attachment.fileName,
+        attachment.fileType,
+        attachment.content,
+      );
+    } catch (error) {
+      console.error("Failed to download letter of good standing:", error);
+    } finally {
+      setDownloadingAction(null);
+    }
+  }
+
+  const actionHandlers: Record<string, () => void> = {
+    Remittance: handleRemittanceDownload,
+    "Letter of Good Standing": handleLetterOfGoodStandingDownload,
+  };
 
   return (
     <article className="w-full rounded-2xl bg-white p-4 shadow-[0px_2px_16px_rgba(0,0,0,0.07)] sm:p-6">
@@ -80,22 +119,21 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2 border-t border-black/5 pt-5">
-        {policy.actions.map((action) => (
-          <button
-            key={action}
-            type="button"
-            disabled={action === "Remittance" && isDownloading}
-            onClick={
-              action === "Remittance" ? handleRemittanceDownload : undefined
-            }
-            className="inline-flex items-center gap-1.5 rounded-lg border cursor-pointer border-black/8 px-4 py-2 text-[12px] font-semibold leading-[18px] text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <DownloadIcon className="h-[13px] w-[13px]" />
-            {action === "Remittance" && isDownloading
-              ? "Downloading..."
-              : action}
-          </button>
-        ))}
+        {policy.actions.map((action) => {
+          const isDownloadingThis = downloadingAction === action;
+          return (
+            <button
+              key={action}
+              type="button"
+              disabled={isDownloadingThis}
+              onClick={actionHandlers[action]}
+              className="inline-flex items-center gap-1.5 rounded-lg border cursor-pointer border-black/8 px-4 py-2 text-[12px] font-semibold leading-[18px] text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <DownloadIcon className="h-[13px] w-[13px]" />
+              {isDownloadingThis ? "Downloading..." : action}
+            </button>
+          );
+        })}
       </div>
     </article>
   );

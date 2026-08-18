@@ -2,28 +2,64 @@
 export const individualNavItems = [
   { label: "Claims", href: "/individual/claims" },
   { label: "Pension Services", href: "/individual/pension-services" },
-  { label: "Customer Care", href: "/customer-care" },
-  { label: "FAQs", href: "/faq" },
+  // { label: "Customer Care", href: "/customer-care" },
+  // { label: "FAQs", href: "/faq" },
 ];
 
 /** Details shown in the "My Profile" dropdown in the navbar. */
 export const profileMenu = {
-  name: "John Doe",
-  email: "john@gmail.com",
+  name: "",
+  email: "",
   /** Falls back to initials derived from `name` when omitted. */
-  initials: "JD",
+  initials: "",
   logoutLabel: "Logout",
   logoutHref: "/auth/logout",
 };
+
+export interface ApiProfileResponse {
+  isValidUser: boolean;
+  employeeDetails: { employeeNumber: string } | null;
+  pensionerDetails: unknown | null;
+  userDetails: {
+    idNumber: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    userRoles: string[];
+    coidId: number;
+    funeralId: number | null;
+    groupRiskId: number | null;
+    prmaId: number | null;
+  };
+}
+
+export interface ProfileSummary {
+  name: string;
+  email: string;
+}
+
+const checkValueExists = (value: string | undefined | null): string =>
+  value && value.trim() ? value : "N/A";
+
+export function mapProfile(response: ApiProfileResponse): ProfileSummary {
+  const { firstName, lastName, email } = response.userDetails;
+  const name = [firstName, lastName].filter(Boolean).join(" ").trim();
+
+  return {
+    name: checkValueExists(name),
+    email: checkValueExists(email),
+  };
+}
 
 export const homeContent = {
   brand: "Individual Portal",
   navLinks: individualNavItems,
   profileLabel: "My Profile",
   greeting: "Good Morning,",
-  memberName: "John Doe",
+  memberName: "",
   // Employer/scheme line shown under the member name on the dashboard.
-  organisation: "Impala minerals pvt limited",
+  organisation: "",
   welcomeMessage:
     "Welcome to your individual portal, you can manage your insurance, claims, and documents — all in one place.",
   quickActionsLabel: "Quick Actions",

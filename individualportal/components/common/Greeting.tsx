@@ -1,9 +1,48 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
-import { homeContent } from "@/content/site";
+import {
+  homeContent,
+  mapProfile,
+  type ApiProfileResponse,
+} from "@/content/site";
 import { BuildingIcon } from "@/components/common/icons";
+import apiService, { API_ROOT_BASE_URL } from "@/lib/api/apiService";
+import { getEmployeeCoidId } from "@/lib/auth/employeeClaims";
 
 export default function Greeting() {
+  const [memberName, setMemberName] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProfile() {
+      try {
+        const { token, coidId } = await getEmployeeCoidId();
+        if (!coidId) return;
+
+        const response = await apiService.get<ApiProfileResponse>(
+          `${API_ROOT_BASE_URL}/profile/individual/${coidId}`,
+          { token },
+        );
+
+        if (!cancelled) setMemberName(mapProfile(response).name);
+      } catch (error) {
+        console.error("Failed to load profile:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <section className="relative overflow-x-clip pt-[72px]">
       {/* Decorative wave — mirrors Figma node 2831:1730 */}
@@ -18,7 +57,7 @@ export default function Greeting() {
                        [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_6%)]"
           >
             <Image
-              src="/background-wave.png"
+              src="/individual/background-wave.png"
               alt=""
               fill
               quality={100}
@@ -35,7 +74,14 @@ export default function Greeting() {
         </p>
 
         <h1 className="mt-5 max-w-[465px] text-[clamp(2.2rem,4.5vw,3rem)] font-normal leading-[58px] text-[#13537B]">
-          {homeContent.memberName}
+          {isLoading ? (
+            <span
+              aria-hidden
+              className="shimmer inline-block h-[0.7em] w-56 max-w-full rounded-full align-middle sm:w-72"
+            />
+          ) : (
+            (memberName ?? homeContent.memberName)
+          )}
         </h1>
 
         {/* Employer line — Figma frame 2147217702 (24px icon, 10px gap). */}
@@ -50,7 +96,6 @@ export default function Greeting() {
           {homeContent.welcomeMessage}
         </p>
       </div>
-
     </section>
   );
 }

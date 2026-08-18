@@ -2,107 +2,20 @@ export const policiesContent = {
   heading: "Policy Details",
   tabs: ["Active Policies", "Inactive Policies"] as const,
   emptyState: "There are no policies to display in this category.",
-  policies: [
-    {
-      title: "Compensation of the Injury on Duty",
-      policyNumber: "POL-2024-001",
-      compliant: true,
-      productOption: "IOD COID Policy (EMP)",
-      annualPremium: "R 2,500,000",
-      premium: "R 4,250/mo",
-      inceptionDate: "01 Jan 2024",
-      expiryDate: "31 Dec 2024",
-      actions: ["Remittance", "Policy Schedule", "Request for Letter of Good Standing"],
-      status: "active" as const,
-    },
-    {
-      title: "Value Added Products",
-      policyNumber: "POL-2024-001",
-      compliant: true,
-      productOption: "IOD Augmentation Only",
-      annualPremium: "R 2,500,000",
-      premium: "R 4,250/mo",
-      inceptionDate: "01 Jan 2024",
-      expiryDate: "31 Dec 2024",
-      actions: ["Remittance", "Policy Schedule"],
-      status: "active" as const,
-    },
-    {
-      title: "Non Statutory Products",
-      policyNumber: "POL-2024-001",
-      compliant: true,
-      productOption: "Riot And Strike Personal Injury",
-      annualPremium: "R 2,500,000",
-      premium: "R 4,250/mo",
-      inceptionDate: "01 Jan 2024",
-      expiryDate: "31 Dec 2024",
-      actions: ["Remittance", "Policy Schedule"],
-      status: "active" as const,
-    },
-    {
-      title: "Non Statutory Products",
-      policyNumber: "POL-2024-001",
-      compliant: true,
-      productOption: "Riot And Strike Personal Injury",
-      annualPremium: "R 2,500,000",
-      premium: "R 4,250/mo",
-      inceptionDate: "01 Jan 2024",
-      expiryDate: "31 Dec 2024",
-      actions: ["Remittance", "Policy Schedule"],
-      status: "active" as const,
-    },
-    {
-      title: "Compensation of the Injury on Duty",
-      policyNumber: "POL-2023-001",
-      compliant: true,
-      productOption: "IOD COID Policy (EMP)",
-      annualPremium: "R 2,500,000",
-      premium: "R 4,250/mo",
-      inceptionDate: "01 Jan 2023",
-      expiryDate: "31 Dec 2023",
-      actions: ["Remittance", "Policy Schedule", "Request for Letter of Good Standing"],
-      status: "inactive" as const,
-    },
-    {
-      title: "Value Added Products",
-      policyNumber: "POL-2023-001",
-      compliant: true,
-      productOption: "IOD Augmentation Only",
-      annualPremium: "R 2,500,000",
-      premium: "R 4,250/mo",
-      inceptionDate: "01 Jan 2023",
-      expiryDate: "31 Dec 2023",
-      actions: ["Remittance", "Policy Schedule"],
-      status: "inactive" as const,
-    },
-    {
-      title: "Non Statutory Products",
-      policyNumber: "POL-2023-001",
-      compliant: true,
-      productOption: "Riot And Strike Personal Injury",
-      annualPremium: "R 2,500,000",
-      premium: "R 4,250/mo",
-      inceptionDate: "01 Jan 2023",
-      expiryDate: "31 Dec 2023",
-      actions: ["Remittance", "Policy Schedule"],
-      status: "inactive" as const,
-    },
-    {
-      title: "Non Statutory Products",
-      policyNumber: "POL-2023-001",
-      compliant: true,
-      productOption: "Riot And Strike Personal Injury",
-      annualPremium: "R 2,500,000",
-      premium: "R 4,250/mo",
-      inceptionDate: "01 Jan 2023",
-      expiryDate: "31 Dec 2023",
-      actions: ["Remittance", "Policy Schedule"],
-      status: "inactive" as const,
-    },
-  ],
 };
 
-export type Policy = (typeof policiesContent.policies)[number];
+export interface Policy {
+  title: string;
+  policyNumber: string;
+  compliant: boolean;
+  productOption: string;
+  annualPremium: string;
+  premium: string;
+  inceptionDate: string;
+  expiryDate: string;
+  actions: string[];
+  status: "active" | "inactive";
+}
 
 export interface ApiPolicy {
   policyId: number;
@@ -123,7 +36,27 @@ export interface ApiRemittanceDocument {
   base64Content: string;
 }
 
-const DEFAULT_ACTIONS = ["Remittance", "Policy Schedule"];
+export interface ApiLetterOfGoodStanding {
+  letterOfGoodStandingId: number;
+  rolePlayerId: number;
+  issueDate: string;
+  expiryDate: string;
+  certificateNo: string;
+  memberName: string;
+  memberEmail: string;
+  policyId: number;
+  attachments: {
+    fileName: string;
+    fileType: string;
+    content: string;
+  };
+}
+
+const DEFAULT_ACTIONS = [
+  "Remittance",
+  "Policy Schedule",
+  "Letter of Good Standing",
+];
 
 export function mapApiPolicy(policy: ApiPolicy): Policy {
   return {

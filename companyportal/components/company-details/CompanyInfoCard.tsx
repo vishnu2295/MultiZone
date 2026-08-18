@@ -7,8 +7,43 @@ import {
   type ApiEmployerDetails,
   type CompanyInfo,
 } from "@/content/companyDetails";
+import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+
+function CompanyInfoCardSkeleton() {
+  return (
+    <aside className="w-full shrink-0 rounded-xl bg-white p-4 shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px]">
+      <Skeleton className="h-4 w-32" />
+
+      <div className="relative mt-4 overflow-hidden rounded-lg bg-[linear-gradient(135deg,#07C1E9_0%,#008A99_100%)] p-4 shadow-[0px_4px_28.9px_rgba(0,0,0,0.25)]">
+        <div className="pointer-events-none absolute -right-10 -top-16 h-64 w-64 rounded-full bg-white/10" />
+
+        <div className="relative flex items-center justify-between">
+          <span className="h-11 w-[47px] animate-pulse rounded-lg bg-white/25" />
+          <span className="h-6 w-16 animate-pulse rounded-full bg-white/25" />
+        </div>
+
+        <div className="relative mt-4 flex flex-col gap-2">
+          <span className="h-4 w-32 animate-pulse rounded-full bg-white/30" />
+          <span className="h-3.5 w-40 animate-pulse rounded-full bg-white/25" />
+        </div>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-4">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <div key={index} className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-4">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+            {index < 7 && <span className="h-px w-full bg-black/5" aria-hidden />}
+          </div>
+        ))}
+      </div>
+    </aside>
+  );
+}
 
 function buildInfoRows(company: CompanyInfo): Array<{ label: string; value: string }> {
   return [
@@ -56,10 +91,14 @@ export default function CompanyInfoCard() {
     };
   }, []);
 
-  if (isLoading || !company) {
+  if (isLoading) {
+    return <CompanyInfoCardSkeleton />;
+  }
+
+  if (!company) {
     return (
       <aside className="w-full shrink-0 rounded-xl bg-white p-4 text-center text-[13.5px] font-normal text-[#64748B] shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px]">
-        {isLoading ? "Loading company details..." : "No company details found."}
+        No company details found.
       </aside>
     );
   }

@@ -14,14 +14,75 @@ export const siteContent = {
   loginButton: "Login / Register",
 };
 
+/** Details shown in the "My Profile" dropdown in the navbar. */
+export const profileMenu = {
+  name: "John Doe",
+  email: "john@gmail.com",
+  /** Falls back to initials derived from `name` when omitted. */
+  initials: "JD",
+  switchProfileLabel: "Switch Profile",
+  logoutLabel: "Logout",
+  logoutHref: "/auth/logout",
+  /** Gateway-relative link to the individual portal zone (see memberportal's rewrites). */
+  individualProfileHref: "/individual",
+};
+
+export interface ApiOrganizationProfileResponse {
+  isValidUser: boolean;
+  hcpDetails: unknown[];
+  employerDetails: Array<{
+    memberNumber: string;
+    status: string;
+    memberName: string;
+    joinDate: string;
+    clientType: string;
+    medicalBenefitWaitingPeriod: string;
+    rolePlayerId: number;
+  }>;
+  userDetails: {
+    idNumber: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    userRoles: string[];
+    coidId: number;
+    funeralId: number | null;
+    groupRiskId: number | null;
+    prmaId: number | null;
+  };
+}
+
+export interface OrganizationProfileSummary {
+  name: string;
+  email: string;
+  memberName: string | null;
+}
+
+const checkValueExists = (value: string | undefined | null): string =>
+  value && value.trim() ? value : "N/A";
+
+export function mapOrganizationProfile(
+  response: ApiOrganizationProfileResponse,
+): OrganizationProfileSummary {
+  const { firstName, lastName, email } = response.userDetails;
+  const name = [firstName, lastName].filter(Boolean).join(" ").trim();
+
+  return {
+    name: checkValueExists(name),
+    email: checkValueExists(email),
+    memberName: response.employerDetails[0]?.memberName ?? null,
+  };
+}
+
 export const homeContent = {
   brand: "Member Portal",
   navLinks: [
-    { label: "My Policy", href: "#" },
-    { label: "Report an Incident", href: "#" },
-    { label: "Claims", href: "#" },
-    { label: "Customer Care", href: "#" },
-    { label: "Faq's", href: "#" },
+    // { label: "My Policy", href: "#" },
+    // { label: "Report an Incident", href: "#" },
+    { label: "Claims", href: "/company/claims" },
+    // { label: "Customer Care", href: "#" },
+    // { label: "Faq's", href: "#" },
   ],
   profileLabel: "My Profile",
   greeting: "Good Morning,",

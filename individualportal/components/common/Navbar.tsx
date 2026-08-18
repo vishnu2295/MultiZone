@@ -43,7 +43,7 @@ export default function Navbar({
   navItems = homeContent.navLinks,
   profileLabel = homeContent.profileLabel,
   onProfileClick,
-  logoSrc = "/brand/rma-logo.svg",
+  logoSrc = "/individual/brand/rma-logo.svg",
   fixed = true,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -88,9 +88,16 @@ export default function Navbar({
       } h-[72px] w-full bg-[#11252D]`}
     >
       <div className="mx-auto flex h-full w-full max-w-[1440px] items-center px-4 sm:px-6 lg:px-14">
-        <Link href="/" aria-label="RMA home" className="flex shrink-0 items-center">
+        <Link
+          href="/"
+          aria-label="RMA home"
+          className="flex shrink-0 items-center"
+        >
           <Image src={logoSrc} alt="RMA" width={95} height={29} priority />
-          <span className="ml-3 hidden h-[19px] w-px bg-[#F3F7FA]/40 sm:block" aria-hidden />
+          <span
+            className="ml-3 hidden h-[19px] w-px bg-[#F3F7FA]/40 sm:block"
+            aria-hidden
+          />
           <span className="ml-[15px] hidden text-[16px] font-bold leading-[19px] text-white sm:block">
             {portalName}
           </span>
