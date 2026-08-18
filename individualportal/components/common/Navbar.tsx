@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { homeContent } from "@/content/site";
 import { ChevronDownIcon, CloseIcon, MenuIcon } from "@/components/common/icons";
+import ProfileMenuCard from "@/components/common/ProfileMenuCard";
 
 export type NavItem = { label: string; href: string };
 
@@ -15,7 +16,10 @@ export interface NavbarProps {
   navItems?: NavItem[];
   /** Label for the trailing profile dropdown. */
   profileLabel?: string;
-  /** Optional click handler for the profile dropdown (desktop + mobile). */
+  /**
+   * Optional extra handler fired when the profile dropdown is toggled
+   * (the dropdown itself opens regardless).
+   */
   onProfileClick?: () => void;
   /** Override the brand logo image. */
   logoSrc?: string;
@@ -43,12 +47,45 @@ export default function Navbar({
   fixed = true,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const mobileProfileRef = useRef<HTMLDivElement>(null);
+
+  // Close the desktop dropdown on outside click or Escape.
+  useEffect(() => {
+    if (!isProfileOpen) return;
+
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      const insideMenu =
+        profileRef.current?.contains(target) ||
+        mobileProfileRef.current?.contains(target);
+      if (!insideMenu) setIsProfileOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsProfileOpen(false);
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isProfileOpen]);
+
+  const toggleProfile = () => {
+    setIsProfileOpen((open) => !open);
+    onProfileClick?.();
+  };
 
   return (
     <header
       className={`${
         fixed ? "fixed left-0 top-0 z-30" : "relative z-10"
-      } h-[72px] w-full overflow-hidden bg-[#11252D]`}
+      } h-[72px] w-full bg-[#11252D]`}
     >
       <div className="mx-auto flex h-full w-full max-w-[1440px] items-center px-4 sm:px-6 lg:px-14">
         <Link href="/" aria-label="RMA home" className="flex shrink-0 items-center">
@@ -70,14 +107,29 @@ export default function Navbar({
             </Link>
           ))}
 
-          <button
-            type="button"
-            onClick={onProfileClick}
-            className="flex items-center gap-1 whitespace-nowrap text-[14px] font-normal leading-[17px] text-[#F3F7FA] opacity-90 transition hover:opacity-100"
-          >
-            {profileLabel}
-            <ChevronDownIcon className="h-5 w-5" />
-          </button>
+          <div ref={profileRef} className="relative">
+            <button
+              type="button"
+              onClick={toggleProfile}
+              aria-haspopup="menu"
+              aria-expanded={isProfileOpen}
+              className="flex items-center gap-1 whitespace-nowrap text-[14px] font-normal leading-[17px] text-[#F3F7FA] opacity-90 transition hover:opacity-100"
+            >
+              {profileLabel}
+              <ChevronDownIcon
+                className={`h-5 w-5 transition-transform ${
+                  isProfileOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {isProfileOpen && (
+              <ProfileMenuCard
+                onLogout={() => setIsProfileOpen(false)}
+                className="absolute right-0 top-[calc(100%+18px)] z-50 w-[320px] max-w-[calc(100vw-2rem)]"
+              />
+            )}
+          </div>
         </nav>
 
         <button
@@ -95,7 +147,10 @@ export default function Navbar({
         className={`fixed inset-0 z-40 bg-black/50 transition-opacity lg:hidden ${
           isMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
-        onClick={() => setIsMenuOpen(false)}
+        onClick={() => {
+          setIsMenuOpen(false);
+          setIsProfileOpen(false);
+        }}
         aria-hidden={!isMenuOpen}
       />
 
@@ -109,7 +164,10 @@ export default function Navbar({
           <button
             type="button"
             aria-label="Close navigation menu"
-            onClick={() => setIsMenuOpen(false)}
+            onClick={() => {
+              setIsMenuOpen(false);
+              setIsProfileOpen(false);
+            }}
             className="flex h-10 w-10 items-center justify-center text-white"
           >
             <CloseIcon className="h-6 w-6" />
@@ -130,14 +188,31 @@ export default function Navbar({
 
           <span className="h-px w-full bg-white/10" aria-hidden />
 
-          <button
-            type="button"
-            onClick={onProfileClick}
-            className="flex items-center gap-1 text-[15px] font-normal text-white/90 transition hover:text-white"
-          >
-            {profileLabel}
-            <ChevronDownIcon className="h-5 w-5" />
-          </button>
+          <div ref={mobileProfileRef} className="flex flex-col gap-4">
+            <button
+              type="button"
+              onClick={toggleProfile}
+              aria-expanded={isProfileOpen}
+              className="flex items-center gap-1 text-[15px] font-normal text-white/90 transition hover:text-white"
+            >
+              {profileLabel}
+              <ChevronDownIcon
+                className={`h-5 w-5 transition-transform ${
+                  isProfileOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {isProfileOpen && (
+              <ProfileMenuCard
+                onLogout={() => {
+                  setIsProfileOpen(false);
+                  setIsMenuOpen(false);
+                }}
+                className="w-full"
+              />
+            )}
+          </div>
         </nav>
       </aside>
     </header>
