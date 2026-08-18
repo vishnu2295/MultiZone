@@ -62,8 +62,8 @@ export default function PortalCard({
   // the scale from resampling the text on every frame.
   const shell = `group relative flex h-[267px] w-full flex-col rounded-xl bg-white px-5 pb-5 pt-[18px] text-left transition-all duration-200 ease-out will-change-transform hover:-translate-y-1 hover:scale-[1.03] ${
     elevated
-      ? "shadow-[13px_20px_28.05px_0px_#122E4D24]"
-      : "shadow-[2.805px_2.805px_14.023px_0px_#122E4D0D] hover:shadow-[13px_20px_28.05px_0px_#122E4D24]"
+      ? "shadow-[13px_20px_28.05px_0px_#122E4D24,2.805px_2.805px_28.05px_0px_#122E4D0D]"
+      : "shadow-[2.805px_2.805px_28.05px_0px_#122E4D0D] hover:shadow-[13px_20px_28.05px_0px_#122E4D24,2.805px_2.805px_28.05px_0px_#122E4D0D]"
   }`;
 
   const bubble =
