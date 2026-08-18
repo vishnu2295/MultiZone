@@ -1,18 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useUser } from "@auth0/nextjs-auth0";
 import { homeContent } from "@/content/site";
 import { ChevronDownIcon, CloseIcon, MenuIcon } from "@/components/home/icons";
+import ProfileMenuCard from "@/components/home/ProfileMenuCard";
 
 export default function HomeNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const mobileProfileRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
+  const pathname = usePathname();
 
-  const authHref = user ? "/auth/logout" : "/auth/login";
-  const authLabel = user ? "Logout" : homeContent.profileLabel;
+  // useUser() is backed by SWR, which revalidates /auth/profile in the
+  // background (e.g. on window refocus). A transient revalidation error
+  // makes the hook return `user: null` even after a successful load, which
+  // would otherwise flicker the profile card back to a plain "Logout" link.
+  // Once we've seen a real user, keep treating the session as authenticated
+  // client-side — an actual logout is a full page navigation anyway.
+  const [hasAuthenticated, setHasAuthenticated] = useState(false);
+  useEffect(() => {
+    if (user) setHasAuthenticated(true);
+  }, [user]);
+  const isAuthenticated = Boolean(user) || hasAuthenticated;
+
+  const authHref = isAuthenticated ? "/auth/logout" : "/auth/login";
+  const authLabel = isAuthenticated ? "Logout" : homeContent.profileLabel;
+  // The full "My Profile" card (with the Switch Profile selector) only
+  // shows on the /company dashboard; other pages keep the plain link.
+  const showProfileCard = isAuthenticated && pathname === "/company";
+
+  // Close the profile dropdown on outside click or Escape.
+  useEffect(() => {
+    if (!isProfileOpen) return;
+
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      const insideMenu =
+        profileRef.current?.contains(target) ||
+        mobileProfileRef.current?.contains(target);
+      if (!insideMenu) setIsProfileOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsProfileOpen(false);
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isProfileOpen]);
 
   return (
     <header className="fixed left-0 top-0 z-30 h-[72px] w-full bg-[#11252D]">
@@ -49,13 +95,39 @@ export default function HomeNavbar() {
             </Link>
           ))}
 
-          <Link
-            href={authHref}
-            className="flex items-center gap-1 text-[14px] font-normal leading-[17px] text-[#F3F7FA] opacity-90 transition hover:opacity-100"
-          >
-            {authLabel}
-            <ChevronDownIcon className="h-4 w-4" />
-          </Link>
+          {showProfileCard ? (
+            <div ref={profileRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setIsProfileOpen((open) => !open)}
+                aria-haspopup="menu"
+                aria-expanded={isProfileOpen}
+                className="flex items-center gap-1 text-[14px] font-normal leading-[17px] text-[#F3F7FA] opacity-90 transition hover:opacity-100"
+              >
+                {homeContent.profileLabel}
+                <ChevronDownIcon
+                  className={`h-4 w-4 transition-transform ${
+                    isProfileOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {isProfileOpen && (
+                <ProfileMenuCard
+                  onLogout={() => setIsProfileOpen(false)}
+                  className="absolute right-0 top-[calc(100%+18px)] z-50 w-[320px] max-w-[calc(100vw-2rem)]"
+                />
+              )}
+            </div>
+          ) : (
+            <Link
+              href={authHref}
+              className="flex items-center gap-1 text-[14px] font-normal leading-[17px] text-[#F3F7FA] opacity-90 transition hover:opacity-100"
+            >
+              {authLabel}
+              {!isAuthenticated && <ChevronDownIcon className="h-4 w-4" />}
+            </Link>
+          )}
         </nav>
 
         <button
@@ -73,7 +145,10 @@ export default function HomeNavbar() {
         className={`fixed inset-0 z-40 bg-black/50 transition-opacity lg:hidden ${
           isMenuOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
-        onClick={() => setIsMenuOpen(false)}
+        onClick={() => {
+          setIsMenuOpen(false);
+          setIsProfileOpen(false);
+        }}
         aria-hidden={!isMenuOpen}
       />
 
@@ -87,7 +162,10 @@ export default function HomeNavbar() {
           <button
             type="button"
             aria-label="Close navigation menu"
-            onClick={() => setIsMenuOpen(false)}
+            onClick={() => {
+              setIsMenuOpen(false);
+              setIsProfileOpen(false);
+            }}
             className="flex h-10 w-10 items-center justify-center text-white"
           >
             <CloseIcon className="h-6 w-6" />
@@ -108,14 +186,42 @@ export default function HomeNavbar() {
 
           <span className="h-px w-full bg-white/10" aria-hidden />
 
-          <Link
-            href={authHref}
-            onClick={() => setIsMenuOpen(false)}
-            className="flex items-center gap-1 text-[15px] font-normal text-white/90 transition hover:text-white"
-          >
-            {authLabel}
-            <ChevronDownIcon className="h-4 w-4" />
-          </Link>
+          {showProfileCard ? (
+            <div ref={mobileProfileRef} className="flex flex-col gap-4">
+              <button
+                type="button"
+                onClick={() => setIsProfileOpen((open) => !open)}
+                aria-expanded={isProfileOpen}
+                className="flex items-center gap-1 text-[15px] font-normal text-white/90 transition hover:text-white"
+              >
+                {homeContent.profileLabel}
+                <ChevronDownIcon
+                  className={`h-4 w-4 transition-transform ${
+                    isProfileOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {isProfileOpen && (
+                <ProfileMenuCard
+                  onLogout={() => {
+                    setIsProfileOpen(false);
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full"
+                />
+              )}
+            </div>
+          ) : (
+            <Link
+              href={authHref}
+              onClick={() => setIsMenuOpen(false)}
+              className="flex items-center gap-1 text-[15px] font-normal text-white/90 transition hover:text-white"
+            >
+              {authLabel}
+              {!isAuthenticated && <ChevronDownIcon className="h-4 w-4" />}
+            </Link>
+          )}
         </nav>
       </aside>
     </header>

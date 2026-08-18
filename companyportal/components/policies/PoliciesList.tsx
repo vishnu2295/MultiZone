@@ -10,11 +10,33 @@ import {
 import type { ApiPagedResponse } from "@/content/companyDetails";
 import PolicyCard from "@/components/policies/PolicyCard";
 import Pagination from "@/components/ui/Pagination";
+import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
 import { computePageCount } from "@/lib/utils/pagination";
 
 type Tab = (typeof policiesContent.tabs)[number];
+
+function PolicyCardSkeleton() {
+  return (
+    <div className="w-full rounded-2xl bg-white p-4 shadow-[0px_2px_16px_rgba(0,0,0,0.07)] sm:p-6">
+      <Skeleton className="h-5 w-48" />
+      <Skeleton className="mt-2 h-3 w-32" />
+      <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3 lg:grid-cols-5">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={index} className="flex flex-col gap-1.5">
+            <Skeleton className="h-2.5 w-16" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 flex gap-2 border-t border-black/5 pt-5">
+        <Skeleton className="h-9 w-28" />
+        <Skeleton className="h-9 w-28" />
+      </div>
+    </div>
+  );
+}
 
 const tabStatus: Record<Tab, "active" | "inactive"> = {
   "Active Policies": "active",
@@ -104,9 +126,9 @@ export default function PoliciesList() {
 
       <div className="mt-6 flex flex-col gap-5">
         {isLoading ? (
-          <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(0,0,0,0.07)]">
-            Loading policies...
-          </div>
+          Array.from({ length: 3 }).map((_, index) => (
+            <PolicyCardSkeleton key={index} />
+          ))
         ) : policies.length > 0 ? (
           policies.map((policy, index) => (
             <PolicyCard key={`${policy.title}-${index}`} policy={policy} />

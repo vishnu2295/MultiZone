@@ -11,9 +11,25 @@ import {
 import { DocumentIcon, DownloadIcon } from "@/components/home/icons";
 import UploadDocumentModal from "@/components/company-details/UploadDocumentModal";
 import Pagination from "@/components/ui/Pagination";
+import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
 import { computePageCount } from "@/lib/utils/pagination";
+
+function DocumentRowSkeleton() {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-2xl bg-white p-4 shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-11 w-11 shrink-0 rounded-lg" />
+        <div className="flex flex-col gap-1.5">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-44" />
+        </div>
+      </div>
+      <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
+    </div>
+  );
+}
 
 const PAGE_SIZE = 10;
 
@@ -73,9 +89,9 @@ export default function DocumentsPanel() {
 
       <div className="mt-6 flex flex-col gap-4">
         {isLoading ? (
-          <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
-            Loading documents...
-          </div>
+          Array.from({ length: 3 }).map((_, index) => (
+            <DocumentRowSkeleton key={index} />
+          ))
         ) : documents.length === 0 ? (
           <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
             There are no documents to display.

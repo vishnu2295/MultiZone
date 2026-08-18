@@ -32,10 +32,10 @@ export default function IndividualBackground({
   return (
     <div className="relative min-h-screen overflow-x-clip bg-[#F3F7FA]">
       {/* Decorative wave — mirrors Figma node 2831:1204 */}
-     <div
-  aria-hidden
-  className="pointer-events-none absolute left-[79.7vw] top-[4.02vw] z-0 -translate-x-1/2 -translate-y-1/2"
->
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-[79.7vw] top-[4.02vw] z-0 -translate-x-1/2 -translate-y-1/2"
+      >
         <div className="w-[78.23vw] rotate-[3.74deg]">
           <div
             className="relative aspect-[5425/1630] w-full
@@ -43,7 +43,7 @@ export default function IndividualBackground({
                        [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_8%)]"
           >
             <Image
-              src="/background-wave.png"
+              src="/individual/background-wave.png"
               alt=""
               fill
               quality={100}

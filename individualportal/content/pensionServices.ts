@@ -1,6 +1,8 @@
 // Mock data for the "Pension Services" screen in the individual flow.
 // Replace with the real API responses once the endpoints are available.
 
+import { API_ROOT_BASE_URL } from "@/lib/api/apiService";
+
 export type PensionServiceAction = "link" | "download" | "modal";
 
 export interface PensionServiceCard {
@@ -22,6 +24,27 @@ export const pensionServicesContent = {
   backHref: "/individual",
   title: "Pension Services",
 };
+
+// commutationDetails/confirmationLetter/childPensionExtensionDetails live
+// under /pensioner, not /coid like the rest of the mobileApp API.
+export const PENSIONER_API_BASE_URL = API_ROOT_BASE_URL;
+
+export interface ApiCommutationDetails {
+  pensionNumber: string;
+  requestReferenceNumber: string;
+  requestedAmount: number;
+  status: string;
+  requestedDate: string;
+  approvedDate: string | null;
+  rejectionReason: string | null;
+}
+
+const checkValueExists = (value: string | undefined | null): string =>
+  value && value.trim() ? value : "N/A";
+
+export function mapCommutationStatus(details: ApiCommutationDetails): string {
+  return checkValueExists(details.status);
+}
 
 export const pensionServiceCards: PensionServiceCard[] = [
   {
@@ -52,49 +75,89 @@ export const pensionServiceCards: PensionServiceCard[] = [
   },
 ];
 
-export type ChildExtensionRequestStatus = "Accepted" | "Pending" | "Declined";
-
 export interface ChildExtensionField {
   label: string;
   value: string;
 }
 
-/**
- * Detail shown in the "Child Extension Request Status" dialog. Fields are
- * grouped so the dialog can render a rule between the demographics block and
- * the payment block, as in the design.
- */
-export const childExtensionRequest = {
+/** Static copy for the "Child Extension Request Status" dialog. */
+export const childExtensionModalContent = {
   title: "Child Extension Request Status",
-  status: "Accepted" as ChildExtensionRequestStatus,
   sectionTitle: "Demographics",
-  groups: [
-    [
-      { label: "Reference No", value: "24859734" },
-      { label: "Child Name", value: "John Doe" },
-      { label: "ID Type", value: "SA ID" },
-      { label: "ID/ Passport Number", value: "987538947523545" },
-      { label: "Date of Birth", value: "1972-06-28" },
-      { label: "Gender", value: "Male" },
-      { label: "Guardian Name", value: "Jane Doe" },
-      { label: "Relationship", value: "Mother" },
-      { label: "Effective Date", value: "12-04-2026" },
-    ],
-    [
-      { label: "Monthly Pension Amount", value: "R 3000.00" },
-      { label: "Payment Frequency", value: "Monthly" },
-      { label: "Nationality", value: "South African" },
-      { label: "Country", value: "South Africa" },
-    ],
-  ] as ChildExtensionField[][],
 };
 
+export interface ApiChildPensionExtensionDetails {
+  pensionCaseNumber: string;
+  childName: string;
+  dateOfBirth: string;
+  guardianName: string;
+  relationship: string;
+  pensionStatus: string;
+  effectiveDate: string;
+  monthlyPensionAmount: number;
+  paymentFrequency: string;
+}
+
+function formatShortDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "N/A";
+  return date.toLocaleDateString("en-ZA", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/**
+ * Maps the childPensionExtensionDetails response to the status pill plus the
+ * field groups shown in the dialog. Fields are grouped so the dialog can
+ * render a rule between the demographics block and the payment block, as in
+ * the design.
+ */
+export function mapChildPensionExtensionDetails(
+  details: ApiChildPensionExtensionDetails,
+): { status: string; groups: ChildExtensionField[][] } {
+  return {
+    status: checkValueExists(details.pensionStatus),
+    groups: [
+      [
+        {
+          label: "Reference No",
+          value: checkValueExists(details.pensionCaseNumber),
+        },
+        { label: "Child Name", value: checkValueExists(details.childName) },
+        { label: "Date of Birth", value: formatShortDate(details.dateOfBirth) },
+        {
+          label: "Guardian Name",
+          value: checkValueExists(details.guardianName),
+        },
+        { label: "Relationship", value: checkValueExists(details.relationship) },
+        {
+          label: "Effective Date",
+          value: formatShortDate(details.effectiveDate),
+        },
+      ],
+      [
+        {
+          label: "Monthly Pension Amount",
+          value: `R ${details.monthlyPensionAmount.toFixed(2)}`,
+        },
+        {
+          label: "Payment Frequency",
+          value: checkValueExists(details.paymentFrequency),
+        },
+      ],
+    ],
+  };
+}
+
 /** Tailwind classes for the pill next to the dialog title, per status. */
-export const childExtensionStatusStyle: Record<
-  ChildExtensionRequestStatus,
-  string
-> = {
+export const childExtensionStatusStyle: Record<string, string> = {
   Accepted: "bg-[#CDE8A0] text-[#11252D]",
+  Active: "bg-[#CDE8A0] text-[#11252D]",
   Pending: "bg-[#FBE6B4] text-[#11252D]",
   Declined: "bg-[#F6CFCB] text-[#11252D]",
+  Inactive: "bg-[#F6CFCB] text-[#11252D]",
 };
+
+export const childExtensionStatusFallbackStyle = "bg-[#EEF3F7] text-[#11252D]";

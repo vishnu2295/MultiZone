@@ -4,7 +4,7 @@ const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 /**
  * Root of the mobileApp API, one level above the configured `/coid` base.
- * Some endpoints (e.g. profile) live under their own top-level segment
+ * Some endpoints (pensioner, profile) live under their own top-level segment
  * instead of `/coid`.
  */
 export const API_ROOT_BASE_URL = DEFAULT_BASE_URL.replace(/\/coid\/?$/, "");

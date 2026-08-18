@@ -11,8 +11,24 @@ import EditAddressModal, {
   toApiAddressUpdateRequest,
   type EditableAddress,
 } from "@/components/company-details/EditAddressModal";
+import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+
+function AddressRowSkeleton() {
+  return (
+    <div className="flex flex-col gap-3 rounded-xl bg-white p-3 shadow-[0px_2px_16px_rgba(218,218,218,0.08)] sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3">
+        <Skeleton className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full" />
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+      </div>
+      <Skeleton className="h-9 w-20 shrink-0 rounded-md" />
+    </div>
+  );
+}
 
 export default function AddressPanel() {
   const [addresses, setAddresses] = useState<EditableAddress[]>([]);
@@ -50,8 +66,10 @@ export default function AddressPanel() {
 
   if (isLoading) {
     return (
-      <div className="rounded-xl bg-white p-3 text-center text-[13.5px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
-        Loading address...
+      <div className="flex flex-col gap-2.5">
+        {Array.from({ length: 2 }).map((_, index) => (
+          <AddressRowSkeleton key={index} />
+        ))}
       </div>
     );
   }

@@ -7,8 +7,39 @@ import {
   type CompanyBankingDetail,
 } from "@/content/companyDetails";
 import { BankIcon } from "@/components/home/icons";
+import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+
+function BankingCardSkeleton() {
+  return (
+    <div className="flex flex-col gap-6 rounded-xl bg-white px-3 py-3.5 shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-4 w-4 shrink-0 rounded-full" />
+        <Skeleton className="h-4 w-36" />
+      </div>
+
+      <div className="flex flex-col gap-6">
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="flex flex-col gap-1.5">
+              <Skeleton className="h-2.5 w-16" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <div key={index} className="flex flex-col gap-1.5">
+              <Skeleton className="h-2.5 w-16" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function DetailField({ label, value }: { label: string; value: string }) {
   return (
@@ -53,11 +84,7 @@ export default function BankingPanel() {
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="rounded-xl bg-white p-3 text-center text-[13.5px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
-        Loading banking details...
-      </div>
-    );
+    return <BankingCardSkeleton />;
   }
 
   return (
