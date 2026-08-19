@@ -5,6 +5,7 @@ import {
   companyDetailsContent,
   mapApiDocumentSets,
   type ApiDocumentSet,
+  type ApiInvoiceAttachment,
   type ApiPagedResponse,
   type CompanyDocument,
 } from "@/content/companyDetails";
@@ -14,6 +15,7 @@ import Pagination from "@/components/ui/Pagination";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { downloadBase64File } from "@/lib/utils/downloadFile";
 import { computePageCount } from "@/lib/utils/pagination";
 
 function DocumentRowSkeleton() {
@@ -40,6 +42,7 @@ export default function DocumentsPanel() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -71,6 +74,27 @@ export default function DocumentsPanel() {
       cancelled = true;
     };
   }, [page, reloadToken]);
+
+  async function handleDownload(documentId: string | undefined) {
+    if (!documentId) return;
+
+    setDownloadingId(documentId);
+    try {
+      const { token, coidId } = await getEmployerCoidId();
+      if (!coidId) return;
+
+      const response = await apiService.get<ApiInvoiceAttachment>(
+        `/employer/${coidId}/documents/${documentId}/download`,
+        { token },
+      );
+
+      downloadBase64File(response.fileName, response.fileType, response.content);
+    } catch (error) {
+      console.error("Failed to download document:", error);
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   return (
     <div>
@@ -124,7 +148,9 @@ export default function DocumentsPanel() {
             <button
               type="button"
               aria-label="Download document"
-              className="flex h-10 w-10 cursor-pointer shrink-0 items-center justify-center rounded-lg border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA]"
+              disabled={downloadingId === document.documentId}
+              onClick={() => handleDownload(document.documentId)}
+              className="flex h-10 w-10 cursor-pointer shrink-0 items-center justify-center rounded-lg border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <DownloadIcon className="h-4 w-4" />
             </button>

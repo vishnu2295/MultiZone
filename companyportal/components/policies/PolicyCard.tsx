@@ -10,6 +10,17 @@ import type {
 import apiService from "@/lib/api/apiService";
 import { getEmployerCoidId } from "@/lib/auth/employerClaims";
 import { downloadBase64File } from "@/lib/utils/downloadFile";
+import DownloadRemittanceModal, {
+  type RemittanceDownloadFilters,
+} from "@/components/policies/DownloadRemittanceModal";
+
+/** yyyy-mm-dd (from the date input) -> RFC 3339 date-time the API expects. */
+function toRfc3339(date: string, boundary: "start" | "end"): string {
+  if (!date) return "";
+  return boundary === "start"
+    ? `${date}T00:00:00.000Z`
+    : `${date}T23:59:59.999Z`;
+}
 
 const infoColumns = (
   policy: Policy,
@@ -22,23 +33,35 @@ const infoColumns = (
 ];
 
 export default function PolicyCard({ policy }: { policy: Policy }) {
-  const [downloadingAction, setDownloadingAction] = useState<string | null>(null);
+  const [downloadingAction, setDownloadingAction] = useState<string | null>(
+    null,
+  );
+  const [isRemittanceModalOpen, setIsRemittanceModalOpen] = useState(false);
 
-  async function handleRemittanceDownload() {
-    setDownloadingAction("Remittance");
+  async function handleRemittanceDownload(filters: RemittanceDownloadFilters) {
     try {
       const { token, coidId } = await getEmployerCoidId();
       if (!coidId) return;
 
-      const now = new Date().toISOString();
+      // paymentType isn't sent yet — the remittanceDocument endpoint doesn't
+      // accept it until that backend change ships.
       const response = await apiService.get<ApiRemittanceDocument[]>(
         `/employer/${coidId}/remittanceDocument`,
-        { token, params: { fromDate: now, toDate: now } },
+        {
+          token,
+          params: {
+            fromDate: filters.fromDate,
+            toDate: filters.toDate,
+            policyId: policy.policyId,
+          },
+        },
       );
 
       const remittance = response?.[0];
       if (!remittance?.base64Content) {
-        throw new Error(`Unexpected remittance document response: ${JSON.stringify(response)}`);
+        throw new Error(
+          `Unexpected remittance document response: ${JSON.stringify(response)}`,
+        );
       }
 
       downloadBase64File(
@@ -48,8 +71,7 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
       );
     } catch (error) {
       console.error("Failed to download remittance document:", error);
-    } finally {
-      setDownloadingAction(null);
+      throw error;
     }
   }
 
@@ -84,7 +106,7 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
   }
 
   const actionHandlers: Record<string, () => void> = {
-    Remittance: handleRemittanceDownload,
+    Remittance: () => setIsRemittanceModalOpen(true),
     "Letter of Good Standing": handleLetterOfGoodStandingDownload,
   };
 
@@ -94,10 +116,11 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
         <h3 className="text-[16px] font-extrabold leading-[24px] text-[#13537B] sm:text-[18px] sm:leading-[27px]">
           {policy.title}
         </h3>
-        {policy.compliant && (
+        {/* <pre>{JSON.stringify(policy, null, 2)}</pre> */}
+        {policy.productStatus && (
           <span className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF5] px-2.5 py-1 text-[11px] font-bold leading-4 text-[#14B86A]">
             <CheckCircleIcon className="h-2.5 w-2.5" />
-            Compliant
+            {policy.productStatus}
           </span>
         )}
       </div>
@@ -135,6 +158,12 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
           );
         })}
       </div>
+
+      <DownloadRemittanceModal
+        open={isRemittanceModalOpen}
+        onClose={() => setIsRemittanceModalOpen(false)}
+        onDownload={handleRemittanceDownload}
+      />
     </article>
   );
 }

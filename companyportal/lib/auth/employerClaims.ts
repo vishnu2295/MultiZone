@@ -53,7 +53,7 @@ export async function getRmaProfiles(): Promise<{
  * etc.) rather than an exact enum — adjust the keyword lists if real role
  * values turn out to differ.
  */
-function classifyRmaRole(role: string | undefined): "individual" | "organization" | "unknown" {
+export function classifyRmaRole(role: string | undefined): "individual" | "organization" | "unknown" {
   const value = (role ?? "").toLowerCase();
 
   if (

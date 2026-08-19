@@ -31,9 +31,15 @@ export default function HomeNavbar() {
 
   const authHref = isAuthenticated ? "/auth/logout" : "/auth/login";
   const authLabel = isAuthenticated ? "Logout" : homeContent.profileLabel;
-  // The full "My Profile" card (with the Switch Profile selector) only
-  // shows on the /company dashboard; other pages keep the plain link.
-  const showProfileCard = isAuthenticated && pathname === "/company";
+  // The full "My Profile" card (with the Switch Profile selector) shows
+  // across the whole /company zone, not just the dashboard root.
+  const showProfileCard = isAuthenticated && pathname?.startsWith("/company");
+  // Both portals are separate apps mounted at /company and /individual, so
+  // the logo should return to whichever zone the user is currently in
+  // rather than a shared "/" that neither app actually serves.
+  const logoHref = pathname?.startsWith("/individual")
+    ? "/individual"
+    : "/company";
 
   // Close the profile dropdown on outside click or Escape.
   useEffect(() => {
@@ -64,7 +70,7 @@ export default function HomeNavbar() {
     <header className="fixed left-0 top-0 z-30 h-[72px] w-full bg-[#11252D]">
       <div className="mx-auto flex h-full w-full max-w-[1440px] items-center px-4 sm:px-6 lg:px-14">
         <Link
-          href="/"
+          href={logoHref}
           aria-label="RMA home"
           className="flex shrink-0 items-center gap-[19px]"
         >
@@ -106,7 +112,7 @@ export default function HomeNavbar() {
               >
                 {homeContent.profileLabel}
                 <ChevronDownIcon
-                  className={`h-4 w-4 transition-transform ${
+                  className={`h-4 w-4 transition-transform cursor-pointer  ${
                     isProfileOpen ? "rotate-180" : ""
                   }`}
                 />

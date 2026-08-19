@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { Auth0Client } from "@auth0/nextjs-auth0/server";
+import { apiService } from "./api/apiService";
 
 const RMA_ROLES_CLAIM = "https://rma.com/claims/rma_roles";
+
+const REGISTRATION_URL =
+  "https://3kndb36n95.execute-api.eu-west-2.amazonaws.com/default/api/mobileApp/public/registration/register";
 
 // The roles claim is issued on the access token (audience-scoped), not the ID
 // token, so session.user won't have it. We just received this token straight
@@ -28,7 +32,26 @@ export const auth0 = new Auth0Client({
     if (error) {
       return NextResponse.redirect(`${baseUrl}/auth/login`);
     }
+
     const accessToken = session?.tokenSet.accessToken;
+    const refreshToken = session?.tokenSet.refreshToken;
+
+    if (accessToken && refreshToken) {
+      try {
+        await apiService.post(
+          REGISTRATION_URL,
+          { accessToken, refreshToken },
+          { skipAuth: true },
+        );
+      } catch (registrationError) {
+        console.error(
+          "Registration API call failed during login callback",
+          registrationError,
+        );
+        return NextResponse.redirect(`${baseUrl}/auth/login`);
+      }
+    }
+
     const claims = accessToken ? decodeAccessTokenClaims(accessToken) : {};
     const roles = (claims[RMA_ROLES_CLAIM] as string[] | undefined) ?? [];
     const returnTo = roles.includes("Organization")

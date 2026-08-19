@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { homeContent } from "@/content/site";
 import { ChevronDownIcon, CloseIcon, MenuIcon } from "@/components/common/icons";
 import ProfileMenuCard from "@/components/common/ProfileMenuCard";
@@ -50,6 +51,11 @@ export default function Navbar({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const mobileProfileRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  // Both portals are separate apps mounted at /company and /individual, so
+  // the logo should return to whichever zone the user is currently in
+  // rather than a shared "/" that neither app actually serves.
+  const logoHref = pathname?.startsWith("/company") ? "/company" : "/individual";
 
   // Close the desktop dropdown on outside click or Escape.
   useEffect(() => {
@@ -89,7 +95,7 @@ export default function Navbar({
     >
       <div className="mx-auto flex h-full w-full max-w-[1440px] items-center px-4 sm:px-6 lg:px-14">
         <Link
-          href="/"
+          href={logoHref}
           aria-label="RMA home"
           className="flex shrink-0 items-center"
         >

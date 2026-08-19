@@ -39,7 +39,7 @@ export type CompanyDocument = {
   name: string;
   documentType: string;
   date: string;
-  documentId?: string;
+  documentId: string;
 };
 
 export interface CompanyInfo {
