@@ -5,6 +5,7 @@ export const policiesContent = {
 };
 
 export interface Policy {
+  policyId: number;
   title: string;
   policyNumber: string;
   compliant: boolean;
@@ -14,6 +15,7 @@ export interface Policy {
   inceptionDate: string;
   expiryDate: string;
   actions: string[];
+  productStatus?: string;
   status: "active" | "inactive";
 }
 
@@ -28,6 +30,7 @@ export interface ApiPolicy {
   status: string;
   inceptionDate?: string;
   expiryDate?: string;
+  productStatus?: string;
 }
 
 export interface ApiRemittanceDocument {
@@ -60,6 +63,7 @@ const DEFAULT_ACTIONS = [
 
 export function mapApiPolicy(policy: ApiPolicy): Policy {
   return {
+    policyId: policy.policyId,
     title: policy.productName,
     policyNumber: policy.policyNumber,
     compliant: true,
@@ -72,6 +76,7 @@ export function mapApiPolicy(policy: ApiPolicy): Policy {
     expiryDate: policy?.expiryDate
       ? new Date(policy.expiryDate).toLocaleDateString("en-GB")
       : "-",
+    productStatus: policy.productStatus,
     actions: DEFAULT_ACTIONS,
     status: policy.status.toLowerCase() === "active" ? "active" : "inactive",
   };

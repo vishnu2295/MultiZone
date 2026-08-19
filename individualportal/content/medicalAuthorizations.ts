@@ -1,20 +1,34 @@
-// Mock data for the "Medical Authorizations" screen in the individual flow.
-// Replace with the real API response once the endpoint is available.
-
-export type MedicalAuthorizationStatus =
-  | "Pending"
-  | "Authorised"
-  | "Declined";
-
 export interface MedicalAuthorization {
-  id: string;
   title: string;
-  /** Pre-authorization number issued by the insurer. */
   preAuthNo: string;
   claimRefNo: string;
   eventDate: string;
   dateReported: string;
-  status: MedicalAuthorizationStatus;
+  status: string;
+}
+
+export interface ApiPreAuthorization {
+  preAuthId: number;
+  preAuthNumber: string;
+  claimId: number;
+  dateAuthorisedFrom: string;
+  dateAuthorisedTo: string;
+  dateAuthorised: string;
+  preAuthType: string;
+  preAuthStatus: string;
+  requestedAmount: number;
+  authorisedAmount: number;
+  claimReferenceNumber: string;
+  employeeName: string;
+  injury: string;
+}
+
+export interface ApiPreAuthorizationsResponse {
+  data: ApiPreAuthorization[];
+  rowCount: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
 }
 
 export const medicalAuthorizationsContent = {
@@ -26,32 +40,34 @@ export const medicalAuthorizationsContent = {
 };
 
 /** Tailwind text colour per status, used by the status column on each card. */
-export const medicalAuthorizationStatusColor: Record<
-  MedicalAuthorizationStatus,
-  string
-> = {
+export const medicalAuthorizationStatusColor: Record<string, string> = {
   Pending: "text-[#E0A527]",
-  Authorised: "text-[#3F9142]",
-  Declined: "text-[#C0392B]",
+  Approved: "text-[#3F9142]",
+  Rejected: "text-[#C0392B]",
 };
 
-export const medicalAuthorizations: MedicalAuthorization[] = [
-  {
-    id: "auth-1",
-    title: "Workplace Accident Claim",
-    preAuthNo: "CLM-2024-003",
-    claimRefNo: "CLM-2024-003",
-    eventDate: "Mar 10, 2024",
-    dateReported: "Jul 10, 2026",
-    status: "Pending",
-  },
-  {
-    id: "auth-2",
-    title: "Workplace Accident Claim",
-    preAuthNo: "CLM-2024-003",
-    claimRefNo: "CLM-2024-003",
-    eventDate: "Mar 10, 2024",
-    dateReported: "Jul 10, 2026",
-    status: "Authorised",
-  },
-];
+const checkValueExists = (value: string | undefined | null): string =>
+  value && value.trim() ? value : "N/A";
+
+function formatDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("en-ZA", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+export function mapApiPreAuthorization(
+  api: ApiPreAuthorization,
+): MedicalAuthorization {
+  return {
+    title: checkValueExists(api.injury),
+    preAuthNo: checkValueExists(api.preAuthNumber),
+    claimRefNo: checkValueExists(api.claimReferenceNumber),
+    eventDate: formatDate(api.dateAuthorisedFrom),
+    dateReported: formatDate(api.dateAuthorised),
+    status: checkValueExists(api.preAuthStatus),
+  };
+}

@@ -76,7 +76,7 @@ export function mapOrganizationProfile(
 }
 
 export const homeContent = {
-  brand: "Member Portal",
+  brand: "Company Portal",
   navLinks: [
     // { label: "My Policy", href: "#" },
     // { label: "Report an Incident", href: "#" },

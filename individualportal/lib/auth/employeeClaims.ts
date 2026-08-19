@@ -30,3 +30,34 @@ export async function getEmployeeCoidId(): Promise<{
 
   return { token, coidId: rmaIds?.[0]?.coidId };
 }
+
+/**
+ * Buckets an rma_ids role string into "individual" or "organization". The
+ * exact role values Auth0 issues aren't documented anywhere in this repo, so
+ * this matches on the terms both zones already use ("Employee"/"Employer"
+ * etc.) rather than an exact enum — adjust the keyword lists if real role
+ * values turn out to differ. Mirrors companyportal's employerClaims.ts.
+ */
+export function classifyRmaRole(role: string | undefined): "individual" | "organization" | "unknown" {
+  const value = (role ?? "").toLowerCase();
+
+  if (
+    value.includes("employer") ||
+    value.includes("organisation") ||
+    value.includes("organization") ||
+    value.includes("company")
+  ) {
+    return "organization";
+  }
+
+  if (
+    value.includes("employee") ||
+    value.includes("individual") ||
+    value.includes("pensioner") ||
+    value.includes("member")
+  ) {
+    return "individual";
+  }
+
+  return "unknown";
+}

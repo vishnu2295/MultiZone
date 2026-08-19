@@ -1,7 +1,7 @@
 export const siteContent = {
   navLinks: [
-    { label: "Customer Care", href: "#" },
-    { label: "Faq's", href: "#" },
+    // { label: "Customer Care", href: "#" },
+    // { label: "Faq's", href: "#" },
     { label: "Go to randmutual.co.za", href: "https://www.randmutual.co.za" },
   ],
   primaryCta: "Proceed to Login",
@@ -23,7 +23,7 @@ export const siteContent = {
 };
 
 export const homeContent = {
-  brand: "Member Portal",
+  brand: "Company Portal",
   navLinks: [
     { label: "My Policy", href: "#" },
     { label: "Report an Incident", href: "#" },
