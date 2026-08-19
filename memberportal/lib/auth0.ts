@@ -40,7 +40,7 @@ export const auth0 = new Auth0Client({
       try {
         await apiService.post(
           REGISTRATION_URL,
-          { accessToken, refreshToken },
+          { accessToken, refreshToken, SourceChannel: "ClientPortal" },
           { skipAuth: true },
         );
       } catch (registrationError) {
