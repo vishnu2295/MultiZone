@@ -33,8 +33,57 @@ export default function MyClaimsPage() {
           {claimsContent.heading}
         </h1>
 
-        <div className="relative z-10 mt-5">
-          <ClaimsList />
+        <div className="relative z-10 mt-5 flex flex-wrap items-center gap-2">
+          {myClaimsContent.tabs.map((tab, index) => (
+            <button
+              key={tab}
+              type="button"
+              className={
+                index === 0
+                  ? "rounded-md bg-[#F59E0B] cursor-pointer px-4 py-1.5 text-[12px] font-semibold leading-[18px] text-white shadow-[0px_4px_12px_rgba(10,102,255,0.25)]"
+                  : "rounded-md border border-black/8 bg-white cursor-pointer px-4 py-1.5 text-[12px] font-semibold leading-[18px] text-[#64748B]"
+              }
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative z-10 mt-6 flex flex-col gap-4">
+          {myClaimsContent.claims.map((claim) => (
+            <Link
+              key={claim.id}
+              href={`/company/claims/${claim.id}`}
+              className="block rounded-xl bg-white p-4 shadow-[0px_2px_16px_rgba(0,0,0,0.07)] transition hover:shadow-[0px_4px_24px_rgba(0,0,0,0.10)] sm:p-6"
+            >
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+                <div className="flex-1">
+                  <h2 className="text-[18px] font-extrabold leading-[27px] text-[#13537B]">
+                    {claim.title}
+                  </h2>
+                  <p className="mt-1 max-w-[760px] text-[12.5px] leading-[19px] text-[#64748B]">
+                    Claim Ref No : {claim.reference} · Event Date :{" "}
+                    {claim.eventDate} · Date Reported : {claim.reportedDate}
+                  </p>
+                  <p className="mt-2 text-[12px] leading-[18px] text-[#64748B]">
+                    <span aria-hidden className="mr-1">
+                      ◦
+                    </span>
+                    Employee : {claim.employee}
+                  </p>
+                </div>
+
+                <div className="flex shrink-0 flex-col items-start lg:items-end">
+                  <span className="text-[11px] font-medium leading-4 text-[#64748B]">
+                    Status
+                  </span>
+                  <span className="text-[16px] font-extrabold leading-6 text-[#F59E0B]">
+                    {claim.status}
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
     </main>

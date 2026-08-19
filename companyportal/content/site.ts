@@ -1,7 +1,7 @@
 export const siteContent = {
   navLinks: [
-    { label: "Customer Care", href: "#" },
-    { label: "Faq's", href: "#" },
+    // { label: "Customer Care", href: "#" },
+    // { label: "Faq's", href: "#" },
     { label: "Go to randmutual.co.za", href: "https://www.randmutual.co.za" },
   ],
   primaryCta: "Proceed to Login",
@@ -121,6 +121,30 @@ export const homeContent = {
       description: "All your queries are answered here.",
       href: "#",
       highlighted: false,
+    },
+  ],
+};
+
+export const myClaimsContent = {
+  tabs: ["Active Claims", "Past Claims"] as const,
+  claims: [
+    {
+      id: "CLM-2024-003",
+      title: "Workplace Accident Claim",
+      reference: "CLM-2024-003",
+      eventDate: "Mar 10, 2024",
+      reportedDate: "Jul 10, 2026",
+      employee: "John Andrew Doe (8212051392372)",
+      status: "Pending",
+    },
+    {
+      id: "CLM-2024-004",
+      title: "Workplace Accident Claim",
+      reference: "CLM-2024-004",
+      eventDate: "Mar 10, 2024",
+      reportedDate: "Jul 10, 2026",
+      employee: "John Andrew Doe (8212051392372)",
+      status: "Completed",
     },
   ],
 };
