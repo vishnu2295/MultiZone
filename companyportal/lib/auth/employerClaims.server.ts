@@ -1,5 +1,5 @@
 import { auth0 } from "@/lib/auth0";
-import { classifyRmaRole, decodeJwtPayload, type RmaId } from "./employerClaims";
+import { classifyRmaRole, decodeJwtPayload, findRmaId, type RmaId } from "./employerClaims";
 
 /**
  * Server-only counterpart to getEmployerCoidId(). Derives the employer coidId
@@ -12,11 +12,12 @@ export async function getEmployerCoidIdServer(): Promise<{
 }> {
   const { token } = await auth0.getAccessToken();
   const claims = decodeJwtPayload(token);
-  const rmaIds = claims[
-    process.env.NEXT_PUBLIC_AUTH0_IDENTIFIER as string
-  ] as RmaId[] | undefined;
+  const rmaIds =
+    (claims[process.env.NEXT_PUBLIC_AUTH0_IDENTIFIER as string] as
+      | RmaId[]
+      | undefined) ?? [];
 
-  return { token, coidId: rmaIds?.[0]?.coidId };
+  return { token, coidId: findRmaId(rmaIds, "organization")?.coidId };
 }
 
 /**

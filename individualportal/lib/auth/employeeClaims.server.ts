@@ -1,22 +1,23 @@
 import { auth0 } from "@/lib/auth0";
-import { classifyRmaRole, decodeJwtPayload, type RmaId } from "./employeeClaims";
+import { classifyRmaRole, decodeJwtPayload, findRmaId, type RmaId } from "./employeeClaims";
 
 /**
- * Server-only counterpart to getEmployerCoidId(). Derives the employer coidId
+ * Server-only counterpart to getEmployeeCoidId(). Derives the employee coidId
  * from the caller's own session token instead of trusting a client-supplied
  * value, for use in route handlers that write on the user's behalf.
  */
-export async function getEmployerCoidIdServer(): Promise<{
+export async function getEmployeeCoidIdServer(): Promise<{
   token: string;
   coidId: string | undefined;
 }> {
   const { token } = await auth0.getAccessToken();
   const claims = decodeJwtPayload(token);
-  const rmaIds = claims[process.env.NEXT_PUBLIC_AUTH0_IDENTIFIER as string] as
-    | RmaId[]
-    | undefined;
+  const rmaIds =
+    (claims[process.env.NEXT_PUBLIC_AUTH0_IDENTIFIER as string] as
+      | RmaId[]
+      | undefined) ?? [];
 
-  return { token, coidId: rmaIds?.[0]?.coidId };
+  return { token, coidId: findRmaId(rmaIds, "individual")?.coidId };
 }
 
 /**
