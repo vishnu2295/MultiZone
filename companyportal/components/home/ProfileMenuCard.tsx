@@ -11,6 +11,7 @@ import {
 import { ChevronDownIcon, LogoutIcon } from "@/components/home/icons";
 import apiService, { API_ROOT_BASE_URL } from "@/lib/api/apiService";
 import {
+  findRmaId,
   getRmaProfiles,
   hasIndividualAndOrganizationRoles,
 } from "@/lib/auth/employerClaims";
@@ -58,7 +59,7 @@ export default function ProfileMenuCard({
           setCanSwitchProfile(hasIndividualAndOrganizationRoles(rmaIds));
         }
 
-        const coidId = rmaIds[0]?.coidId;
+        const coidId = findRmaId(rmaIds, "organization")?.coidId;
         if (!coidId) return;
 
         const response = await apiService.get<ApiOrganizationProfileResponse>(
@@ -159,14 +160,21 @@ export default function ProfileMenuCard({
                 >
                   {memberName}
                 </span>
-                <Link
+                {/*
+                  Plain anchor, not next/link: /individual is served by a
+                  separate Next.js app (individualportal) behind memberportal's
+                  rewrite proxy, not a route this app knows about, so a
+                  client-side soft navigation 404s. A full browser navigation
+                  is required to cross zones.
+                */}
+                <a
                   href={profileMenu.individualProfileHref}
                   role="option"
                   onClick={() => setIsSwitcherOpen(false)}
                   className="block px-4 py-2.5 text-[14px] font-medium text-[#13537B] transition hover:bg-[#F3F7FA]"
                 >
                   My Individual Profile
-                </Link>
+                </a>
               </div>
             )}
           </div>

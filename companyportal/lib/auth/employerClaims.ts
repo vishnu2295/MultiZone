@@ -17,6 +17,18 @@ export interface RmaId {
   role?: string;
 }
 
+/**
+ * Picks the rma_ids entry matching the given role bucket. A user with both an
+ * organization and an individual profile has both entries in the array in no
+ * guaranteed order, so callers must filter by role rather than assume [0].
+ */
+export function findRmaId(
+  rmaIds: RmaId[],
+  role: "individual" | "organization",
+): RmaId | undefined {
+  return rmaIds.find((entry) => classifyRmaRole(entry.role) === role);
+}
+
 /** Access token plus the employer coidId pulled from the rma_ids claim. */
 export async function getEmployerCoidId(): Promise<{
   token: string;
@@ -24,11 +36,12 @@ export async function getEmployerCoidId(): Promise<{
 }> {
   const token = await getAccessToken();
   const claims = decodeJwtPayload(token);
-  const rmaIds = claims[
-    process.env.NEXT_PUBLIC_AUTH0_IDENTIFIER as string
-  ] as RmaId[] | undefined;
+  const rmaIds =
+    (claims[process.env.NEXT_PUBLIC_AUTH0_IDENTIFIER as string] as
+      | RmaId[]
+      | undefined) ?? [];
 
-  return { token, coidId: rmaIds?.[0]?.coidId };
+  return { token, coidId: findRmaId(rmaIds, "organization")?.coidId };
 }
 
 /** Access token plus every rma_ids entry, for callers that need all of a user's linked profiles. */
