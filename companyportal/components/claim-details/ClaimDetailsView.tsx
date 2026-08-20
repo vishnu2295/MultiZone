@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ClaimInfoCard from "@/components/claim-details/ClaimInfoCard";
 import AuthorizationsPanel from "@/components/claim-details/panels/AuthorizationsPanel";
 import DocumentRow from "@/components/claim-details/panels/DocumentRow";
@@ -9,12 +9,32 @@ import InvoicesPanel from "@/components/claim-details/panels/InvoicesPanel";
 import BeneficiariesPanel from "@/components/claim-details/panels/BeneficiariesPanel";
 import DocumentUploadList from "@/components/claim-details/panels/DocumentUploadList";
 import DocumentsPanel from "@/components/claim-details/panels/DocumentsPanel";
-import MedicalRecordsPanel from "@/components/claim-details/panels/MedicalRecordsPanel";
+import MedicalReportsPanel from "@/components/claim-details/panels/MedicalReportsPanel";
 import EarningsPanel from "@/components/claim-details/panels/EarningsPanel";
 import ClaimantInjuryPanel from "@/components/claim-details/panels/ClaimantInjuryPanel";
 import PaymentsPanel from "@/components/claim-details/panels/PaymentsPanel";
+import apiService from "@/lib/api/apiService";
+import { getEmployerCoidId } from "@/lib/auth/employerClaims";
 import {
   claimTabs,
+  getClaimantFullName,
+  getClaimantInitials,
+  mapApiBeneficiaries,
+  mapApiClaimantDetails,
+  mapApiDocuments,
+  mapApiEarnings,
+  mapApiEmploymentDetails,
+  mapApiIcdCodes,
+  mapApiInjuryDetails,
+  mapApiMedicalReports,
+  type ApiBeneficiary,
+  type ApiClaimantDetailsResponse,
+  type ApiClaimDocument,
+  type ApiEarningsRecord,
+  type ApiEmploymentDetails,
+  type ApiIcdCode,
+  type ApiInjuryDetailsResponse,
+  type ApiMedicalReportsResponse,
   type ClaimDetails,
   type ClaimSection,
   type ClaimTab,
@@ -25,14 +45,121 @@ const sectionHeadings: Partial<Record<ClaimSection, string>> = {
   "Letters & Templates": "Letters and Templates",
 };
 
-export default function ClaimDetailsView({ claim }: { claim: ClaimDetails }) {
+export default function ClaimDetailsView({
+  claim,
+  claimantId,
+}: {
+  claim: ClaimDetails;
+  claimantId: string;
+}) {
   const [activeSection, setActiveSection] = useState<ClaimSection | null>(null);
   const [activeTab, setActiveTab] = useState<ClaimTab>(claimTabs[0]);
+  const [claimantDetails, setClaimantDetails] = useState(claim.claimantDetails);
+  const [claimantIdentity, setClaimantIdentity] = useState({
+    claimantName: claim.claimantName,
+    initials: claim.initials,
+  });
+  const [injuryDetails, setInjuryDetails] = useState(claim.injuryDetails);
+  const [icdCodes, setIcdCodes] = useState(claim.icdCodes);
+  const [employment, setEmployment] = useState(claim.employment);
+  const [beneficiaries, setBeneficiaries] = useState(claim.beneficiaries);
+  const [earnings, setEarnings] = useState(claim.earnings);
+  const [requirements, setRequirements] = useState(claim.requirements);
+  const [medicalReports, setMedicalReports] = useState(claim.medicalReports);
+  const [isClaimantLoaded, setIsClaimantLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadClaimantAndInjury() {
+      try {
+        const { token } = await getEmployerCoidId();
+        const [
+          claimantResponse,
+          injuryResponse,
+          icdCodesResponse,
+          employmentResponse,
+          beneficiariesResponse,
+          earningsResponse,
+          documentsResponse,
+          medicalReportsResponse,
+        ] = await Promise.all([
+          apiService.get<ApiClaimantDetailsResponse>(
+            `/employer/claimant/${claimantId}`,
+            { token },
+          ),
+          apiService.get<ApiInjuryDetailsResponse>(
+            `/employer/injury/${claimantId}`,
+            { token },
+          ),
+          apiService.get<ApiIcdCode[]>(`/employer/icd10codes/${claimantId}`, {
+            token,
+          }),
+          apiService.get<ApiEmploymentDetails>(
+            `/employer/employment/${claimantId}`,
+            { token },
+          ),
+          apiService.get<ApiBeneficiary[]>(
+            `/employer/beneficiaries/${claimantId}`,
+            { token },
+          ),
+          apiService.get<ApiEarningsRecord[]>(
+            `/employer/earnings/${claimantId}`,
+            { token },
+          ),
+          apiService.get<ApiClaimDocument[]>(
+            `/employer/documents/${claimantId}`,
+            { token },
+          ),
+          apiService.get<ApiMedicalReportsResponse>(
+            `/employer/medicalRecords/${claimantId}`,
+            { token },
+          ),
+        ]);
+
+        if (cancelled) return;
+        setClaimantDetails(mapApiClaimantDetails(claimantResponse));
+        setClaimantIdentity({
+          claimantName: getClaimantFullName(claimantResponse.personalDetails),
+          initials: getClaimantInitials(claimantResponse.personalDetails),
+        });
+        setInjuryDetails(mapApiInjuryDetails(injuryResponse));
+        setIcdCodes(mapApiIcdCodes(icdCodesResponse));
+        setEmployment(mapApiEmploymentDetails(employmentResponse));
+        setBeneficiaries(mapApiBeneficiaries(beneficiariesResponse));
+        setEarnings(mapApiEarnings(earningsResponse));
+        setRequirements(mapApiDocuments(documentsResponse));
+        setMedicalReports(mapApiMedicalReports(medicalReportsResponse));
+      } catch (error) {
+        console.error("Failed to load claimant/injury details:", error);
+      } finally {
+        if (!cancelled) setIsClaimantLoaded(true);
+      }
+    }
+
+    loadClaimantAndInjury();
+    return () => {
+      cancelled = true;
+    };
+  }, [claimantId]);
+
+  const displayClaim: ClaimDetails = {
+    ...claim,
+    ...claimantIdentity,
+    claimantDetails,
+    injuryDetails,
+    icdCodes,
+    employment,
+    beneficiaries,
+    earnings,
+    requirements,
+    medicalReports,
+  };
 
   return (
     <div className="relative z-10 mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
       <ClaimInfoCard
-        claim={claim}
+        claim={displayClaim}
         activeSection={activeSection}
         onSelectSection={setActiveSection}
       />
@@ -62,14 +189,18 @@ export default function ClaimDetailsView({ claim }: { claim: ClaimDetails }) {
                 {activeTab}
               </h2>
 
-              {activeTab === "Invoices" && <InvoicesPanel invoices={claim.invoices} />}
+              {/* {activeTab === "Invoices" && (
+                <InvoicesPanel invoices={claim.invoices} />
+              )} */}
               {activeTab === "Medical Invoices" && (
                 <InvoicesPanel invoices={claim.medicalInvoices} />
               )}
               {activeTab === "Authorizations" && (
                 <AuthorizationsPanel authorizations={claim.authorizations} />
               )}
-              {activeTab === "Payments" && <PaymentsPanel payments={claim.payments} />}
+              {activeTab === "Payments" && (
+                <PaymentsPanel payments={claim.payments} />
+              )}
             </div>
           </>
         ) : activeSection === "Beneficiaries" ? (
@@ -77,27 +208,28 @@ export default function ClaimDetailsView({ claim }: { claim: ClaimDetails }) {
             <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
               Beneficiaries
             </h2>
-            <BeneficiariesPanel beneficiaries={claim.beneficiaries} />
+            <BeneficiariesPanel beneficiaries={beneficiaries} />
           </div>
         ) : activeSection === "Documents" ? (
           <DocumentsPanel groups={claim.documentGroups} />
-        ) : activeSection === "Medical Records" ? (
-          <MedicalRecordsPanel
-            medicalRecords={claim.medicalRecords}
-            icdCodes={claim.icdCodes}
-          />
+        ) : activeSection === "Medical Reports" ? (
+          <MedicalReportsPanel reports={medicalReports} />
         ) : activeSection === "Requirements" ? (
-          <DocumentUploadList title="Claim Requirements" documents={claim.requirements} />
+          <DocumentUploadList
+            title="Claim Requirements"
+            documents={requirements}
+          />
         ) : activeSection === "Earnings" ? (
           <EarningsPanel
-            earnings={claim.earnings}
+            earnings={earnings}
             documents={claim.earningsDocuments}
           />
         ) : activeSection === "Claimant & Injury Details" ? (
           <ClaimantInjuryPanel
-            details={claim.claimantDetails}
-            injuryDetails={claim.injuryDetails}
-            icdCodes={claim.icdCodes}
+            key={isClaimantLoaded ? "loaded" : "loading"}
+            details={claimantDetails}
+            injuryDetails={injuryDetails}
+            icdCodes={icdCodes}
           />
         ) : (
           <div className="flex flex-col gap-4">
@@ -106,7 +238,7 @@ export default function ClaimDetailsView({ claim }: { claim: ClaimDetails }) {
             </h2>
 
             {activeSection === "Employment" ? (
-              <FieldGroupsPanel groups={claim.employment} />
+              <FieldGroupsPanel groups={employment} />
             ) : (
               claim.letters.map((letter) => (
                 <DocumentRow key={letter.name} document={letter} />

@@ -36,7 +36,7 @@ export default function DocumentRow({
       <button
         type="button"
         aria-label={`Download ${document.name}`}
-        className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA]"
+        className="flex h-9 w-9 cursor-not-allowed shrink-0 items-center justify-center rounded-lg border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA]"
       >
         <DownloadIcon className="h-4 w-4" />
       </button>

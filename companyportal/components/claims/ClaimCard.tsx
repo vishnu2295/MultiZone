@@ -1,9 +1,18 @@
 import type { Claim } from "@/content/claims";
+import { useRouter } from "next/dist/client/components/navigation";
 
 export default function ClaimCard({ claim }: { claim: Claim }) {
+  const router = useRouter();
+  const handleClick = () => {
+    // Navigate to the claim details page
+    router.push(`/company/claims/${claim.id}`);
+  };
   return (
-    <article className="rounded-xl bg-white p-4 shadow-[0px_2px_16px_rgba(0,0,0,0.07)] sm:p-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+    <article className="cursor-pointer rounded-xl bg-white p-4 shadow-[0px_2px_16px_rgba(0,0,0,0.07)] sm:p-6">
+      <div
+        className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6"
+        onClick={handleClick}
+      >
         <div className="flex-1">
           <h2 className="text-[18px] font-extrabold leading-[27px] text-[#13537B]">
             {claim.title}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import DocumentUploadList from "@/components/claim-details/panels/DocumentUploadList";
-import type { ClaimUploadDocument } from "@/content/claimDetails";
+import type { ClaimEarningsRecord, ClaimUploadDocument } from "@/content/claimDetails";
 
 const tabs = ["Earnings", "Employee Earnings Documents"] as const;
 type EarningsTab = (typeof tabs)[number];
@@ -11,7 +11,7 @@ export default function EarningsPanel({
   earnings,
   documents,
 }: {
-  earnings: Array<Array<{ label: string; value: string }>>;
+  earnings: ClaimEarningsRecord[];
   documents: ClaimUploadDocument[];
 }) {
   const [activeTab, setActiveTab] = useState<EarningsTab>(tabs[0]);
@@ -41,28 +41,35 @@ export default function EarningsPanel({
             {activeTab}
           </h2>
 
-          <div className="w-full max-w-[455px] rounded-xl bg-white px-5 py-4 shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
-            {earnings.map((group, groupIndex) => (
-              <div key={group[0].label}>
-                {groupIndex > 0 && (
-                  <span className="my-3 block h-px w-full bg-black/5" aria-hidden />
-                )}
+          <div className="flex flex-wrap gap-4">
+            {earnings.map((record, recordIndex) => (
+              <div
+                key={recordIndex}
+                className="w-full max-w-[455px] rounded-xl bg-white px-5 py-4 shadow-[0px_2px_16px_rgba(218,218,218,0.08)]"
+              >
+                {record.map((group, groupIndex) => (
+                  <div key={group[0].label}>
+                    {groupIndex > 0 && (
+                      <span className="my-3 block h-px w-full bg-black/5" aria-hidden />
+                    )}
 
-                <div className="flex flex-col gap-4">
-                  {group.map((row) => (
-                    <div
-                      key={row.label}
-                      className="flex items-center justify-between gap-4"
-                    >
-                      <span className="text-[14px] font-normal leading-[21px] text-[#13537B]">
-                        {row.label}
-                      </span>
-                      <span className="text-right text-[14px] font-bold leading-[21px] text-[#13537B]">
-                        {row.value}
-                      </span>
+                    <div className="flex flex-col gap-4">
+                      {group.map((row) => (
+                        <div
+                          key={row.label}
+                          className="flex items-center justify-between gap-4"
+                        >
+                          <span className="text-[14px] font-normal leading-[21px] text-[#13537B]">
+                            {row.label}
+                          </span>
+                          <span className="text-right text-[14px] font-bold leading-[21px] text-[#13537B]">
+                            {row.value}
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
