@@ -53,6 +53,7 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
             fromDate: filters.fromDate,
             toDate: filters.toDate,
             policyId: policy.policyId,
+            paymentType: filters.paymentType,
           },
         },
       );

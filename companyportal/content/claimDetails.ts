@@ -4,7 +4,7 @@ export type ClaimSection =
   | "Beneficiaries"
   | "Earnings"
   | "Requirements"
-  | "Medical Records"
+  | "Medical Reports"
   | "Documents"
   | "Letters & Templates";
 
@@ -39,7 +39,10 @@ export type ClaimPayment = {
   status: string;
 };
 
-export type ClaimantTab = "Claimant Details" | "Injury Details" | "ICD 10 Codes";
+export type ClaimantTab =
+  | "Claimant Details"
+  | "Injury Details"
+  | "ICD 10 Codes";
 
 export type ClaimContact = {
   name: string;
@@ -74,13 +77,204 @@ export type ClaimMedicalRecords = {
   };
   checks: Array<{ label: string; checked: boolean }>;
   documents: ClaimMedicalDocument[];
+  icdCodes: ClaimIcdCode[];
 };
+
+export type ApiMedicalReportDocument = {
+  id: string;
+  documentType: string;
+  fileName: string;
+  uploadedDate: string;
+  fileContent?: string;
+};
+
+export type ApiMedicalReport = {
+  receivedDate: string;
+  hcpPracticeNumber: string;
+  healthcareProviderName: string;
+  medicalReportCategory: string;
+  dateOfConsultation: string;
+  clinicalDescription: string;
+  mechanismOfInjury: string;
+  bodySide: string;
+  severity: string;
+  isNextReviewDateApplicable: boolean;
+  isPreExistingCondition: boolean;
+  isInjuryMechanismConsistent: boolean;
+  isPatientEligibleForDaysOff: boolean;
+  medicalDocuments: ApiMedicalReportDocument[];
+  icd10Codes?: ApiIcdCode[];
+};
+
+export type ClaimMedicalReport = {
+  healthcareProviderName: string;
+  practiceNumber: string;
+  ICD10Code: string;
+  consultationDate: string;
+  status: string;
+  updatedBy: string;
+  formDetails: ApiMedicalReport;
+};
+
+export type ClaimMedicalReports = {
+  firstMedicalReport: ClaimMedicalReport[];
+  progressMedicalReports: ClaimMedicalReport[];
+  finalMedicalReports: ClaimMedicalReport[];
+  sickNoteMedicalReports: ClaimMedicalReport[];
+};
+
+export type ApiMedicalReportListItem = ApiMedicalReport & {
+  status: string;
+  updatedBy: string;
+};
+
+export type ApiMedicalReportsResponse = {
+  firstMedicalReport: ApiMedicalReportListItem | null;
+  progressMedicalReports: ApiMedicalReportListItem[];
+  finalMedicalReports: ApiMedicalReportListItem[];
+  sickNoteMedicalReports: ApiMedicalReportListItem[];
+};
+
+function formatMedicalReportDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-ZA", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function mapMedicalReportSummary(report: ApiMedicalReportListItem): ClaimMedicalReport {
+  return {
+    healthcareProviderName: report.healthcareProviderName,
+    practiceNumber: report.hcpPracticeNumber,
+    ICD10Code: report.icd10Codes?.[0]?.code ?? "-",
+    consultationDate: formatMedicalReportDate(report.dateOfConsultation),
+    status: report.status,
+    updatedBy: report.updatedBy,
+    formDetails: report,
+  };
+}
+
+export function mapApiMedicalReports(
+  response: ApiMedicalReportsResponse,
+): ClaimMedicalReports {
+  return {
+    firstMedicalReport: response.firstMedicalReport
+      ? [mapMedicalReportSummary(response.firstMedicalReport)]
+      : [],
+    progressMedicalReports: (response.progressMedicalReports ?? []).map(
+      mapMedicalReportSummary,
+    ),
+    finalMedicalReports: (response.finalMedicalReports ?? []).map(
+      mapMedicalReportSummary,
+    ),
+    sickNoteMedicalReports: (response.sickNoteMedicalReports ?? []).map(
+      mapMedicalReportSummary,
+    ),
+  };
+}
+
+export function mapApiMedicalReportDetail(
+  report: ApiMedicalReport,
+): ClaimMedicalRecords {
+  return {
+    report: {
+      title: report.medicalReportCategory || "Medical Report Details",
+      fields: [
+        { label: "Received Date", value: report.receivedDate },
+        { label: "HCP Practice Number", value: report.hcpPracticeNumber },
+        {
+          label: "Healthcare Provider Name",
+          value: report.healthcareProviderName,
+        },
+        {
+          label: "Medical Report Category",
+          value: report.medicalReportCategory,
+        },
+        { label: "Date of Consultation", value: report.dateOfConsultation },
+        { label: "Clinical Description", value: report.clinicalDescription },
+        { label: "Mechanism of Injury", value: report.mechanismOfInjury },
+        { label: "Body Side", value: report.bodySide },
+        { label: "Severity", value: report.severity },
+      ],
+    },
+    checks: [
+      {
+        label: "Is next review date applicable?",
+        checked: report.isNextReviewDateApplicable === true,
+      },
+      {
+        label: "Is a pre-existing condition?",
+        checked: report.isPreExistingCondition === true,
+      },
+      {
+        label: "Is the injury mechanism consistent?",
+        checked: report.isInjuryMechanismConsistent === true,
+      },
+      {
+        label: "Is the patient eligible for days off?",
+        checked: report.isPatientEligibleForDaysOff === true,
+      },
+    ],
+    documents: report.medicalDocuments.map((document) => ({
+      name: formatDocumentLabel(document.documentType),
+      documentType: document.fileName,
+      uploadedAt: formatDocumentTimestamp(document.uploadedDate),
+    })),
+    icdCodes: mapApiIcdCodes(report.icd10Codes ?? []),
+  };
+}
 
 export type ClaimUploadDocument = {
   name: string;
   fileName?: string;
   uploadedAt?: string;
 };
+
+export type ApiClaimDocument = {
+  documentKeySet: string;
+  documentKey: string;
+  documentType: string;
+  fileName: string;
+  uploadedDate: string;
+  fileContent?: string;
+};
+
+function formatDocumentLabel(documentType: string): string {
+  return documentType.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+}
+
+function formatDocumentTimestamp(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  const datePart = date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  const timePart = date
+    .toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    })
+    .toLowerCase();
+
+  return `${datePart} · ${timePart}`;
+}
+
+export function mapApiDocuments(
+  response: ApiClaimDocument[],
+): ClaimUploadDocument[] {
+  return response.map((doc) => ({
+    name: formatDocumentLabel(doc.documentType),
+    fileName: doc.fileName,
+    uploadedAt: formatDocumentTimestamp(doc.uploadedDate),
+  }));
+}
 
 export type ClaimBeneficiary = {
   name: string;
@@ -106,10 +300,359 @@ export type ClaimantDetails = {
   addresses: ClaimAddress[];
 };
 
+export type ApiClaimantPersonalDetails = {
+  title: string;
+  firstname: string;
+  surname: string;
+  idType: string;
+  idNumber: string;
+  dateOfBirth: string;
+  gender: string;
+  maritalStatus: string;
+  nationality: string;
+  country: string;
+};
+
+export type ApiClaimantContact = {
+  title: string;
+  firstname: string;
+  surname: string;
+  communicationType: string;
+  contactNumber: string;
+  emailAddress: string;
+  contactDesignation: string;
+  contactContext: string;
+  isContactConfirmed: boolean;
+  isPrimary: boolean;
+  rolePlayerId: number;
+  rolePlayerContactId: number;
+};
+
+export type ApiClaimantAddress = {
+  type: string;
+  effectiveFrom: string;
+  addressLine1: string;
+  addressLine2?: string;
+  province: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  isPrimary: boolean;
+  isPostalSameAsPhysical?: boolean;
+  rolePlayerId: number;
+};
+
+export type ApiClaimantDetailsResponse = {
+  personalDetails: ApiClaimantPersonalDetails;
+  contacts: ApiClaimantContact[];
+  addressDetails: ApiClaimantAddress[];
+};
+
+export function mapApiClaimantDetails(
+  response: ApiClaimantDetailsResponse,
+): ClaimantDetails {
+  const { personalDetails, contacts, addressDetails } = response;
+
+  return {
+    demographics: [
+      { label: "ID Type", value: personalDetails.idType },
+      { label: "ID/ Passport number", value: personalDetails.idNumber },
+      { label: "Date of Birth", value: personalDetails.dateOfBirth },
+      { label: "Gender", value: personalDetails.gender },
+      { label: "Marital Status", value: personalDetails.maritalStatus },
+      { label: "Nationality", value: personalDetails.nationality },
+      { label: "Country", value: personalDetails.country },
+    ],
+    contacts: contacts.map((contact) => ({
+      name: [contact.title, contact.firstname, contact.surname]
+        .filter(Boolean)
+        .join(" "),
+      email: contact.emailAddress,
+      phone: contact.contactNumber,
+      primary: contact.isPrimary,
+    })),
+    addresses: addressDetails.map((address) => ({
+      type: address.type,
+      line: [
+        address.addressLine1,
+        address.addressLine2,
+        address.city,
+        address.province,
+        address.postalCode,
+        address.country,
+      ]
+        .filter(Boolean)
+        .join(", "),
+      primary: address.isPrimary,
+    })),
+  };
+}
+
+export function getClaimantFullName(
+  personalDetails: ApiClaimantPersonalDetails,
+): string {
+  return [
+    personalDetails.title,
+    personalDetails.firstname,
+    personalDetails.surname,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+export function getClaimantInitials(
+  personalDetails: ApiClaimantPersonalDetails,
+): string {
+  return `${personalDetails.firstname?.[0] ?? ""}${personalDetails.surname?.[0] ?? ""}`.toUpperCase();
+}
+
+export type ApiBeneficiaryPersonalDetails = ApiClaimantPersonalDetails & {
+  relation: string;
+};
+
+export type ApiBeneficiaryBankingDetails = {
+  accountHolder: string;
+  bank: string;
+  accountType: string;
+  accountNumber: string;
+  branch: string;
+  branchCode: string;
+};
+
+export type ApiBeneficiary = {
+  personalDetails: ApiBeneficiaryPersonalDetails;
+  contacts: ApiClaimantContact[];
+  addressDetails: ApiClaimantAddress[];
+  bankingDetails: ApiBeneficiaryBankingDetails;
+};
+
+export function mapApiBeneficiaries(
+  response: ApiBeneficiary[],
+): ClaimBeneficiary[] {
+  return response.map((beneficiary) => {
+    const { personalDetails, contacts, addressDetails, bankingDetails } =
+      beneficiary;
+    const primaryContact =
+      contacts.find((contact) => contact.isPrimary) ?? contacts[0];
+
+    return {
+      name: primaryContact
+        ? [
+            primaryContact.title,
+            primaryContact.firstname,
+            primaryContact.surname,
+          ]
+            .filter(Boolean)
+            .join(" ")
+        : getClaimantFullName(personalDetails),
+      email: primaryContact?.emailAddress ?? "",
+      phone: primaryContact?.contactNumber ?? "",
+      demographics: [
+        { label: "ID Type", value: personalDetails.idType },
+        { label: "ID/ Passport number", value: personalDetails.idNumber },
+        { label: "Date of Birth", value: personalDetails.dateOfBirth },
+        { label: "Gender", value: personalDetails.gender },
+        { label: "Relation", value: personalDetails.relation },
+        { label: "Marital Status", value: personalDetails.maritalStatus },
+        { label: "Nationality", value: personalDetails.nationality },
+        { label: "Country", value: personalDetails.country },
+      ],
+      banking: [
+        { label: "Account Holder", value: bankingDetails.accountHolder },
+        { label: "Bank", value: bankingDetails.bank },
+        { label: "Account Type", value: bankingDetails.accountType },
+        { label: "Account No", value: bankingDetails.accountNumber },
+        { label: "Branch", value: bankingDetails.branch },
+        { label: "Branch Code", value: bankingDetails.branchCode },
+      ],
+      addresses: addressDetails.map((address) => ({
+        type: address.type,
+        line: [
+          address.addressLine1,
+          address.addressLine2,
+          address.city,
+          address.province,
+          address.postalCode,
+          address.country,
+        ]
+          .filter(Boolean)
+          .join(", "),
+        primary: address.isPrimary,
+      })),
+    };
+  });
+}
+
+export type ApiInjuryDetails = {
+  insuranceType: string;
+  dateNotified: string;
+  dateOfIncident: string;
+  claimType: string;
+  benefits: string;
+  primaryInjuryDiagnosticGroup: string;
+  injuryDescription: string;
+  bodySide: string;
+  severity: string;
+};
+
+export type ApiInjuryDetailsResponse = {
+  injuryDetails: ApiInjuryDetails;
+};
+
+export function mapApiInjuryDetails(
+  response: ApiInjuryDetailsResponse,
+): Array<{ label: string; value: string }> {
+  const { injuryDetails } = response;
+
+  return [
+    { label: "Insurance Type", value: injuryDetails.insuranceType },
+    { label: "Date Notified", value: injuryDetails.dateNotified },
+    { label: "Date of Incident", value: injuryDetails.dateOfIncident },
+    { label: "Claim Type", value: injuryDetails.claimType },
+    { label: "Benefits", value: injuryDetails.benefits },
+    {
+      label: "Primary Injury Diagnostic Group",
+      value: injuryDetails.primaryInjuryDiagnosticGroup,
+    },
+    {
+      label: "Brief Description of Injury",
+      value: injuryDetails.injuryDescription,
+    },
+    { label: "Severity", value: injuryDetails.severity },
+    { label: "Body Side", value: injuryDetails.bodySide },
+  ];
+}
+
+export type ApiIcdCode = {
+  code: string;
+  description: string;
+  expiryDate: string;
+  severity: string;
+  mmiDays: string;
+  bodySide: string;
+};
+
+export function mapApiIcdCodes(response: ApiIcdCode[]): ClaimIcdCode[] {
+  return response.map((icdCode) => ({
+    description: icdCode.description,
+    code: icdCode.code,
+    expiryDate: icdCode.expiryDate,
+    severity: icdCode.severity,
+    mmiDays: icdCode.mmiDays,
+    bodySide: icdCode.bodySide,
+  }));
+}
+
+export type ClaimEarningsRecord = Array<
+  Array<{ label: string; value: string }>
+>;
+
+export type ApiEarningsRecord = {
+  variableSubtotal: number | null;
+  nonVariableSubtotal: number | null;
+  totalEarnings: number;
+  createdBy: string;
+  createdDate: string;
+  isVerified: boolean;
+  isEstimated: boolean;
+  earningType: string;
+};
+
+function formatEarningsAmount(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "N/A";
+  return value.toLocaleString("en-ZA", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function formatEarningsDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${day}-${month}-${date.getFullYear()}`;
+}
+
+export function mapApiEarnings(
+  response: ApiEarningsRecord[],
+): ClaimEarningsRecord[] {
+  return response.map((record) => [
+    [
+      {
+        label: "Variable Subtotal",
+        value: formatEarningsAmount(record.variableSubtotal),
+      },
+      {
+        label: "Non-Variable Subtotal",
+        value: formatEarningsAmount(record.nonVariableSubtotal),
+      },
+    ],
+    [
+      {
+        label: "Total Earnings",
+        value: formatEarningsAmount(record.totalEarnings),
+      },
+    ],
+    [
+      { label: "Created By", value: record.createdBy },
+      { label: "Created Date", value: formatEarningsDate(record.createdDate) },
+    ],
+    [
+      { label: "Is Verified", value: record.isVerified ? "Yes" : "No" },
+      { label: "Is Estimated", value: record.isEstimated ? "Yes" : "No" },
+      { label: "Earning Type", value: record.earningType },
+    ],
+  ]);
+}
+
 export type ClaimFieldGroup = {
   title: string;
   fields: Array<{ label: string; value: string }>;
 };
+
+export type ApiEmploymentDetails = {
+  isSkilled: boolean;
+  isTrainee: boolean;
+  startDate: string;
+  patersonGrading: string;
+  rmaEmployeeRefNumber: string;
+  employeeNumber: string;
+  employeeIndustryNumber: string;
+  occupation: string;
+};
+
+export function mapApiEmploymentDetails(
+  response: ApiEmploymentDetails,
+): ClaimFieldGroup[] {
+  return [
+    {
+      title: "Person Employment",
+      fields: [
+        {
+          label: "Skilled / Unskilled",
+          value: response.isSkilled ? "Skilled" : "Unskilled",
+        },
+        {
+          label: "Trainee/Learner/Apprentice?",
+          value: response.isTrainee ? "Yes" : "No",
+        },
+        { label: "Start Date with Employer", value: response.startDate },
+        { label: "Paterson Grading", value: response.patersonGrading },
+        {
+          label: "RMA Employee Ref Number",
+          value: response.rmaEmployeeRefNumber,
+        },
+        { label: "Employee Number", value: response.employeeNumber },
+        {
+          label: "Employee Industry Number",
+          value: response.employeeIndustryNumber,
+        },
+        { label: "Occupation", value: response.occupation },
+      ],
+    },
+  ];
+}
 
 export type ClaimDetails = {
   id: string;
@@ -130,10 +673,10 @@ export type ClaimDetails = {
   injuryDetails: Array<{ label: string; value: string }>;
   icdCodes: ClaimIcdCode[];
   beneficiaries: ClaimBeneficiary[];
-  earnings: Array<Array<{ label: string; value: string }>>;
+  earnings: ClaimEarningsRecord[];
   earningsDocuments: ClaimUploadDocument[];
   requirements: ClaimUploadDocument[];
-  medicalRecords: ClaimMedicalRecords;
+  medicalReports: ClaimMedicalReports;
   documentGroups: ClaimDocumentGroup[];
   letters: ClaimMedicalDocument[];
   employment: ClaimFieldGroup[];
@@ -158,7 +701,7 @@ export const claimSections: readonly ClaimSection[] = [
   "Beneficiaries",
   "Earnings",
   "Requirements",
-  "Medical Records",
+  "Medical Reports",
   "Documents",
   "Letters & Templates",
 ] as const;
@@ -311,7 +854,10 @@ const pendingClaim: ClaimDetails = {
       label: "Primary Injury Diagnostic Group",
       value: "DRG 16 : Injuries to Anke and Foot",
     },
-    { label: "Brief Description of Injury", value: "Concussion in the Left foot" },
+    {
+      label: "Brief Description of Injury",
+      value: "Concussion in the Left foot",
+    },
     { label: "Severity", value: "Mild" },
     { label: "Body Side", value: "Left" },
   ],
@@ -403,18 +949,20 @@ const pendingClaim: ClaimDetails = {
   ],
   earnings: [
     [
-      { label: "Variable Subtotal", value: "N/A" },
-      { label: "Non-Variable Subtotal", value: "15,820.00" },
-    ],
-    [{ label: "Total Earnings", value: "15,820.00" }],
-    [
-      { label: "Created By", value: "John Doe" },
-      { label: "Created Date", value: "12-03-2026" },
-    ],
-    [
-      { label: "Is Verified", value: "Yes" },
-      { label: "Is Estimated", value: "Yes" },
-      { label: "Earning Type", value: "Accident" },
+      [
+        { label: "Variable Subtotal", value: "N/A" },
+        { label: "Non-Variable Subtotal", value: "15,820.00" },
+      ],
+      [{ label: "Total Earnings", value: "15,820.00" }],
+      [
+        { label: "Created By", value: "John Doe" },
+        { label: "Created Date", value: "12-03-2026" },
+      ],
+      [
+        { label: "Is Verified", value: "Yes" },
+        { label: "Is Estimated", value: "Yes" },
+        { label: "Earning Type", value: "Accident" },
+      ],
     ],
   ],
   earningsDocuments: [
@@ -453,37 +1001,53 @@ const pendingClaim: ClaimDetails = {
       uploadedAt: "10 Jan 2024 · 10:32 am",
     },
   ],
-  medicalRecords: {
-    report: {
-      title: "First Medical Report",
-      fields: [
-        { label: "Received Date", value: "2026/07/10" },
-        { label: "HCP Practice Number", value: "1131311" },
-        { label: "Healthcare Provider Name", value: "BAFOKENG MINE HOSPITAL" },
-        { label: "Medical Report Category", value: "General Report" },
-        { label: "Date of Consultation", value: "2026/07/09" },
-        { label: "Clinical Description", value: "Contusion left foot" },
-        { label: "Mechanism of Injury", value: "Contusion left foot" },
-        { label: "Body Side", value: "Left" },
-        { label: "Severity", value: "Mild" },
-        { label: "Is Next Review Date Applicable?", value: "No" },
-        { label: "Treatment Provided", value: "Contusion left foot" },
-        { label: "Affected Body Side", value: "Left" },
-      ],
-    },
-    checks: [
-      { label: "Is next review date applicable?", checked: false },
-      { label: "Is a pre-existing condition?", checked: false },
-      { label: "Is the injury mechanism consistent?", checked: false },
-      { label: "Is the patient eligible for days off?", checked: false },
-    ],
-    documents: [
+  medicalReports: {
+    firstMedicalReport: [
       {
-        name: "First medical report",
-        documentType: "Acute Medication.pdf",
-        uploadedAt: "10 Jan 2024 · 10:32 am",
+        healthcareProviderName: "BAFOKENG MINE HOSPITAL",
+        practiceNumber: "1131311",
+        ICD10Code: "S90.3",
+        consultationDate: "10 Jan 2024",
+        status: "Accepted",
+        updatedBy: "John Doe",
+        formDetails: {
+          receivedDate: "2026/07/10",
+          hcpPracticeNumber: "1131311",
+          healthcareProviderName: "BAFOKENG MINE HOSPITAL",
+          medicalReportCategory: "General Report",
+          dateOfConsultation: "2026/07/09",
+          clinicalDescription: "Contusion left foot",
+          mechanismOfInjury: "Contusion left foot",
+          bodySide: "Left",
+          severity: "Mild",
+          isNextReviewDateApplicable: false,
+          isPreExistingCondition: false,
+          isInjuryMechanismConsistent: false,
+          isPatientEligibleForDaysOff: false,
+          medicalDocuments: [
+            {
+              id: "doc-1",
+              documentType: "FirstMedicalReport",
+              fileName: "Acute Medication.pdf",
+              uploadedDate: "2024-01-10T10:32:00Z",
+            },
+          ],
+          icd10Codes: [
+            {
+              description: "Contusion other parts of foot",
+              code: "S90.3",
+              expiryDate: "2026-07-18",
+              severity: "Mild",
+              mmiDays: "09",
+              bodySide: "Left",
+            },
+          ],
+        },
       },
     ],
+    progressMedicalReports: [],
+    finalMedicalReports: [],
+    sickNoteMedicalReports: [],
   },
   documentGroups: [
     {
@@ -594,6 +1158,6 @@ export const claimDetailsById: Record<string, ClaimDetails> = {
   [completedClaim.id]: completedClaim,
 };
 
-export function getClaimDetails(claimId: string): ClaimDetails | undefined {
-  return claimDetailsById[claimId];
+export function getClaimDetails(claimId: string): ClaimDetails {
+  return claimDetailsById[claimId] ?? pendingClaim;
 }
