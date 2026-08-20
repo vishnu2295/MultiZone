@@ -57,7 +57,7 @@ export interface ApiLetterOfGoodStanding {
 
 const DEFAULT_ACTIONS = [
   "Remittance",
-  "Policy Schedule",
+  // "Policy Schedule",
   "Letter of Good Standing",
 ];
 
