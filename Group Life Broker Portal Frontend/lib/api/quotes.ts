@@ -1,0 +1,417 @@
+import { apiClient } from "./apiClient";
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+export interface QuickQuotePayload {
+  lead_id: string;
+  workforce_count: number;
+  average_age: number;
+  average_salary: number;
+  province: string;
+  industry: string;
+  gender_split: string;
+  total_premium?: number;
+  benefits: Array<{
+    benefit_type: string;
+    cover_amount?: number;
+    premium_amount?: number;
+    premium_rate?: number;
+  }>;
+  quote_status?: string;
+  step?: number;
+}
+
+export interface FullQuotePayload {
+  lead_id: string;
+  product_id?: string;
+  rma_member_number?: string;
+  is_permanent_employees?: boolean;
+  is_actively_at_work?: boolean;
+  is_replacing_policy?: boolean;
+  replaced_policy_includes_disability?: boolean;
+  is_policy_older_than_6_months?: boolean;
+  replaced_policy_start_date?: string;
+  province?: string;
+  industry?: string;
+  generate_options?: boolean;
+  total_premium?: number;
+  benefits: Array<{
+    benefit_type: string;
+    multiple?: number;
+    cover_amount?: number;
+    premium_amount?: number;
+    premium_rate?: number;
+  }>;
+  employees?: any[];
+  employeeFile?: File;
+  quote_status?: string;
+  step?: number;
+}
+
+export interface RepricePayload {
+  benefits?: Array<{
+    benefit_type: string;
+    cover_amount?: number;
+    multiple?: number;
+  }>;
+  lifeCoverMultiple?: number;
+  funeralCoverAmount?: number;
+  occupationalDisabilityMultiple?: number;
+  additionalBenefits?: string[];
+}
+
+export type QuoteStatus =
+  | "new"
+  | "pending"
+  | "approved"
+  | "onboarding"
+  | "cancelled"
+  | "expired"
+  | "Draft"
+  | "Generated"
+  | "Revised"
+  | "Awaiting Employer Acceptance"
+  | "Awaiting OTP"
+  | "Accepted"
+  | "Expired"
+  | "Rejected"
+  | "Cancelled";
+
+export interface QuoteStatusPayload {
+  status: QuoteStatus;
+}
+
+export interface Quote {
+  quoteId: string;
+  quoteReference: string;
+  leadReference: string;
+  quoteType: "Quick Quote" | "Full Quote";
+  status: QuoteStatus;
+  companyName: string;
+  registrationNumber?: string;
+  numberOfEmployees: number;
+  averageAge?: number;
+  averageMonthlyIncome?: number;
+  genderSplit?: string;
+  province?: string;
+  industry?: string;
+  monthlyPremium: number;
+  coverageAmount: number;
+  lifeCover?: number;
+  funeralCover?: number;
+  occupationalDisability?: number;
+  scheme?: string;
+  benefits?: string[];
+  valueAddedServices?: string[];
+  deductible?: number;
+  contactFirstName?: string;
+  contactLastName?: string;
+  contactEmail?: string;
+  contactMobile?: string;
+  validUntilDays?: number;
+  createdAt: string;
+  benefitBreakdown?: Array<{
+    benefit_name: string;
+    benefit_type: string;
+    cover_amount: number;
+    premium_amount: number;
+    premium_rate: number;
+  }>;
+  rmaMemberNumber?: string;
+  isPermanentEmployees?: boolean;
+  isActiveAtWork?: boolean;
+  isReplacingPolicy?: boolean;
+  replacedPolicyIncludesDisability?: boolean;
+  isPolicyOlderThan6Months?: boolean;
+  replacedPolicyStartDate?: string;
+  step?: number;
+}
+
+// ── API functions ──────────────────────────────────────────────────────────────
+
+/** POST /broker/quotes/quick — generate a quick quote from average workforce data */
+export async function createQuickQuote(
+  payload: QuickQuotePayload
+): Promise<{ success: boolean; data: Quote }> {
+  return apiClient("/broker/quotes/quick", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/** POST /broker/quotes/full — generate a full quote */
+export async function createFullQuote(
+  payload: FullQuotePayload
+): Promise<{ success: boolean; data: Quote }> {
+  // The backend expects JSON for full quotes, so we just send JSON.
+  // The file is handled by the employee import endpoint instead.
+
+  return apiClient("/broker/quotes/full", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/** POST /broker/quotes/{quoteReference}/reprice — reprice an existing quote with new benefits */
+export async function repriceQuote(
+  quoteReference: string,
+  payload: RepricePayload
+): Promise<{ success: boolean; data: Quote }> {
+  return apiClient(`/broker/quotes/${quoteReference}/reprice`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/** GET /broker/quotes/{quoteReference} — get details of a specific quote */
+export async function getQuote(
+  quoteReference: string
+): Promise<{ success: boolean; data: Quote }> {
+  const json = await apiClient<{ success: boolean; data: any }>(
+    `/broker/quotes/${quoteReference}`,
+    { cache: "no-store" }
+  );
+  if (json.success && json.data) {
+    json.data = normaliseQuote(json.data);
+  }
+  return json;
+}
+
+/** GET /broker/quotes/{quoteId}/preview — Get complete quote preview information */
+export async function getQuotePreview(
+  quoteId: string
+): Promise<{ success: boolean; data: any }> {
+  return apiClient(`/broker/quotes/${quoteId}/preview`, { cache: "no-store" });
+}
+
+/** PATCH /broker/quotes/{quoteId}/status — update the status of a quote */
+export async function updateQuoteStatus(
+  quoteId: string,
+  status: QuoteStatus
+): Promise<{ success: boolean; data: Quote }> {
+  return apiClient(`/broker/quotes/${quoteId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status } satisfies QuoteStatusPayload),
+  });
+}
+
+/** PATCH /broker/quotes/{quoteId} — Update quote details (header, quick quote, and full quote data) */
+export async function updateQuote(
+  quoteId: string,
+  payload: any
+): Promise<{ success: boolean; data: Quote }> {
+  return apiClient(`/broker/quotes/${quoteId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export interface QuoteFilterParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+  search?: string;
+  searchFields?: string | string[];
+  quote_status?: string;
+  quote_type?: string;
+  clientName?: string;
+}
+
+/** GET /broker/quotes/representative — get all quotes for the authenticated representative */
+export async function getQuotes(
+  filters?: QuoteFilterParams
+): Promise<Quote[] & { pagination?: any }> {
+  const params = new URLSearchParams();
+
+  if (filters) {
+    Object.entries(filters).forEach(([key, val]) => {
+      if (val !== undefined && val !== null && val !== "") {
+        if (Array.isArray(val)) {
+          params.append(key, val.join(","));
+        } else {
+          params.append(key, String(val));
+        }
+      }
+    });
+  }
+
+  const queryStr = params.toString();
+  const json = await apiClient<{ success: boolean; data: any }>(
+    `/broker/quotes/representative${queryStr ? `?${queryStr}` : ""}`,
+    { cache: "no-store" }
+  );
+
+  const list = Array.isArray(json.data) ? json.data : (json.data?.quotes ?? []);
+
+  const resultList: Quote[] & { pagination?: any } = list.map(normaliseQuote);
+
+  if (json.data?.total !== undefined) {
+    Object.defineProperty(resultList, "pagination", {
+      value: { total: json.data.total },
+      writable: true,
+      enumerable: false,
+      configurable: true,
+    });
+  }
+
+  return resultList;
+}
+
+/** GET /broker/quotes/lead/{leadId} — get all quotes for a specific lead */
+export async function getQuotesByLead(
+  leadId: string,
+  filters?: QuoteFilterParams
+): Promise<{ success: boolean; data: { quotes: Quote[]; total: number } }> {
+  const params = new URLSearchParams();
+
+  if (filters) {
+    Object.entries(filters).forEach(([key, val]) => {
+      if (val !== undefined && val !== null && val !== "") {
+        params.append(key, String(val));
+      }
+    });
+  }
+
+  const queryStr = params.toString();
+  const json = await apiClient<{ success: boolean; data: any }>(
+    `/broker/quotes/lead/${leadId}${queryStr ? `?${queryStr}` : ""}`,
+    { cache: "no-store" }
+  );
+
+  const list = Array.isArray(json.data) ? json.data : (json.data?.quotes ?? []);
+  const quotes = list.map(normaliseQuote);
+
+  return {
+    success: json.success,
+    data: {
+      quotes,
+      total: json.data?.total ?? quotes.length,
+    },
+  };
+}
+
+/** POST /broker/quotes/{quoteId}/employer-details — save onboarding details */
+export async function saveOnboardingDetails(
+  quoteId: string,
+  data: any
+): Promise<{ success: boolean; data: any }> {
+  return apiClient(`/broker/quotes/${quoteId}/employer-details`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+/** Map raw API response to a normalised Quote object */
+export function normaliseQuote(raw: any): Quote {
+  return {
+    quoteId: raw.quote_id ?? raw.quoteId ?? raw.id ?? "",
+    quoteReference:
+      raw.quote_reference ?? raw.quoteReference ?? raw.reference ?? "",
+    leadReference: raw.lead_reference ?? raw.leadReference ?? "",
+    quoteType:
+      raw.quote_type?.toLowerCase() === "full" ? "Full Quote" : "Quick Quote",
+    status: raw.quote_status ?? raw.status ?? "new",
+    companyName:
+      raw.lead?.employer?.employer_name ??
+      raw.employer?.employer_name ??
+      raw.companyName ??
+      "",
+    registrationNumber:
+      raw.lead?.employer?.registration_number ??
+      raw.employer?.registration_number ??
+      raw.registrationNumber,
+    numberOfEmployees:
+      raw.lead?.employer?.number_of_employees ??
+      raw.number_of_employees ??
+      raw.numberOfEmployees ??
+      raw.quick_quote_data?.workforce_count ??
+      0,
+    averageAge:
+      raw.average_age ?? raw.averageAge ?? raw.quick_quote_data?.average_age,
+    averageMonthlyIncome:
+      raw.average_monthly_income ??
+      raw.averageMonthlyIncome ??
+      raw.quick_quote_data?.average_salary,
+    genderSplit:
+      raw.gender_split ?? raw.genderSplit ?? raw.quick_quote_data?.gender_split,
+    province:
+      raw.lead?.employer?.province ??
+      raw.province ??
+      raw.quick_quote_data?.province,
+    industry:
+      raw.lead?.employer?.industry_type ??
+      raw.industry ??
+      raw.quick_quote_data?.industry_type ??
+      raw.quick_quote_data?.industry,
+    monthlyPremium:
+      raw.total_premium ?? raw.monthly_premium ?? raw.monthlyPremium ?? 0,
+    coverageAmount:
+      raw.coverage_amount ??
+      raw.coverageAmount ??
+      (raw.benefits
+        ? raw.benefits.reduce(
+            (sum: number, b: any) => sum + (parseFloat(b.cover_amount) || 0),
+            0
+          )
+        : 0),
+    lifeCover: raw.life_cover ?? raw.lifeCover,
+    funeralCover: raw.funeral_cover ?? raw.funeralCover,
+    occupationalDisability:
+      raw.occupational_disability ?? raw.occupationalDisability,
+    scheme: raw.scheme,
+    benefits: raw.benefits,
+    valueAddedServices: raw.value_added_services ?? raw.valueAddedServices,
+    deductible: raw.deductible,
+    contactFirstName:
+      raw.lead?.contact?.contact_first_name ??
+      raw.contact?.contact_first_name ??
+      raw.contactFirstName,
+    contactLastName:
+      raw.lead?.contact?.contact_last_name ??
+      raw.contact?.contact_last_name ??
+      raw.contactLastName,
+    contactEmail:
+      raw.lead?.contact?.contact_email ??
+      raw.contact?.contact_email ??
+      raw.contactEmail,
+    contactMobile:
+      raw.lead?.contact?.contact_mobile ??
+      raw.contact?.contact_mobile ??
+      raw.contactMobile,
+    validUntilDays: raw.valid_until_days ?? raw.validUntilDays ?? 30,
+    createdAt: raw.createdAt ?? raw.quote_created_at ?? "",
+    benefitBreakdown: raw.benefits?.map((b: any) => ({
+      benefit_name: b.benefit_name,
+      benefit_type: b.benefit_type,
+      cover_amount: parseFloat(b.cover_amount),
+      premium_amount: parseFloat(b.premium_amount),
+      premium_rate: parseFloat(b.premium_rate),
+    })),
+    rmaMemberNumber: raw.rma_member_number ?? raw.rmaMemberNumber,
+    isPermanentEmployees:
+      raw.is_permanent_employees ?? raw.isPermanentEmployees,
+    isActiveAtWork: raw.is_actively_at_work ?? raw.isActiveAtWork,
+    isReplacingPolicy: raw.is_replacing_policy ?? raw.isReplacingPolicy,
+    replacedPolicyIncludesDisability:
+      raw.replaced_policy_includes_disability ??
+      raw.replacedPolicyIncludesDisability,
+    isPolicyOlderThan6Months:
+      raw.is_policy_older_than_6_months ?? raw.isPolicyOlderThan6Months,
+    replacedPolicyStartDate:
+      raw.replaced_policy_start_date ?? raw.replacedPolicyStartDate,
+  };
+}
+
+/** Format a number as South African Rand string, e.g. "R 26,629" */
+export function formatRand(value: number): string {
+  return (
+    "R" +
+    new Intl.NumberFormat("en-ZA", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value)
+  );
+}

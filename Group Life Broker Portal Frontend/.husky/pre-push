@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -e
+
+echo "🚀 Running pre-push checks..."
+
+npm run pre-push
+
+echo "✅ Pre-push checks passed!"
