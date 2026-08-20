@@ -115,13 +115,13 @@ export const homeContent = {
       href: "/company/claims",
       highlighted: false,
     },
-    {
-      icon: "question" as const,
-      title: "General Enquiry",
-      description: "All your queries are answered here.",
-      href: "#",
-      highlighted: false,
-    },
+    // {
+    //   icon: "question" as const,
+    //   title: "General Enquiry",
+    //   description: "All your queries are answered here.",
+    //   href: "#",
+    //   highlighted: false,
+    // },
   ],
 };
 
