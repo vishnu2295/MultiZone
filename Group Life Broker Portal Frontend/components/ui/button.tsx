@@ -1,0 +1,150 @@
+import * as React from "react";
+import MuiButton, { ButtonProps as MuiButtonProps } from "@mui/material/Button";
+
+type Variant = "view" | "continue" | "destructive" | "primary" | "secondary" | "outlined" | "cancel" | "audit";
+type Size    = "sm" | "md";
+
+export interface ButtonProps extends Omit<MuiButtonProps, "variant" | "size"> {
+  variant?: Variant;
+  size?: Size;
+}
+
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ variant = "view", size = "sm", sx, disabled, children, ...props }, ref) => {
+    
+    // Shared base styles
+    const baseStyle = {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      whiteSpace: "nowrap",
+      borderRadius: "8px",
+      fontSize: "14px",
+      fontWeight: 500,
+      gap: "6px",
+      transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+      textTransform: "none",
+      minWidth: "auto",
+      flexShrink: 0,
+      "&.Mui-disabled": {
+        opacity: 0.5,
+        color: variant === "destructive" ? "#FFFFFF" : undefined,
+      },
+      "& .MuiButton-startIcon": {
+        marginRight: 0,
+      },
+    };
+
+    // Size styles mapping
+    const sizeStyle = size === "sm" 
+      ? { height: "32px", px: "10px" } 
+      : { height: "40px", px: "16px" };
+
+    // Variant style states mapping
+    let variantStyle = {};
+    if (variant === "view") {
+      variantStyle = {
+        background: "transparent",
+        color: "rgb(156, 163, 175)",
+        border: "none",
+        padding: "0 10px",
+        "&:hover": {
+          background: "transparent",
+          color: "rgb(31, 195, 235)",
+        }
+      };
+    } else if (variant === "continue") {
+      variantStyle = {
+        background: "rgba(31, 195, 235, 0.1)",
+        border: "1px solid rgb(58, 58, 58)",
+        color: "rgb(31, 195, 235)",
+        "&:hover": {
+          background: "rgba(31, 195, 235, 0.2)",
+          borderColor: "rgb(58, 58, 58)",
+        }
+      };
+    } else if (variant === "destructive") {
+      variantStyle = {
+        background: "rgba(239, 68, 68, 0.6)",
+        border: "none",
+        color: "rgb(255, 255, 255)",
+        "&:hover": {
+          background: "rgba(239, 68, 68, 0.8)",
+        }
+      };
+    } else if (variant === "primary") {
+      variantStyle = {
+        background: "#1FC3EB",
+        color: "#0A0A0A",
+        border: "none",
+        fontWeight: 700,
+        "&:hover": {
+          background: "#0DB5D8",
+        }
+      };
+    } else if (variant === "secondary") {
+      variantStyle = {
+        background: "var(--foreground)",
+        color: "var(--background)",
+        border: "none",
+        fontWeight: 700,
+        "&:hover": {
+          opacity: 0.9,
+        }
+      };
+    } else if (variant === "outlined") {
+      variantStyle = {
+        background: "var(--table-header-bg)",
+        border: "1px solid var(--text-secondary)",
+        color: "var(--text-primary)",
+        fontWeight: 600,
+        "&:hover": {
+          background: "var(--border)",
+          borderColor: "var(--text-primary)",
+        }
+      };
+    } else if (variant === "cancel") {
+      variantStyle = {
+        background: "#FE7F7F",
+        color: "#000000",
+        border: "none",
+        fontWeight: 600,
+        boxShadow: "none",
+        "&:hover": {
+          background: "#FF6C6C",
+          boxShadow: "none",
+        }
+      };
+    } else if (variant === "audit") {
+      variantStyle = {
+        background: "#FFFFFF",
+        color: "#0A0A0A",
+        border: "none",
+        fontWeight: 700,
+        "&:hover": {
+          background: "#F0F0F0",
+        }
+      };
+    }
+
+    return (
+      <MuiButton
+        ref={ref}
+        disabled={disabled}
+        sx={{
+          ...baseStyle,
+          ...sizeStyle,
+          ...variantStyle,
+          ...sx,
+        }}
+        {...(props as any)}
+      >
+        {children}
+      </MuiButton>
+    );
+  }
+);
+
+Button.displayName = "Button";
+
+export default Button;

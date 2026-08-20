@@ -1,0 +1,219 @@
+@import "tailwindcss";
+
+:root {
+  /* Colors */
+  --background: #181818;
+  --foreground: #ffffff;
+  --card: #1E1E1E;
+  --slider-value-bg: #121212;
+  --border: rgb(58, 58, 58);
+  --primary: #00C0E8;
+  --accent: #00C0E8;
+  --accent-foreground: #ffffff;
+  --secondary: #3a3a3a;
+  --input: #3d3d3d;
+  --muted-foreground: #a0a0a0;
+  --destructive: #ef4444;
+
+  /* Toggle Group */
+  --toggle-bg: #3A3A3A4D;
+  --toggle-hover: #3a3a3a80;
+  --toggle-selected: #1fc3eb26;
+  --toggle-selected-hover: #1fc3eb40;
+
+  /* Sidebar */
+  --sidebar: #1a1a1a;
+  --sidebar-bg: #1a1a1a;
+  --sidebar-border: #3a3a3a;
+  --sidebar-accent: #ffffff12;
+  --sidebar-accent-hover: #ffffff1f;
+  --sidebar-foreground: #d1d5db;
+  --sidebar-foreground-muted: #6b7280;
+  --sidebar-active-bg: #1fc3eb1a;
+  --sidebar-active-text: #ffffff;
+  --sidebar-logo-color: #1FC3EB;
+  --sidebar-width: 240px;
+
+  /* Date picker — dark mode defaults (JS overrides on theme toggle) */
+  --date-icon-filter: invert(1) brightness(2);
+  --color-scheme: dark;
+}
+
+* {
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+}
+
+/* Input base styles */
+.bp-input {
+  width: 100%;
+  height: 2.5rem; /* h-10 = 40px */
+  padding: 0.5rem 0.75rem; /* py-2 px-3 */
+  margin-top: 0.375rem; /* mt-1.5 = 6px */
+  background: var(--card-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.875rem; /* 14px */
+  font-weight: 400;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+
+.bp-inputoption, .bp-input option {
+  background: var(--card-secondary);
+  color: var(--text-primary);
+}
+
+.bp-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.bp-input:hover {
+  border-color: rgba(31, 195, 235, 0.5);
+}
+
+.bp-input:focus {
+  border-color: #1FC3EB;
+  box-shadow: 0 0 0 4px rgba(31, 195, 235, 0.2);
+}
+
+.bp-input.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+}
+
+.bp-input.error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+}
+
+/* Header action buttons */
+.header-bell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.header-bell:hover {
+  background: color-mix(in oklab, #1fc3eb 50%, transparent);
+  color: #ffffff;
+}
+
+.header-logout {
+  border: none;
+  background: transparent;
+  color: #1FC3EB;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+.header-logout:hover {
+  background: color-mix(in oklab, #1fc3eb 50%, transparent);
+  color: #ffffff;
+}
+
+/* Remove number input spinner for all browsers */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}
+
+/* Date picker calendar icon styling */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: var(--date-icon-filter);
+  cursor: pointer;
+  opacity: 0.9;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+input[type="date"] {
+  color-scheme: var(--color-scheme);
+}
+
+/* Additional fallback */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Custom sleek scrollbar for modals */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Table and page layout fixes for static 100% zoom */
+table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+table th,
+table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Ensure pages don't scroll unnecessarily */
+main {
+  overflow: hidden;
+}
+
+/* Hide scrollbars when content fits */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
