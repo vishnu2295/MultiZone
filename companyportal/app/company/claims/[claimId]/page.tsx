@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import HomeNavbar from "@/components/home/HomeNavbar";
 import ClaimDetailsView from "@/components/claim-details/ClaimDetailsView";
 import { getClaimDetails } from "@/content/claimDetails";
@@ -9,14 +8,10 @@ import { BackArrowIcon } from "@/components/home/icons";
 export default async function ClaimDetailsPage({
   params,
 }: {
-  params: Promise<{ claimId: string }>;
+  params: Promise<{ claimId: number }>;
 }) {
   const { claimId } = await params;
-  const claim = getClaimDetails(decodeURIComponent(claimId));
-
-  if (!claim) {
-    notFound();
-  }
+  const claim = getClaimDetails(String(claimId));
 
   return (
     <main className="min-h-screen bg-[#F3F7FA]">
@@ -41,7 +36,7 @@ export default async function ClaimDetailsPage({
           Back
         </Link>
 
-        <ClaimDetailsView claim={claim} />
+        <ClaimDetailsView claim={claim} claimantId={String(claimId)} />
       </div>
     </main>
   );

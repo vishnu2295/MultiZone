@@ -5,6 +5,7 @@ export const claimsContent = {
 };
 
 export interface Claim {
+  id: number;
   title: string;
   reference: string;
   eventDate: string;
@@ -50,6 +51,7 @@ function formatDate(value: string): string {
 
 export function mapApiClaim(claim: ApiClaim): Claim {
   return {
+    id: claim.claimId,
     title: claim.eventDescription,
     reference: claim.claimReferenceNumber,
     eventDate: formatDate(claim.eventDate),
