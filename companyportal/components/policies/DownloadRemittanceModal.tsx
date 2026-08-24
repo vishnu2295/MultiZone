@@ -19,7 +19,7 @@ const DATE_RANGE_PRESETS = [
 // payment type filter yet (backend change in progress). Kept in the form so
 // the UI matches the design; wire it into the request once that ships.
 const PAYMENT_TYPES = [
-  "All",
+  // "All",
   "Claim",
   "Commission",
   "Refund",
@@ -44,7 +44,10 @@ function addDays(date: Date, days: number): Date {
 }
 
 /** Computes the {fromDate, toDate} pair (yyyy-mm-dd) for a preset label. */
-function computeDateRange(preset: string): { fromDate: string; toDate: string } {
+function computeDateRange(preset: string): {
+  fromDate: string;
+  toDate: string;
+} {
   const today = startOfDay(new Date());
   const dayOfWeek = today.getDay(); // 0 = Sunday .. 6 = Saturday
   const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -65,18 +68,35 @@ function computeDateRange(preset: string): { fromDate: string; toDate: string } 
       return { fromDate: toIsoDate(firstOfMonth), toDate: toIsoDate(today) };
     }
     case "Last Month": {
-      const firstOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const lastOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-      return { fromDate: toIsoDate(firstOfLastMonth), toDate: toIsoDate(lastOfLastMonth) };
+      const firstOfLastMonth = new Date(
+        today.getFullYear(),
+        today.getMonth() - 1,
+        1,
+      );
+      const lastOfLastMonth = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        0,
+      );
+      return {
+        fromDate: toIsoDate(firstOfLastMonth),
+        toDate: toIsoDate(lastOfLastMonth),
+      };
     }
     case "This Year": {
       const firstOfYear = new Date(today.getFullYear(), 0, 1);
       return { fromDate: toIsoDate(firstOfYear), toDate: toIsoDate(today) };
     }
     case "Last 30 Days":
-      return { fromDate: toIsoDate(addDays(today, -29)), toDate: toIsoDate(today) };
+      return {
+        fromDate: toIsoDate(addDays(today, -29)),
+        toDate: toIsoDate(today),
+      };
     case "Last 90 Days":
-      return { fromDate: toIsoDate(addDays(today, -89)), toDate: toIsoDate(today) };
+      return {
+        fromDate: toIsoDate(addDays(today, -89)),
+        toDate: toIsoDate(today),
+      };
     case "All Time":
     default:
       return { fromDate: "", toDate: "" };
@@ -128,6 +148,9 @@ export default function DownloadRemittanceModal({
     setToDate(range.toDate);
   };
 
+  const isFormValid =
+    Boolean(fromDate) && Boolean(toDate) && Boolean(paymentType);
+
   const handleDownloadClick = async () => {
     setIsDownloading(true);
     try {
@@ -164,28 +187,38 @@ export default function DownloadRemittanceModal({
 
         <div className="flex flex-col gap-4 px-4 py-5 sm:px-6">
           <Field label="Pre-defined Date Range">
-            <Select value={preset} onChange={handlePresetChange} options={DATE_RANGE_PRESETS} />
+            <Select
+              value={preset}
+              onChange={handlePresetChange}
+              options={DATE_RANGE_PRESETS}
+            />
           </Field>
 
-          <Field label="Payment Type">
-            <Select value={paymentType} onChange={setPaymentType} options={PAYMENT_TYPES} />
+          <Field label="Payment Type" required>
+            <Select
+              value={paymentType}
+              onChange={setPaymentType}
+              options={PAYMENT_TYPES}
+            />
           </Field>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Start Date">
+            <Field label="Start Date" required>
               <input
                 type="date"
                 value={fromDate}
                 onChange={(event) => setFromDate(event.target.value)}
+                required
                 className="w-full rounded-lg border border-black/10 px-4 py-2.5 text-[13.5px] font-medium text-[#13537B] outline-none focus:border-[#07C1E9] [color-scheme:light]"
               />
             </Field>
 
-            <Field label="End Date">
+            <Field label="End Date" required>
               <input
                 type="date"
                 value={toDate}
                 onChange={(event) => setToDate(event.target.value)}
+                required
                 className="w-full rounded-lg border border-black/10 px-4 py-2.5 text-[13.5px] font-medium text-[#13537B] outline-none focus:border-[#07C1E9] [color-scheme:light]"
               />
             </Field>
@@ -203,7 +236,7 @@ export default function DownloadRemittanceModal({
           <button
             type="button"
             onClick={handleDownloadClick}
-            disabled={isDownloading}
+            disabled={isDownloading || !isFormValid}
             className="w-full cursor-pointer rounded-md bg-[#07C1E9] px-6 py-2.5 text-[13px] font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
             {isDownloading ? "Downloading..." : "Download"}
@@ -214,10 +247,21 @@ export default function DownloadRemittanceModal({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-[13px] font-semibold text-[#13537B]">{label}</label>
+      <label className="text-[13px] font-semibold text-[#13537B]">
+        {label}
+        {required && <span className="text-[#E77B7B]"> *</span>}
+      </label>
       {children}
     </div>
   );
