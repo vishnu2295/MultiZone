@@ -764,6 +764,18 @@ export const claimSections: readonly ClaimSection[] = [
   "Letters & Templates",
 ] as const;
 
+/** Route segment each section lives under, e.g. `/company/claims/1/beneficiaries`. */
+export const claimSectionSlugs: Record<ClaimSection, string> = {
+  "Claimant & Injury Details": "claimant-injury",
+  Employment: "employment",
+  Beneficiaries: "beneficiaries",
+  Earnings: "earnings",
+  Requirements: "requirements",
+  "Medical Reports": "medical-reports",
+  Documents: "documents",
+  "Letters & Templates": "letters",
+};
+
 const pendingClaim: ClaimDetails = {
   id: "CLM-2024-003",
   claimantName: "John Andrew Doe",
