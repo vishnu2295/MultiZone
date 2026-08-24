@@ -1,43 +1,38 @@
-import Image from "next/image";
-import Link from "next/link";
-import HomeNavbar from "@/components/home/HomeNavbar";
-import ClaimDetailsView from "@/components/claim-details/ClaimDetailsView";
-import { getClaimDetails } from "@/content/claimDetails";
-import { BackArrowIcon } from "@/components/home/icons";
+import ClaimTabsPanel from "@/components/claim-details/ClaimTabsPanel";
+import serverApiService from "@/lib/api/serverApiService";
+import {
+  getClaimDetails,
+  mapApiDocuments,
+  type ApiClaimDocument,
+  type ClaimMedicalDocument,
+} from "@/content/claimDetails";
 
-export default async function ClaimDetailsPage({
+export default async function ClaimDetailsIndexPage({
   params,
 }: {
-  params: Promise<{ claimId: number }>;
+  params: Promise<{ claimId: string }>;
 }) {
   const { claimId } = await params;
-  const claim = getClaimDetails(String(claimId));
+  const claimantId = String(claimId);
+  const mockClaim = getClaimDetails(claimantId);
+
+  let invoiceDocuments: ClaimMedicalDocument[] = mockClaim.invoiceDocuments;
+
+  try {
+    const documentsResponse = await serverApiService.get<ApiClaimDocument[]>(
+      `/employer/documents/${claimantId}`,
+    );
+    invoiceDocuments = mapApiDocuments(documentsResponse).invoiceDocuments;
+  } catch (error) {
+    console.error("Failed to load claim documents:", error);
+  }
 
   return (
-    <main className="min-h-screen bg-[#F3F7FA]">
-      <HomeNavbar />
-
-      <div className="relative mx-auto w-full max-w-[1440px] px-4 pb-16 pt-[112px] sm:px-6 lg:px-14">
-        <div className="pointer-events-none absolute right-0 top-[2px] h-[clamp(220px,29vw,414px)] w-[65%]">
-          <Image
-            src="/company/icons/pages_wave.png"
-            alt=""
-            fill
-            quality={100}
-            className="object-contain object-top"
-          />
-        </div>
-
-        <Link
-          href="/company/claims"
-          className="relative z-10 inline-flex items-center gap-2 text-[14px] font-bold leading-[28px] text-[#13537B]"
-        >
-          <BackArrowIcon className="h-5 w-5" />
-          Back
-        </Link>
-
-        <ClaimDetailsView claim={claim} claimantId={String(claimId)} />
-      </div>
-    </main>
+    <ClaimTabsPanel
+      invoiceDocuments={invoiceDocuments}
+      medicalInvoices={mockClaim.medicalInvoices}
+      authorizations={mockClaim.authorizations}
+      payments={mockClaim.payments}
+    />
   );
 }
