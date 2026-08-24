@@ -81,7 +81,7 @@ export type ClaimMedicalRecords = {
 };
 
 export type ApiMedicalReportDocument = {
-  id: string;
+  documentId: number;
   documentType: string;
   fileName: string;
   uploadedDate: string;
@@ -123,13 +123,18 @@ export type ClaimMedicalReports = {
   sickNoteMedicalReports: ClaimMedicalReport[];
 };
 
-export type ApiMedicalReportListItem = ApiMedicalReport & {
+export type ApiMedicalReportListItem = {
+  healthcareProviderName: string;
+  practiceNumber: string;
+  icd10Code: string;
+  consultationDate: string;
   status: string;
   updatedBy: string;
+  formDetails: ApiMedicalReport;
 };
 
 export type ApiMedicalReportsResponse = {
-  firstMedicalReport: ApiMedicalReportListItem | null;
+  firstMedicalReport: ApiMedicalReportListItem[];
   progressMedicalReports: ApiMedicalReportListItem[];
   finalMedicalReports: ApiMedicalReportListItem[];
   sickNoteMedicalReports: ApiMedicalReportListItem[];
@@ -148,12 +153,12 @@ function formatMedicalReportDate(value: string): string {
 function mapMedicalReportSummary(report: ApiMedicalReportListItem): ClaimMedicalReport {
   return {
     healthcareProviderName: report.healthcareProviderName,
-    practiceNumber: report.hcpPracticeNumber,
-    ICD10Code: report.icd10Codes?.[0]?.code ?? "-",
-    consultationDate: formatMedicalReportDate(report.dateOfConsultation),
+    practiceNumber: report.practiceNumber,
+    ICD10Code: report.icd10Code,
+    consultationDate: formatMedicalReportDate(report.consultationDate),
     status: report.status,
     updatedBy: report.updatedBy,
-    formDetails: report,
+    formDetails: report.formDetails,
   };
 }
 
@@ -161,9 +166,9 @@ export function mapApiMedicalReports(
   response: ApiMedicalReportsResponse,
 ): ClaimMedicalReports {
   return {
-    firstMedicalReport: response.firstMedicalReport
-      ? [mapMedicalReportSummary(response.firstMedicalReport)]
-      : [],
+    firstMedicalReport: (response.firstMedicalReport ?? []).map(
+      mapMedicalReportSummary,
+    ),
     progressMedicalReports: (response.progressMedicalReports ?? []).map(
       mapMedicalReportSummary,
     ),
@@ -234,6 +239,7 @@ export type ClaimUploadDocument = {
 };
 
 export type ApiClaimDocument = {
+  documentId: number;
   documentKeySet: string;
   documentKey: string;
   documentType: string;
@@ -266,14 +272,64 @@ function formatDocumentTimestamp(value: string): string {
   return `${datePart} · ${timePart}`;
 }
 
-export function mapApiDocuments(
-  response: ApiClaimDocument[],
-): ClaimUploadDocument[] {
-  return response.map((doc) => ({
-    name: formatDocumentLabel(doc.documentType),
-    fileName: doc.fileName,
-    uploadedAt: formatDocumentTimestamp(doc.uploadedDate),
-  }));
+const REQUIREMENTS_DOCUMENT_KEY_SET = "Claim Requirements";
+const CLAIM_DOCUMENT_KEY_SET = "Claim";
+const INVOICES_DOCUMENT_KEY_SET = "Invoices";
+const MEDICAL_REPORTS_DOCUMENT_KEY_SET = "Medical Reports";
+
+export type MappedClaimDocuments = {
+  requirements: ClaimUploadDocument[];
+  documentGroups: ClaimDocumentGroup[];
+  invoiceDocuments: ClaimMedicalDocument[];
+  medicalReportDocuments: ClaimMedicalDocument[];
+};
+
+/**
+ * Routes the flat document list by `documentKeySet` to the section that
+ * displays it: "Claim Requirements" -> Requirements, "Claim" -> the
+ * Documents section, "Invoices" -> the Invoices tab, "Medical Reports" ->
+ * the Medical Reports section. Any other keySet is currently unhandled.
+ */
+export function mapApiDocuments(response: ApiClaimDocument[]): MappedClaimDocuments {
+  const requirements: ClaimUploadDocument[] = [];
+  const claimDocuments: ClaimMedicalDocument[] = [];
+  const invoiceDocuments: ClaimMedicalDocument[] = [];
+  const medicalReportDocuments: ClaimMedicalDocument[] = [];
+
+  for (const doc of response) {
+    const document = {
+      name: formatDocumentLabel(doc.documentType),
+      fileName: doc.fileName,
+      documentType: doc.fileName,
+      uploadedAt: formatDocumentTimestamp(doc.uploadedDate),
+    };
+
+    switch (doc.documentKeySet) {
+      case REQUIREMENTS_DOCUMENT_KEY_SET:
+        requirements.push(document);
+        break;
+      case CLAIM_DOCUMENT_KEY_SET:
+        claimDocuments.push(document);
+        break;
+      case INVOICES_DOCUMENT_KEY_SET:
+        invoiceDocuments.push(document);
+        break;
+      case MEDICAL_REPORTS_DOCUMENT_KEY_SET:
+        medicalReportDocuments.push(document);
+        break;
+      default:
+        break;
+    }
+  }
+
+  return {
+    requirements,
+    documentGroups: claimDocuments.length
+      ? [{ title: CLAIM_DOCUMENT_KEY_SET, documents: claimDocuments }]
+      : [],
+    invoiceDocuments,
+    medicalReportDocuments,
+  };
 }
 
 export type ClaimBeneficiary = {
@@ -677,7 +733,9 @@ export type ClaimDetails = {
   earningsDocuments: ClaimUploadDocument[];
   requirements: ClaimUploadDocument[];
   medicalReports: ClaimMedicalReports;
+  medicalReportDocuments: ClaimMedicalDocument[];
   documentGroups: ClaimDocumentGroup[];
+  invoiceDocuments: ClaimMedicalDocument[];
   letters: ClaimMedicalDocument[];
   employment: ClaimFieldGroup[];
 };
@@ -1026,7 +1084,7 @@ const pendingClaim: ClaimDetails = {
           isPatientEligibleForDaysOff: false,
           medicalDocuments: [
             {
-              id: "doc-1",
+              documentId: 1,
               documentType: "FirstMedicalReport",
               fileName: "Acute Medication.pdf",
               uploadedDate: "2024-01-10T10:32:00Z",
@@ -1105,6 +1163,30 @@ const pendingClaim: ClaimDetails = {
           uploadedAt: "10 Jan 2024 · 10:32 am",
         },
       ],
+    },
+  ],
+  invoiceDocuments: [
+    {
+      name: "Hospital Invoice",
+      documentType: "Hospital Invoice.pdf",
+      uploadedAt: "10 Jan 2024 · 10:32 am",
+    },
+    {
+      name: "Pharmacy Invoice",
+      documentType: "Pharmacy Invoice.pdf",
+      uploadedAt: "10 Jan 2024 · 10:32 am",
+    },
+  ],
+  medicalReportDocuments: [
+    {
+      name: "Specialist Report",
+      documentType: "Specialist Report.pdf",
+      uploadedAt: "10 Jan 2024 · 10:32 am",
+    },
+    {
+      name: "Radiology Report",
+      documentType: "Radiology Report.pdf",
+      uploadedAt: "10 Jan 2024 · 10:32 am",
     },
   ],
   letters: [

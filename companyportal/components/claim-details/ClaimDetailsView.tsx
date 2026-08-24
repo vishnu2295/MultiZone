@@ -65,6 +65,11 @@ export default function ClaimDetailsView({
   const [beneficiaries, setBeneficiaries] = useState(claim.beneficiaries);
   const [earnings, setEarnings] = useState(claim.earnings);
   const [requirements, setRequirements] = useState(claim.requirements);
+  const [documentGroups, setDocumentGroups] = useState(claim.documentGroups);
+  const [invoiceDocuments, setInvoiceDocuments] = useState(claim.invoiceDocuments);
+  const [medicalReportDocuments, setMedicalReportDocuments] = useState(
+    claim.medicalReportDocuments,
+  );
   const [medicalReports, setMedicalReports] = useState(claim.medicalReports);
   const [isClaimantLoaded, setIsClaimantLoaded] = useState(false);
 
@@ -128,7 +133,11 @@ export default function ClaimDetailsView({
         setEmployment(mapApiEmploymentDetails(employmentResponse));
         setBeneficiaries(mapApiBeneficiaries(beneficiariesResponse));
         setEarnings(mapApiEarnings(earningsResponse));
-        setRequirements(mapApiDocuments(documentsResponse));
+        const mappedDocuments = mapApiDocuments(documentsResponse);
+        setRequirements(mappedDocuments.requirements);
+        setDocumentGroups(mappedDocuments.documentGroups);
+        setInvoiceDocuments(mappedDocuments.invoiceDocuments);
+        setMedicalReportDocuments(mappedDocuments.medicalReportDocuments);
         setMedicalReports(mapApiMedicalReports(medicalReportsResponse));
       } catch (error) {
         console.error("Failed to load claimant/injury details:", error);
@@ -153,6 +162,9 @@ export default function ClaimDetailsView({
     beneficiaries,
     earnings,
     requirements,
+    documentGroups,
+    invoiceDocuments,
+    medicalReportDocuments,
     medicalReports,
   };
 
@@ -189,9 +201,13 @@ export default function ClaimDetailsView({
                 {activeTab}
               </h2>
 
-              {/* {activeTab === "Invoices" && (
-                <InvoicesPanel invoices={claim.invoices} />
-              )} */}
+              {activeTab === "Invoices" && (
+                <div className="flex flex-col gap-4">
+                  {invoiceDocuments.map((document) => (
+                    <DocumentRow key={document.name} document={document} />
+                  ))}
+                </div>
+              )}
               {activeTab === "Medical Invoices" && (
                 <InvoicesPanel invoices={claim.medicalInvoices} />
               )}
@@ -211,9 +227,12 @@ export default function ClaimDetailsView({
             <BeneficiariesPanel beneficiaries={beneficiaries} />
           </div>
         ) : activeSection === "Documents" ? (
-          <DocumentsPanel groups={claim.documentGroups} />
+          <DocumentsPanel groups={documentGroups} />
         ) : activeSection === "Medical Reports" ? (
-          <MedicalReportsPanel reports={medicalReports} />
+          <MedicalReportsPanel
+            reports={medicalReports}
+            documents={medicalReportDocuments}
+          />
         ) : activeSection === "Requirements" ? (
           <DocumentUploadList
             title="Claim Requirements"

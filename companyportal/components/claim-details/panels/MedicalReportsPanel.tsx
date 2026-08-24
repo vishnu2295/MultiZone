@@ -7,17 +7,17 @@ import DocumentRow from "@/components/claim-details/panels/DocumentRow";
 import IcdCodeCard from "@/components/claim-details/panels/IcdCodeCard";
 import {
   mapApiMedicalReportDetail,
+  type ClaimMedicalDocument,
   type ClaimMedicalRecords,
   type ClaimMedicalReport,
   type ClaimMedicalReports,
 } from "@/content/claimDetails";
 
-const tabs: Array<{ key: keyof ClaimMedicalReports; label: string }> = [
-  { key: "firstMedicalReport", label: "First Medical Report" },
-  { key: "progressMedicalReports", label: "Progress Medical Reports" },
-  { key: "finalMedicalReports", label: "Final Medical Reports" },
-  { key: "sickNoteMedicalReports", label: "Sick Note Medical Reports" },
-];
+/** Turns an API category key like "sickNoteMedicalReports" into "Sick Note Medical Reports". */
+function formatReportCategoryLabel(key: string): string {
+  const withSpaces = key.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+  return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
+}
 
 function subscribeNoop() {
   return () => {};
@@ -172,11 +172,18 @@ function ReportDetailsDrawer({
 
 export default function MedicalReportsPanel({
   reports,
+  documents,
 }: {
   reports: ClaimMedicalReports;
+  documents: ClaimMedicalDocument[];
 }) {
-  const [activeKey, setActiveKey] =
-    useState<keyof ClaimMedicalReports>("firstMedicalReport");
+  const tabs = (Object.keys(reports) as Array<keyof ClaimMedicalReports>).map(
+    (key) => ({ key, label: formatReportCategoryLabel(key) }),
+  );
+
+  const [activeKey, setActiveKey] = useState<keyof ClaimMedicalReports>(
+    tabs[0]?.key ?? "firstMedicalReport",
+  );
   const [viewingReport, setViewingReport] = useState<ClaimMedicalReport | null>(
     null,
   );
@@ -257,6 +264,19 @@ export default function MedicalReportsPanel({
           ))
         )}
       </div>
+
+      {documents.length > 0 && (
+        <>
+          <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
+            Medical Report Documents
+          </h2>
+          <div className="flex flex-col gap-4">
+            {documents.map((document) => (
+              <DocumentRow key={document.name} document={document} />
+            ))}
+          </div>
+        </>
+      )}
 
       <ReportDetailsDrawer
         report={viewingReport}
