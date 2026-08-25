@@ -93,6 +93,7 @@ export default function ClaimInfoCard({
 
   const basePath = `/company/claims/${claimId}`;
   const isIndexActive = pathname === basePath;
+  const queryString = ref ? `?ref=${encodeURIComponent(ref)}` : "";
 
   return (
     <aside className="w-full shrink-0 rounded-xl bg-white p-4 shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px]">
@@ -138,7 +139,7 @@ export default function ClaimInfoCard({
 
       <nav className="mt-4 flex flex-col gap-3">
         <Link
-          href={basePath}
+          href={`${basePath}${queryString}`}
           className={`flex items-center gap-1 text-left text-[12px] leading-[15px] text-[#13537B] transition ${
             isIndexActive
               ? "rounded-lg bg-[#F3F7FA] px-2 py-2.5 font-bold"
@@ -151,11 +152,12 @@ export default function ClaimInfoCard({
         {claimSections.map((section) => {
           const href = `${basePath}/${claimSectionSlugs[section]}`;
           const isActive = pathname === href;
+          const hrefWithRef = `${href}${queryString}`;
 
           return (
             <Link
               key={section}
-              href={href}
+              href={hrefWithRef}
               className={`flex items-center gap-1 text-left text-[12px] leading-[15px] text-[#13537B] transition ${
                 isActive
                   ? "rounded-lg bg-[#F3F7FA] px-2 py-2.5 font-bold"
