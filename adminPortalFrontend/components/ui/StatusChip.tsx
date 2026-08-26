@@ -104,7 +104,6 @@ export function StatusChip({ status, sx, ...props }: StatusChipProps) {
 
   const normalizedStatus = status?.toLowerCase().split(":")[0].trim() || "";
   const variant = STATUS_VARIANTS[normalizedStatus] ?? "inactive";
-  console.log("pppppppppppppppppp", normalizedStatus, variant);
   const { bg, text } = STATUS_GROUPS[variant];
 
   return (

@@ -1,7 +1,11 @@
 import EarningsPanel from "@/components/claim-details/panels/EarningsPanel";
 import serverApiService from "@/lib/api/serverApiService";
 import {
-  getClaimDetails,
+  ApiClaimDocument,
+  ClaimDocumentGroup,
+  ClaimUploadDocument,
+  mapApiDocuments,
+  // getClaimDetails,
   mapApiEarnings,
   type ApiEarningsRecord,
   type ClaimEarningsRecord,
@@ -14,20 +18,21 @@ export default async function EarningsPage({
 }) {
   const { claimId } = await params;
   const claimantId = String(claimId);
-  const mockClaim = getClaimDetails(claimantId);
-
-  let earnings: ClaimEarningsRecord[] = mockClaim.earnings;
+  let earnings: ClaimEarningsRecord[] = [];
+  let documentGroups: ClaimUploadDocument[] = [];
 
   try {
     const earningsResponse = await serverApiService.get<ApiEarningsRecord[]>(
       `/employer/earnings/${claimantId}`,
     );
     earnings = mapApiEarnings(earningsResponse);
+    const documentsResponse = await serverApiService.get<ApiClaimDocument[]>(
+      `/employer/documents/${claimantId}`,
+    );
+    documentGroups = mapApiDocuments(documentsResponse).earningDocuments ??[];
   } catch (error) {
     console.error("Failed to load earnings:", error);
   }
 
-  return (
-    <EarningsPanel earnings={earnings} documents={mockClaim.earningsDocuments} />
-  );
+  return <EarningsPanel earnings={earnings} documents={documentGroups} />;
 }

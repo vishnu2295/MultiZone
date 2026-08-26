@@ -1,7 +1,6 @@
 import ClaimTabsPanel from "@/components/claim-details/ClaimTabsPanel";
 import serverApiService from "@/lib/api/serverApiService";
 import {
-  getClaimDetails,
   mapApiDocuments,
   type ApiClaimDocument,
   type ClaimMedicalDocument,
@@ -14,9 +13,8 @@ export default async function ClaimDetailsIndexPage({
 }) {
   const { claimId } = await params;
   const claimantId = String(claimId);
-  const mockClaim = getClaimDetails(claimantId);
 
-  let invoiceDocuments: ClaimMedicalDocument[] = mockClaim.invoiceDocuments;
+  let invoiceDocuments: ClaimMedicalDocument[] = [];
 
   try {
     const documentsResponse = await serverApiService.get<ApiClaimDocument[]>(
@@ -30,9 +28,9 @@ export default async function ClaimDetailsIndexPage({
   return (
     <ClaimTabsPanel
       invoiceDocuments={invoiceDocuments}
-      medicalInvoices={mockClaim.medicalInvoices}
-      authorizations={mockClaim.authorizations}
-      payments={mockClaim.payments}
+      medicalInvoices={[]}
+      authorizations={[]}
+      payments={[]}
     />
   );
 }

@@ -1,11 +1,49 @@
+"use client";
+
+import { useState } from "react";
 import { DocumentIcon, DownloadIcon } from "@/components/home/icons";
 import type { ClaimMedicalDocument } from "@/content/claimDetails";
+import apiService from "@/lib/api/apiService";
+import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { downloadBase64File } from "@/lib/utils/downloadFile";
+
+interface ApiDocumentDownload {
+  fileName: string;
+  fileType: string;
+  content: string;
+}
 
 export default function DocumentRow({
   document,
 }: {
   document: ClaimMedicalDocument;
 }) {
+  const [isDownloading, setIsDownloading] = useState(false);
+  async function handleDownload() {
+    if (!document.documentId) return;
+
+    setIsDownloading(true);
+    try {
+      const { token, coidId } = await getEmployerCoidId();
+      if (!coidId) return;
+
+      const response = await apiService.get<ApiDocumentDownload>(
+        `/employer/${coidId}/documents/${document.documentId}/download`,
+        { token },
+      );
+
+      downloadBase64File(
+        response.fileName,
+        response.fileType,
+        response.content,
+      );
+    } catch (error) {
+      console.error("Failed to download document:", error);
+    } finally {
+      setIsDownloading(false);
+    }
+  }
+
   return (
     <div className="flex items-center justify-between gap-4 rounded-2xl bg-white p-4 shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
       <div className="flex items-center gap-3">
@@ -36,7 +74,9 @@ export default function DocumentRow({
       <button
         type="button"
         aria-label={`Download ${document.name}`}
-        className="flex h-9 w-9 cursor-not-allowed shrink-0 items-center justify-center rounded-lg border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA]"
+        disabled={!document.documentId || isDownloading}
+        onClick={handleDownload}
+        className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-50"
       >
         <DownloadIcon className="h-4 w-4" />
       </button>

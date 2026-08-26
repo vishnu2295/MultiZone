@@ -1,7 +1,6 @@
 import MedicalReportsPanel from "@/components/claim-details/panels/MedicalReportsPanel";
 import serverApiService from "@/lib/api/serverApiService";
 import {
-  getClaimDetails,
   mapApiDocuments,
   mapApiMedicalReports,
   type ApiClaimDocument,
@@ -17,26 +16,31 @@ export default async function MedicalReportsPage({
 }) {
   const { claimId } = await params;
   const claimantId = String(claimId);
-  const mockClaim = getClaimDetails(claimantId);
 
-  let medicalReportDocuments: ClaimMedicalDocument[] = mockClaim.medicalReportDocuments;
-  let medicalReports: ClaimMedicalReports = mockClaim.medicalReports;
+  let medicalReportDocuments: ClaimMedicalDocument[] = [];
+  let medicalReports: ClaimMedicalReports = {} as ClaimMedicalReports;
 
   try {
     const [documentsResponse, medicalReportsResponse] = await Promise.all([
-      serverApiService.get<ApiClaimDocument[]>(`/employer/documents/${claimantId}`),
+      serverApiService.get<ApiClaimDocument[]>(
+        `/employer/documents/${claimantId}`,
+      ),
       serverApiService.get<ApiMedicalReportsResponse>(
         `/employer/medicalRecords/${claimantId}`,
       ),
     ]);
 
-    medicalReportDocuments = mapApiDocuments(documentsResponse).medicalReportDocuments;
+    medicalReportDocuments =
+      mapApiDocuments(documentsResponse).medicalReportDocuments;
     medicalReports = mapApiMedicalReports(medicalReportsResponse);
   } catch (error) {
     console.error("Failed to load medical reports:", error);
   }
 
   return (
-    <MedicalReportsPanel reports={medicalReports} documents={medicalReportDocuments} />
+    <MedicalReportsPanel
+      reports={medicalReports}
+      documents={medicalReportDocuments}
+    />
   );
 }

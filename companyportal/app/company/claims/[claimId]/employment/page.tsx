@@ -1,7 +1,6 @@
 import FieldGroupsPanel from "@/components/claim-details/panels/FieldGroupsPanel";
 import serverApiService from "@/lib/api/serverApiService";
 import {
-  getClaimDetails,
   mapApiEmploymentDetails,
   type ApiEmploymentDetails,
   type ClaimFieldGroup,
@@ -14,9 +13,8 @@ export default async function EmploymentPage({
 }) {
   const { claimId } = await params;
   const claimantId = String(claimId);
-  const mockClaim = getClaimDetails(claimantId);
 
-  let employment: ClaimFieldGroup[] = mockClaim.employment;
+  let employment: ClaimFieldGroup[] = [];
 
   try {
     const employmentResponse = await serverApiService.get<ApiEmploymentDetails>(

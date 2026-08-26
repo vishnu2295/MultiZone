@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DocumentIcon } from "@/components/home/icons";
+import DocumentRow from "@/components/claim-details/panels/DocumentRow";
 import DocumentUploadModal from "@/components/claim-details/DocumentUploadModal";
 import type { ClaimUploadDocument } from "@/content/claimDetails";
 
@@ -34,36 +34,23 @@ export default function DocumentUploadList({
       </div>
 
       <div className="flex flex-col gap-4">
-        {rows.map((row) => (
-          <div
-            key={row.name}
-            className="rounded-2xl bg-white p-4 shadow-[0px_2px_16px_rgba(218,218,218,0.08)]"
-          >
-            <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EAF6FE]">
-                <DocumentIcon className="h-4 w-4 text-[#07C1E9]" />
-              </span>
-
-              <div className="flex flex-col gap-0.5">
-                <span className="text-[13.5px] font-bold leading-[20px] text-[#13537B]">
-                  {row.name}
-                </span>
-
-                {row.fileName ? (
-                  <span className="flex flex-wrap items-center gap-2 text-[11.5px] leading-[17px] text-[#64748B]">
-                    Document Type
-                    <span className="font-semibold text-[#13537B]">: {row.fileName}</span>
-                    {row.uploadedAt && <span>{row.uploadedAt}</span>}
-                  </span>
-                ) : (
-                  <span className="text-[11.5px] leading-[17px] text-[#94A3B8]">
-                    No document uploaded
-                  </span>
-                )}
-              </div>
-            </div>
+        {rows.length === 0 ? (
+          <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
+            No documents found/uploaded.
           </div>
-        ))}
+        ) : (
+          rows.map((row) => (
+            <DocumentRow
+              key={row.name}
+              document={{
+                documentId: row.documentId,
+                name: row.name,
+                documentType: row.fileName,
+                uploadedAt: row.uploadedAt,
+              }}
+            />
+          ))
+        )}
       </div>
 
       <DocumentUploadModal

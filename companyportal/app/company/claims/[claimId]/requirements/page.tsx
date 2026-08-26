@@ -1,7 +1,7 @@
 import DocumentUploadList from "@/components/claim-details/panels/DocumentUploadList";
 import serverApiService from "@/lib/api/serverApiService";
 import {
-  getClaimDetails,
+  // getClaimDetails,
   mapApiDocuments,
   type ApiClaimDocument,
   type ClaimUploadDocument,
@@ -14,9 +14,8 @@ export default async function RequirementsPage({
 }) {
   const { claimId } = await params;
   const claimantId = String(claimId);
-  const mockClaim = getClaimDetails(claimantId);
 
-  let requirements: ClaimUploadDocument[] = mockClaim.requirements;
+  let requirements: ClaimUploadDocument[] = [];
 
   try {
     const documentsResponse = await serverApiService.get<ApiClaimDocument[]>(
@@ -27,5 +26,7 @@ export default async function RequirementsPage({
     console.error("Failed to load claim requirements:", error);
   }
 
-  return <DocumentUploadList title="Claim Requirements" documents={requirements} />;
+  return (
+    <DocumentUploadList title="Claim Requirements" documents={requirements} />
+  );
 }

@@ -265,7 +265,7 @@ export default function MedicalReportsPanel({
         )}
       </div>
 
-      {documents.length > 0 && (
+      {/* {documents.length > 0 && (
         <>
           <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
             Medical Report Documents
@@ -276,7 +276,7 @@ export default function MedicalReportsPanel({
             ))}
           </div>
         </>
-      )}
+      )} */}
 
       <ReportDetailsDrawer
         report={viewingReport}
