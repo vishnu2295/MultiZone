@@ -1,4 +1,5 @@
 import AccessRestricted from "@/components/home/AccessRestricted";
+import HomeNavbar from "@/components/home/HomeNavbar";
 import { hasOrganizationAccessServer } from "@/lib/auth/employerClaims.server";
 
 // Gates every /company route: users without an organization role on their
@@ -11,9 +12,10 @@ export default async function CompanyLayout({
 }) {
   const hasAccess = await hasOrganizationAccessServer();
 
-  if (!hasAccess) {
-    return <AccessRestricted />;
-  }
-
-  return <>{children}</>;
+  return (
+    <>
+      <HomeNavbar />
+      {hasAccess ? children : <AccessRestricted />}
+    </>
+  );
 }

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import HomeNavbar from "@/components/home/HomeNavbar";
 import PoliciesList from "@/components/policies/PoliciesList";
 import { policiesContent } from "@/content/policies";
 import { BackArrowIcon } from "@/components/home/icons";
@@ -7,8 +6,6 @@ import { BackArrowIcon } from "@/components/home/icons";
 export default function PoliciesPage() {
   return (
     <main className="min-h-screen bg-[#F3F7FA]">
-      <HomeNavbar />
-
       <div className="mx-auto w-full max-w-[1440px] px-4 pb-16 pt-[112px] sm:px-6 lg:px-14">
         <Link
           href="/company"

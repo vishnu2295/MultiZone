@@ -21,8 +21,8 @@ export default function ClaimCard({ claim }: { claim: Claim }) {
             {claim.title}
           </h2>
           <p className="mt-1 max-w-[760px] text-[12.5px] leading-[19px] text-[#64748B]">
-            Claim Ref No : {claim.reference} · Event Date : {claim.eventDate} ·
-            Date Reported : {claim.reportedDate}
+            Claim Ref No : <span className="font-bold">{claim.reference}</span> · Event Date : <span className="font-bold">{claim.eventDate}</span> ·
+            Date Reported : <span className="font-bold">{claim.reportedDate}</span>
           </p>
           <p className="mt-2 text-[12px] leading-[18px] text-[#64748B]">
             <span aria-hidden className="mr-1">
