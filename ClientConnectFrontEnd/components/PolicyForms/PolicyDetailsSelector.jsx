@@ -26,8 +26,6 @@ const PolicyDetailsSelector = ({
 }) => {
   const accessToken = useToken();
 
-  console.log(policyDetails);
-
   const getProductTypes = useQuery(
     "ProductTypes",
     () => {
@@ -117,7 +115,6 @@ const PolicyDetailsSelector = ({
       // Set the month to the start of the second month
       date = date.add(2, "month").startOf("month");
     }
-    console.log(date.format("YYYY-MM-DD"));
     setPolicyDetails({
       ...policyDetails,
       date: date,

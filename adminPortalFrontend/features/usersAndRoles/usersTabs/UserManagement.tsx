@@ -65,7 +65,6 @@ export default function UserManagement() {
   const getRole = useCallback(async () => {
     try {
       const url = `${process.env.NEXT_PUBLIC_API_URL}/users/roles`;
-      console.log("URL:", accessToken);
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${accessToken?.accessToken}`,

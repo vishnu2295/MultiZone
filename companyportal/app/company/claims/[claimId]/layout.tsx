@@ -3,7 +3,12 @@ import Link from "next/link";
 import HomeNavbar from "@/components/home/HomeNavbar";
 import ClaimInfoCard from "@/components/claim-details/ClaimInfoCard";
 import { BackArrowIcon } from "@/components/home/icons";
-import { getClaimDetails } from "@/content/claimDetails";
+import serverApiService from "@/lib/api/serverApiService";
+import {
+  getClaimantFullName,
+  getClaimantInitials,
+  type ApiClaimantDetailsResponse,
+} from "@/content/claimDetails";
 
 export default async function ClaimDetailsLayout({
   children,
@@ -14,7 +19,20 @@ export default async function ClaimDetailsLayout({
 }) {
   const { claimId } = await params;
   const claimantId = String(claimId);
-  const mockClaim = getClaimDetails(claimantId);
+
+  let claimantName = "";
+  let initials = "";
+
+  try {
+    const claimantResponse =
+      await serverApiService.get<ApiClaimantDetailsResponse>(
+        `/employer/claimant/${claimantId}`,
+      );
+    claimantName = getClaimantFullName(claimantResponse.personalDetails);
+    initials = getClaimantInitials(claimantResponse.personalDetails);
+  } catch (error) {
+    console.error("Failed to load claimant details:", error);
+  }
 
   return (
     <main className="min-h-screen bg-[#F3F7FA]">
@@ -42,10 +60,10 @@ export default async function ClaimDetailsLayout({
         <div className="relative z-10 mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
           <ClaimInfoCard
             claimId={claimantId}
-            claimantName={mockClaim.claimantName}
-            initials={mockClaim.initials}
-            status={mockClaim.status}
-            claimRef={mockClaim.claimRef}
+            claimantName={claimantName}
+            initials={initials}
+            status=""
+            claimRef=""
           />
 
           <div className="flex-1">{children}</div>

@@ -1,7 +1,6 @@
 import BeneficiariesPanel from "@/components/claim-details/panels/BeneficiariesPanel";
 import serverApiService from "@/lib/api/serverApiService";
 import {
-  getClaimDetails,
   mapApiBeneficiaries,
   type ApiBeneficiary,
   type ClaimBeneficiary,
@@ -14,16 +13,13 @@ export default async function BeneficiariesPage({
 }) {
   const { claimId } = await params;
   const claimantId = String(claimId);
-  const mockClaim = getClaimDetails(claimantId);
 
-  let beneficiaries: ClaimBeneficiary[] = mockClaim.beneficiaries;
+  let beneficiaries: ClaimBeneficiary[] = [];
 
   try {
     const beneficiariesResponse = await serverApiService.get<ApiBeneficiary[]>(
       `/employer/beneficiaries/${claimantId}`,
     );
-
-    console.log("beneficiariesResponse", beneficiariesResponse)
     beneficiaries = mapApiBeneficiaries(beneficiariesResponse);
   } catch (error) {
     console.error("Failed to load beneficiaries:", error);

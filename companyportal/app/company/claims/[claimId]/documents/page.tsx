@@ -1,7 +1,7 @@
 import DocumentsPanel from "@/components/claim-details/panels/DocumentsPanel";
 import serverApiService from "@/lib/api/serverApiService";
 import {
-  getClaimDetails,
+  ApiClaimantDetailsResponse,
   mapApiDocuments,
   type ApiClaimDocument,
   type ClaimDocumentGroup,
@@ -14,9 +14,7 @@ export default async function DocumentsPage({
 }) {
   const { claimId } = await params;
   const claimantId = String(claimId);
-  const mockClaim = getClaimDetails(claimantId);
-
-  let documentGroups: ClaimDocumentGroup[] = mockClaim.documentGroups;
+  let documentGroups: ClaimDocumentGroup[] = [];
 
   try {
     const documentsResponse = await serverApiService.get<ApiClaimDocument[]>(
