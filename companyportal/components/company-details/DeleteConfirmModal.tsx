@@ -47,14 +47,14 @@ export default function DeleteConfirmModal({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 rounded-full border border-black/10 bg-white px-6 py-3 text-[14px] font-semibold text-[#13537B] transition hover:bg-[#F3F7FA]"
+            className="flex-1 cursor-pointer rounded-full border border-black/10 bg-white px-6 py-3 text-[14px] font-semibold text-[#13537B] transition hover:bg-[#F3F7FA]"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="flex-1 rounded-full bg-[#E13F3F] px-6 py-3 text-[14px] font-semibold text-white shadow-[0px_6px_20px_rgba(225,63,63,0.4)] transition hover:brightness-95"
+            className="flex-1 cursor-pointer rounded-full bg-[#E13F3F] px-6 py-3 text-[14px] font-semibold text-white shadow-[0px_6px_20px_rgba(225,63,63,0.4)] transition hover:brightness-95"
           >
             {confirmLabel}
           </button>

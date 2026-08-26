@@ -1,5 +1,6 @@
 import DocumentUploadList from "@/components/claim-details/panels/DocumentUploadList";
-import serverApiService from "@/lib/api/serverApiService";
+import apiService from "@/lib/api/apiService";
+import { auth0 } from "@/lib/auth0";
 import {
   // getClaimDetails,
   mapApiDocuments,
@@ -18,8 +19,10 @@ export default async function RequirementsPage({
   let requirements: ClaimUploadDocument[] = [];
 
   try {
-    const documentsResponse = await serverApiService.get<ApiClaimDocument[]>(
+    const { token } = await auth0.getAccessToken();
+    const documentsResponse = await apiService.get<ApiClaimDocument[]>(
       `/employer/documents/${claimantId}`,
+      { token },
     );
     requirements = mapApiDocuments(documentsResponse).requirements;
   } catch (error) {

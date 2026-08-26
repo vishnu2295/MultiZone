@@ -20,6 +20,7 @@ export default async function DocumentsPage({
     const documentsResponse = await serverApiService.get<ApiClaimDocument[]>(
       `/employer/documents/${claimantId}`,
     );
+    console.log("documents", documentsResponse);
     documentGroups = mapApiDocuments(documentsResponse).documentGroups;
   } catch (error) {
     console.error("Failed to load documents:", error);

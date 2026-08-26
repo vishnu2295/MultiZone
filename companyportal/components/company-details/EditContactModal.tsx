@@ -143,7 +143,7 @@ export default function EditContactModal({
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-[#13537B] transition hover:bg-[#F3F7FA]"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-[#13537B] transition hover:bg-[#F3F7FA]"
           >
             <CloseIcon className="h-4 w-4" />
           </button>
@@ -227,14 +227,14 @@ export default function EditContactModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-black/10 bg-white px-6 py-2.5 text-[13px] font-semibold text-[#13537B] transition hover:bg-[#F3F7FA]"
+            className="rounded-md cursor-pointer border border-black/10 bg-white px-6 py-2.5 text-[13px] font-semibold text-[#13537B] transition hover:bg-[#F3F7FA]"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="rounded-md bg-[#07C1E9] px-6 py-2.5 text-[13px] font-semibold text-white transition hover:brightness-95"
+            className="rounded-md cursor-pointer bg-[#07C1E9] px-6 py-2.5 text-[13px] font-semibold text-white transition hover:brightness-95"
           >
             Save Changes
           </button>

@@ -76,7 +76,7 @@ export default function UploadDocumentModal({
             type="button"
             aria-label="Close"
             onClick={handleClose}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-[#13537B] transition hover:bg-[#F3F7FA]"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-[#13537B] transition hover:bg-[#F3F7FA]"
           >
             <CloseIcon className="h-4 w-4" />
           </button>
@@ -90,7 +90,7 @@ export default function UploadDocumentModal({
             <select
               value={documentType}
               onChange={(event) => setDocumentType(event.target.value)}
-              className="w-full appearance-none rounded-lg border border-black/10 px-4 py-2.5 text-[13.5px] font-medium text-[#13537B] outline-none focus:border-[#07C1E9]"
+              className="w-full cursor-pointer appearance-none rounded-lg border border-black/10 px-4 py-2.5 text-[13.5px] font-medium text-[#13537B] outline-none focus:border-[#07C1E9]"
             >
               {documentTypes.map((type) => (
                 <option key={type} value={type}>

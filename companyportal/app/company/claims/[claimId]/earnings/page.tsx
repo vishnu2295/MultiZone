@@ -25,6 +25,7 @@ export default async function EarningsPage({
     const earningsResponse = await serverApiService.get<ApiEarningsRecord[]>(
       `/employer/earnings/${claimantId}`,
     );
+    console.log("earnings", earningsResponse);
     earnings = mapApiEarnings(earningsResponse);
     const documentsResponse = await serverApiService.get<ApiClaimDocument[]>(
       `/employer/documents/${claimantId}`,
