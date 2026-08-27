@@ -8,7 +8,7 @@ import type {
   Policy,
 } from "@/content/policies";
 import apiService from "@/lib/api/apiService";
-import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import { downloadBase64File } from "@/lib/utils/downloadFile";
 import DownloadRemittanceModal, {
   type RemittanceDownloadFilters,
@@ -33,22 +33,22 @@ const infoColumns = (
 ];
 
 export default function PolicyCard({ policy }: { policy: Policy }) {
+  const { token, rolePlayerId } = useCompanyProfile();
   const [downloadingAction, setDownloadingAction] = useState<string | null>(
     null,
   );
   const [isRemittanceModalOpen, setIsRemittanceModalOpen] = useState(false);
 
   async function handleRemittanceDownload(filters: RemittanceDownloadFilters) {
-    try {
-      const { token, coidId } = await getEmployerCoidId();
-      if (!coidId) return;
+    if (!rolePlayerId) return;
 
+    try {
       // paymentType isn't sent yet — the remittanceDocument endpoint doesn't
       // accept it until that backend change ships.
       const response = await apiService.get<ApiRemittanceDocument[]>(
-        `/employer/${coidId}/remittanceDocument`,
+        `/employer/${rolePlayerId}/remittanceDocument`,
         {
-          token,
+          token: token ?? undefined,
           params: {
             fromDate: filters.fromDate,
             toDate: filters.toDate,
@@ -77,14 +77,13 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
   }
 
   async function handleLetterOfGoodStandingDownload() {
+    if (!rolePlayerId) return;
+
     setDownloadingAction("Letter of Good Standing");
     try {
-      const { token, coidId } = await getEmployerCoidId();
-      if (!coidId) return;
-
       const response = await apiService.get<ApiLetterOfGoodStanding>(
-        `/employer/${coidId}/letterOfGoodStanding`,
-        { token },
+        `/employer/${rolePlayerId}/letterOfGoodStanding`,
+        { token: token ?? undefined },
       );
 
       const attachment = response?.attachments;

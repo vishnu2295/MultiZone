@@ -21,7 +21,7 @@ import DeleteConfirmModal from "@/components/company-details/DeleteConfirmModal"
 import Pagination from "@/components/ui/Pagination";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
-import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import { computePageCount } from "@/lib/utils/pagination";
 
 function ContactRowSkeleton() {
@@ -48,9 +48,8 @@ function ContactRowSkeleton() {
 
 const PAGE_SIZE = 10;
 
-// TODO: hardcoded to employer 1 until the coid comes from elsewhere; the
-// token is still pulled via getEmployerCoidId() but its coidId is unused here.
 export default function ContactsPanel() {
+  const { token, rolePlayerId } = useCompanyProfile();
   const [contacts, setContacts] = useState<EditableContact[]>([]);
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
@@ -59,16 +58,16 @@ export default function ContactsPanel() {
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
 
   useEffect(() => {
+    if (!rolePlayerId) return;
+
     let cancelled = false;
     setIsLoading(true);
 
     async function loadContactDetails() {
       try {
-        const { token, coidId } = await getEmployerCoidId();
-
         const response = await apiService.get<ApiPagedResponse<ApiContactDetails>>(
-          `/employer/${coidId}/contactDetails`,
-          { token, params: { page, pageSize: PAGE_SIZE } },
+          `/employer/${rolePlayerId}/contactDetails`,
+          { token: token ?? undefined, params: { page, pageSize: PAGE_SIZE } },
         );
 
         if (!cancelled) {
@@ -86,7 +85,7 @@ export default function ContactsPanel() {
     return () => {
       cancelled = true;
     };
-  }, [page]);
+  }, [page, rolePlayerId, token]);
 
   const editingContact = editingIndex !== null ? contacts[editingIndex] : null;
   const deletingContact =

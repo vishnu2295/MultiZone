@@ -9,7 +9,7 @@ import {
 } from "@/content/companyDetails";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
-import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 
 function CompanyInfoCardSkeleton() {
   return (
@@ -59,20 +59,24 @@ function buildInfoRows(company: CompanyInfo): Array<{ label: string; value: stri
 }
 
 export default function CompanyInfoCard() {
+  const { token, rolePlayerId } = useCompanyProfile();
   const [company, setCompany] = useState<CompanyInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!rolePlayerId) return;
+
     let cancelled = false;
 
     async function loadCompanyDetails() {
       try {
-        const { token, coidId } = await getEmployerCoidId();
-        if (!coidId) return;
-
         const [companyDetails, employerDetails] = await Promise.all([
-          apiService.get<ApiCompanyDetails>(`/employer/${coidId}/companyDetails`, { token }),
-          apiService.get<ApiEmployerDetails>(`/employer/${coidId}/employerDetails`, { token }),
+          apiService.get<ApiCompanyDetails>(`/employer/${rolePlayerId}/companyDetails`, {
+            token: token ?? undefined,
+          }),
+          apiService.get<ApiEmployerDetails>(`/employer/${rolePlayerId}/employerDetails`, {
+            token: token ?? undefined,
+          }),
         ]);
 
         if (!cancelled) {
@@ -89,7 +93,7 @@ export default function CompanyInfoCard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [rolePlayerId, token]);
 
   if (isLoading) {
     return <CompanyInfoCardSkeleton />;

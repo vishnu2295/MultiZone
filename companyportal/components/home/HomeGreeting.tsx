@@ -1,48 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 
-import {
-  homeContent,
-  mapOrganizationProfile,
-  type ApiOrganizationProfileResponse,
-} from "@/content/site";
-import apiService, { API_ROOT_BASE_URL } from "@/lib/api/apiService";
-import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { homeContent } from "@/content/site";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 
 export default function HomeGreeting() {
-  const [memberName, setMemberName] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadProfile() {
-      try {
-        const { token, coidId } = await getEmployerCoidId();
-        if (!coidId) return;
-
-        const response = await apiService.get<ApiOrganizationProfileResponse>(
-          `${API_ROOT_BASE_URL}/profile/organization/${coidId}`,
-          { token },
-        );
-
-        if (!cancelled) {
-          setMemberName(mapOrganizationProfile(response).memberName);
-        }
-      } catch (error) {
-        console.error("Failed to load profile:", error);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
-
-    loadProfile();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { selectedEmployer, isLoading } = useCompanyProfile();
+  const memberName = selectedEmployer?.memberName ?? null;
 
   return (
     <section className="relative overflow-hidden pt-[72px]">

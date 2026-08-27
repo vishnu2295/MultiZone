@@ -10,7 +10,7 @@ import {
 import ClaimCard from "@/components/claims/ClaimCard";
 import Pagination from "@/components/ui/Pagination";
 import apiService from "@/lib/api/apiService";
-import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import Skeleton from "../ui/Skeleton";
 
 type Tab = (typeof claimsContent.tabs)[number];
@@ -39,6 +39,7 @@ const tabIsActive: Record<Tab, boolean> = {
 const PAGE_SIZE = 3;
 
 export default function ClaimsList() {
+  const { token, rolePlayerId } = useCompanyProfile();
   const [activeTab, setActiveTab] = useState<Tab>(claimsContent.tabs[0]);
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
@@ -46,18 +47,17 @@ export default function ClaimsList() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!rolePlayerId) return;
+
     let cancelled = false;
     setIsLoading(true);
 
     async function loadClaims() {
       try {
-        const { token, coidId } = await getEmployerCoidId();
-        if (!coidId) return;
-
         const response = await apiService.get<ApiClaimsResponse>(
-          `/employer/${coidId}/claims`,
+          `/employer/${rolePlayerId}/claims`,
           {
-            token,
+            token: token ?? undefined,
             params: {
               isActive: tabIsActive[activeTab],
               page,
@@ -81,7 +81,7 @@ export default function ClaimsList() {
     return () => {
       cancelled = true;
     };
-  }, [activeTab, page]);
+  }, [activeTab, page, rolePlayerId, token]);
 
   return (
     <div className="flex min-h-130 flex-col">

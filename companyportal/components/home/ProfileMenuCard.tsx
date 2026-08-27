@@ -1,20 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import {
-  homeContent,
-  mapOrganizationProfile,
-  profileMenu,
-  type ApiOrganizationProfileResponse,
-} from "@/content/site";
+import { homeContent, profileMenu } from "@/content/site";
 import { ChevronDownIcon, LogoutIcon } from "@/components/home/icons";
-import apiService, { API_ROOT_BASE_URL } from "@/lib/api/apiService";
-import {
-  findRmaId,
-  getRmaProfiles,
-  hasIndividualAndOrganizationRoles,
-} from "@/lib/auth/employerClaims";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 
 export interface ProfileMenuCardProps {
   /** Called after the logout link is clicked (used to close the menu/drawer). */
@@ -27,65 +17,35 @@ function initialsFrom(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "";
   const first = parts[0][0] ?? "";
-  const last = parts.length > 1 ? parts[parts.length - 1][0] ?? "" : "";
+  const last = parts.length > 1 ? (parts[parts.length - 1][0] ?? "") : "";
   return (first + last).toUpperCase();
 }
 
 /**
  * White card with the signed-in user's avatar, name, email, an optional
- * "Switch Profile" selector (shown only when the user's rma_ids span both an
- * individual and an organization role), and a logout action.
+ * "Switch Profile" selector (shown when the organization profile endpoint
+ * returns more than one employerDetails entry), and a logout action.
  */
 export default function ProfileMenuCard({
   onLogout,
   className = "",
 }: ProfileMenuCardProps) {
-  const [canSwitchProfile, setCanSwitchProfile] = useState(false);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
-  const [profile, setProfile] = useState<{
-    name: string;
-    email: string;
-    memberName: string | null;
-  } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    userName,
+    userEmail,
+    employerProfiles,
+    selectedEmployer,
+    isLoading,
+    selectProfile,
+  } = useCompanyProfile();
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadProfile() {
-      try {
-        const { token, rmaIds } = await getRmaProfiles();
-        if (!cancelled) {
-          setCanSwitchProfile(hasIndividualAndOrganizationRoles(rmaIds));
-        }
-
-        const coidId = findRmaId(rmaIds, "organization")?.coidId;
-        if (!coidId) return;
-
-        const response = await apiService.get<ApiOrganizationProfileResponse>(
-          `${API_ROOT_BASE_URL}/profile/organization/${coidId}`,
-          { token },
-        );
-
-        if (!cancelled) setProfile(mapOrganizationProfile(response));
-      } catch (error) {
-        console.error("Failed to load profile:", error);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
-
-    loadProfile();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const showSkeleton = isLoading && !profile;
-  const name = profile?.name ?? profileMenu.name;
-  const email = profile?.email ?? profileMenu.email;
-  const memberName = profile?.memberName ?? homeContent.memberName;
-  const avatarText = profile ? initialsFrom(name) : profileMenu.initials;
+  const showSkeleton = isLoading && !selectedEmployer;
+  const name = userName ?? profileMenu.name;
+  const email = userEmail ?? profileMenu.email;
+  const memberName = selectedEmployer?.memberName ?? homeContent.memberName;
+  const avatarText = userName ? initialsFrom(name) : profileMenu.initials;
+  const canSwitchProfile = employerProfiles.length > 0;
 
   return (
     <div
@@ -126,7 +86,10 @@ export default function ProfileMenuCard({
 
       {canSwitchProfile && (
         <>
-          <span className="my-4 block h-px w-full bg-[#E3EAEE] sm:my-5" aria-hidden />
+          <span
+            className="my-4 block h-px w-full bg-[#E3EAEE] sm:my-5"
+            aria-hidden
+          />
 
           <p className="text-[11px] font-bold uppercase tracking-[0.6px] text-[#13537B]">
             {profileMenu.switchProfileLabel}
@@ -153,35 +116,37 @@ export default function ProfileMenuCard({
                 role="listbox"
                 className="absolute left-0 right-0 top-[calc(100%+6px)] z-10 overflow-hidden rounded-lg border border-black/8 bg-white shadow-[0_8px_24px_rgba(17,37,45,0.15)]"
               >
-                <span
-                  role="option"
-                  aria-selected="true"
-                  className="block bg-[#EAF6FE] px-4 py-2.5 text-[14px] font-medium text-[#13537B]"
-                >
-                  {memberName}
-                </span>
-                {/*
-                  Plain anchor, not next/link: /individual is served by a
-                  separate Next.js app (individualportal) behind memberportal's
-                  rewrite proxy, not a route this app knows about, so a
-                  client-side soft navigation 404s. A full browser navigation
-                  is required to cross zones.
-                */}
-                <a
-                  href={profileMenu.individualProfileHref}
-                  role="option"
-                  onClick={() => setIsSwitcherOpen(false)}
-                  className="block px-4 py-2.5 text-[14px] font-medium text-[#13537B] transition hover:bg-[#F3F7FA]"
-                >
-                  My Individual Profile
-                </a>
+                {employerProfiles.map((employer) => {
+                  const isSelected =
+                    employer.rolePlayerId === selectedEmployer?.rolePlayerId;
+                  return (
+                    <button
+                      key={employer.rolePlayerId}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => {
+                        selectProfile(employer.rolePlayerId);
+                        setIsSwitcherOpen(false);
+                      }}
+                      className={`block w-full px-4 py-2.5 text-left text-[14px] font-medium text-[#13537B] transition ${
+                        isSelected ? "bg-[#EAF6FE]" : "hover:bg-[#F3F7FA]"
+                      }`}
+                    >
+                      {employer.memberName}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
         </>
       )}
 
-      <span className="my-4 block h-px w-full bg-[#E3EAEE] sm:my-5" aria-hidden />
+      <span
+        className="my-4 block h-px w-full bg-[#E3EAEE] sm:my-5"
+        aria-hidden
+      />
 
       <Link
         href={profileMenu.logoutHref}

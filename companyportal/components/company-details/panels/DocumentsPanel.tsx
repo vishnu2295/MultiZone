@@ -14,7 +14,7 @@ import UploadDocumentModal from "@/components/company-details/UploadDocumentModa
 import Pagination from "@/components/ui/Pagination";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
-import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import { downloadBase64File } from "@/lib/utils/downloadFile";
 import { computePageCount } from "@/lib/utils/pagination";
 
@@ -36,6 +36,7 @@ function DocumentRowSkeleton() {
 const PAGE_SIZE = 10;
 
 export default function DocumentsPanel() {
+  const { token, rolePlayerId } = useCompanyProfile();
   const [documents, setDocuments] = useState<CompanyDocument[]>([]);
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
@@ -45,17 +46,16 @@ export default function DocumentsPanel() {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!rolePlayerId) return;
+
     let cancelled = false;
     setIsLoading(true);
 
     async function loadDocuments() {
       try {
-        const { token, coidId } = await getEmployerCoidId();
-        if (!coidId) return;
-
         const response = await apiService.get<ApiPagedResponse<ApiDocumentSet>>(
-          `/employer/${coidId}/documents`,
-          { token, params: { page, pageSize: PAGE_SIZE } },
+          `/employer/${rolePlayerId}/documents`,
+          { token: token ?? undefined, params: { page, pageSize: PAGE_SIZE } },
         );
 
         if (!cancelled) {
@@ -73,19 +73,16 @@ export default function DocumentsPanel() {
     return () => {
       cancelled = true;
     };
-  }, [page, reloadToken]);
+  }, [page, reloadToken, rolePlayerId, token]);
 
   async function handleDownload(documentId: string | undefined) {
-    if (!documentId) return;
+    if (!documentId || !rolePlayerId) return;
 
     setDownloadingId(documentId);
     try {
-      const { token, coidId } = await getEmployerCoidId();
-      if (!coidId) return;
-
       const response = await apiService.get<ApiInvoiceAttachment>(
-        `/employer/${coidId}/documents/${documentId}/download`,
-        { token },
+        `/employer/${rolePlayerId}/documents/${documentId}/download`,
+        { token: token ?? undefined },
       );
 
       downloadBase64File(response.fileName, response.fileType, response.content);

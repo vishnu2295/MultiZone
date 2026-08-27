@@ -13,7 +13,7 @@ import EditAddressModal, {
 } from "@/components/company-details/EditAddressModal";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
-import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 
 function AddressRowSkeleton() {
   return (
@@ -31,21 +31,21 @@ function AddressRowSkeleton() {
 }
 
 export default function AddressPanel() {
+  const { token, rolePlayerId } = useCompanyProfile();
   const [addresses, setAddresses] = useState<EditableAddress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   useEffect(() => {
+    if (!rolePlayerId) return;
+
     let cancelled = false;
 
     async function loadAddress() {
       try {
-        const { token, coidId } = await getEmployerCoidId();
-        if (!coidId) return;
-
         const response = await apiService.get<ApiPagedResponse<ApiAddressDetails>>(
-          `/employer/${coidId}/addressDetails`,
-          { token }
+          `/employer/${rolePlayerId}/addressDetails`,
+          { token: token ?? undefined }
         );
 
         if (!cancelled) setAddresses(response.data.map(mapApiAddress));
@@ -60,7 +60,7 @@ export default function AddressPanel() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [rolePlayerId, token]);
 
   const editingAddress = editingIndex !== null ? addresses[editingIndex] : null;
 

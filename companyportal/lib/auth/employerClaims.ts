@@ -44,21 +44,6 @@ export async function getEmployerCoidId(): Promise<{
   return { token, coidId: findRmaId(rmaIds, "organization")?.coidId };
 }
 
-/** Access token plus every rma_ids entry, for callers that need all of a user's linked profiles. */
-export async function getRmaProfiles(): Promise<{
-  token: string;
-  rmaIds: RmaId[];
-}> {
-  const token = await getAccessToken();
-  const claims = decodeJwtPayload(token);
-  const rmaIds =
-    (claims[process.env.NEXT_PUBLIC_AUTH0_IDENTIFIER as string] as
-      | RmaId[]
-      | undefined) ?? [];
-
-  return { token, rmaIds };
-}
-
 /**
  * Buckets an rma_ids role string into "individual" or "organization". The
  * exact role values Auth0 issues aren't documented anywhere in this repo, so
@@ -88,10 +73,4 @@ export function classifyRmaRole(role: string | undefined): "individual" | "organ
   }
 
   return "unknown";
-}
-
-/** True when the user's rma_ids entries span both an individual and an organization role. */
-export function hasIndividualAndOrganizationRoles(rmaIds: RmaId[]): boolean {
-  const roles = new Set(rmaIds.map((entry) => classifyRmaRole(entry.role)));
-  return roles.has("individual") && roles.has("organization");
 }
