@@ -9,7 +9,7 @@ import {
 import { BankIcon } from "@/components/home/icons";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
-import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 
 function BankingCardSkeleton() {
   return (
@@ -53,20 +53,20 @@ function DetailField({ label, value }: { label: string; value: string }) {
 }
 
 export default function BankingPanel() {
+  const { token, rolePlayerId } = useCompanyProfile();
   const [bankingDetails, setBankingDetails] = useState<CompanyBankingDetail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!rolePlayerId) return;
+
     let cancelled = false;
 
     async function loadBankDetails() {
       try {
-        const { token, coidId } = await getEmployerCoidId();
-        if (!coidId) return;
-
         const response = await apiService.get<ApiBankDetails>(
-          `/employer/${coidId}/bankDetails`,
-          { token }
+          `/employer/${rolePlayerId}/bankDetails`,
+          { token: token ?? undefined }
         );
 
         if (!cancelled) setBankingDetails([mapApiBankDetails(response)]);
@@ -81,7 +81,7 @@ export default function BankingPanel() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [rolePlayerId, token]);
 
   if (isLoading) {
     return <BankingCardSkeleton />;

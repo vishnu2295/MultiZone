@@ -23,8 +23,6 @@ export const profileMenu = {
   switchProfileLabel: "Switch Profile",
   logoutLabel: "Logout",
   logoutHref: "/auth/logout",
-  /** Gateway-relative link to the individual portal zone (see memberportal's rewrites). */
-  individualProfileHref: "/individual",
 };
 
 export interface ApiOrganizationProfileResponse {
@@ -59,6 +57,13 @@ export interface OrganizationProfileSummary {
   memberName: string | null;
 }
 
+/** One switchable entry in the "Switch Profile" list, sourced from `employerDetails`. */
+export interface EmployerProfileOption {
+  rolePlayerId: number;
+  memberNumber: string;
+  memberName: string;
+}
+
 const checkValueExists = (value: string | undefined | null): string =>
   value && value.trim() ? value : "N/A";
 
@@ -73,6 +78,17 @@ export function mapOrganizationProfile(
     email: checkValueExists(email),
     memberName: response.employerDetails[0]?.memberName ?? null,
   };
+}
+
+/** Every employer/company membership the org user can switch between. */
+export function mapEmployerProfiles(
+  response: ApiOrganizationProfileResponse,
+): EmployerProfileOption[] {
+  return response.employerDetails.map((employer) => ({
+    rolePlayerId: employer.rolePlayerId,
+    memberNumber: employer.memberNumber,
+    memberName: employer.memberName,
+  }));
 }
 
 export const homeContent = {

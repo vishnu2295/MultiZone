@@ -4,7 +4,7 @@ import { useState } from "react";
 import { DocumentIcon, DownloadIcon } from "@/components/home/icons";
 import type { ClaimMedicalDocument } from "@/content/claimDetails";
 import apiService from "@/lib/api/apiService";
-import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import { downloadBase64File } from "@/lib/utils/downloadFile";
 
 interface ApiDocumentDownload {
@@ -18,18 +18,16 @@ export default function DocumentRow({
 }: {
   document: ClaimMedicalDocument;
 }) {
+  const { token, rolePlayerId } = useCompanyProfile();
   const [isDownloading, setIsDownloading] = useState(false);
   async function handleDownload() {
-    if (!document.documentId) return;
+    if (!document.documentId || !rolePlayerId) return;
 
     setIsDownloading(true);
     try {
-      const { token, coidId } = await getEmployerCoidId();
-      if (!coidId) return;
-
       const response = await apiService.get<ApiDocumentDownload>(
-        `/employer/${coidId}/documents/${document.documentId}/download`,
-        { token },
+        `/employer/${rolePlayerId}/documents/${document.documentId}/download`,
+        { token: token ?? undefined },
       );
 
       downloadBase64File(

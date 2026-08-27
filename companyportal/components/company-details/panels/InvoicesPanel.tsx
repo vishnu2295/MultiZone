@@ -10,7 +10,7 @@ import { InvoiceIcon, CheckCircleIcon, DownloadIcon } from "@/components/home/ic
 import Pagination from "@/components/ui/Pagination";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
-import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import { downloadBase64File } from "@/lib/utils/downloadFile";
 import { computePageCount } from "@/lib/utils/pagination";
 
@@ -41,23 +41,23 @@ const statusStyles: Record<string, string> = {
 const PAGE_SIZE = 5;
 
 export default function InvoicesPanel() {
+  const { token, rolePlayerId } = useCompanyProfile();
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
   const [invoices, setInvoices] = useState<CompanyInvoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!rolePlayerId) return;
+
     let cancelled = false;
     setIsLoading(true);
 
     async function loadInvoices() {
       try {
-        const { token, coidId } = await getEmployerCoidId();
-        if (!coidId) return;
-
         const response = await apiService.get<ApiInvoicesResponse>(
-          `/employer/${coidId}/invoices`,
-          { token, params: { page, pageSize: PAGE_SIZE } },
+          `/employer/${rolePlayerId}/invoices`,
+          { token: token ?? undefined, params: { page, pageSize: PAGE_SIZE } },
         );
 
         if (!cancelled) {
@@ -75,7 +75,7 @@ export default function InvoicesPanel() {
     return () => {
       cancelled = true;
     };
-  }, [page]);
+  }, [page, rolePlayerId, token]);
 
   if (isLoading) {
     return (

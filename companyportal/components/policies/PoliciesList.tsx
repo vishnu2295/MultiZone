@@ -12,7 +12,7 @@ import PolicyCard from "@/components/policies/PolicyCard";
 import Pagination from "@/components/ui/Pagination";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
-import { getEmployerCoidId } from "@/lib/auth/employerClaims";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import { computePageCount } from "@/lib/utils/pagination";
 
 type Tab = (typeof policiesContent.tabs)[number];
@@ -46,6 +46,7 @@ const tabStatus: Record<Tab, "active" | "inactive"> = {
 const PAGE_SIZE = 10;
 
 export default function PoliciesList() {
+  const { token, rolePlayerId } = useCompanyProfile();
   const [activeTab, setActiveTab] = useState<Tab>(policiesContent.tabs[0]);
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [page, setPage] = useState(1);
@@ -53,18 +54,17 @@ export default function PoliciesList() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!rolePlayerId) return;
+
     let cancelled = false;
     setIsLoading(true);
 
     async function loadPolicies() {
       try {
-        const { token, coidId } = await getEmployerCoidId();
-        if (!coidId) return;
-
         const response = await apiService.get<ApiPagedResponse<ApiPolicy>>(
-          `/employer/${coidId}/policies`,
+          `/employer/${rolePlayerId}/policies`,
           {
-            token,
+            token: token ?? undefined,
             params: {
               isActive: tabStatus[activeTab] === "active",
               page,
@@ -98,7 +98,7 @@ export default function PoliciesList() {
     return () => {
       cancelled = true;
     };
-  }, [activeTab, page]);
+  }, [activeTab, page, rolePlayerId, token]);
 
   function handleTabChange(tab: Tab) {
     setActiveTab(tab);
