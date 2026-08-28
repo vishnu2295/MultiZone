@@ -45,6 +45,20 @@ export default function ClaimsList() {
   const [pageCount, setPageCount] = useState(1);
   const [claims, setClaims] = useState<Claim[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
+  const [claimReferenceNumber, setClaimReferenceNumber] = useState("");
+
+  useEffect(() => {
+    const timeout = setTimeout(
+      () => setClaimReferenceNumber(searchInput.trim()),
+      400,
+    );
+    return () => clearTimeout(timeout);
+  }, [searchInput]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [claimReferenceNumber]);
 
   useEffect(() => {
     if (!rolePlayerId) return;
@@ -62,6 +76,7 @@ export default function ClaimsList() {
               isActive: tabIsActive[activeTab],
               page,
               pageSize: PAGE_SIZE,
+              claimReferenceNumber,
             },
           },
         );
@@ -81,28 +96,45 @@ export default function ClaimsList() {
     return () => {
       cancelled = true;
     };
-  }, [activeTab, page, rolePlayerId, token]);
+  }, [activeTab, page, rolePlayerId, token, claimReferenceNumber]);
 
   return (
     <div className="flex min-h-130 flex-col">
-      <div className="flex flex-wrap items-center gap-2">
-        {claimsContent.tabs.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => {
-              setActiveTab(tab);
-              setPage(1);
-            }}
-            className={`cursor-pointer rounded-md px-4 py-1.5 text-[12px] font-semibold leading-[18px] transition ${
-              activeTab === tab
-                ? "bg-[#F59E0B] text-white shadow-[0px_4px_12px_rgba(10,102,255,0.25)]"
-                : "border border-black/8 bg-white text-[#64748B] hover:text-[#13537B]"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {claimsContent.tabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => {
+                setActiveTab(tab);
+                setPage(1);
+              }}
+              className={`cursor-pointer rounded-md px-4 py-1.5 text-[12px] font-semibold leading-[18px] transition ${
+                activeTab === tab
+                  ? "bg-[#F59E0B] text-white shadow-[0px_4px_12px_rgba(10,102,255,0.25)]"
+                  : "border border-black/8 bg-white text-[#64748B] hover:text-[#13537B]"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative w-full sm:w-72">
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Search by claim ref no"
+            className="w-full rounded-lg border border-black/8 bg-white py-2.5 pl-4 pr-10 text-[13px] text-[#13537B] placeholder:text-[#94A3B8] shadow-[0px_2px_16px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-[#07C1E9]/30"
+          />
+          <img
+            src="/company/icons/search.svg"
+            alt="Search"
+            className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#13537B]"
+          />
+        </div>
       </div>
 
       <div className="mt-6 flex flex-col gap-4">
