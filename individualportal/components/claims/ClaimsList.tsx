@@ -10,6 +10,7 @@ import {
 import ClaimCard from "@/components/claims/ClaimCard";
 import Pagination from "@/components/ui/Pagination";
 import Skeleton from "@/components/ui/Skeleton";
+import { SearchIcon } from "@/components/common/icons";
 import apiService from "@/lib/api/apiService";
 import { getEmployeeCoidId } from "@/lib/auth/employeeClaims";
 
@@ -35,6 +36,20 @@ export default function ClaimsList() {
   const [pageCount, setPageCount] = useState(1);
   const [claims, setClaims] = useState<Claim[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
+  const [claimReferenceNumber, setClaimReferenceNumber] = useState("");
+
+  useEffect(() => {
+    const timeout = setTimeout(
+      () => setClaimReferenceNumber(searchInput.trim()),
+      400,
+    );
+    return () => clearTimeout(timeout);
+  }, [searchInput]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [claimReferenceNumber]);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +64,7 @@ export default function ClaimsList() {
           `/employee/${coidId}/claims`,
           {
             token,
-            params: { page, pageSize: PAGE_SIZE },
+            params: { page, pageSize: PAGE_SIZE, claimReferenceNumber },
           },
         );
 
@@ -68,10 +83,26 @@ export default function ClaimsList() {
     return () => {
       cancelled = true;
     };
-  }, [page]);
+  }, [page, claimReferenceNumber]);
 
   return (
     <div className="flex w-full max-w-[1040px] flex-col">
+      <div className="mb-4 flex justify-end">
+        <div className="relative w-full sm:w-72">
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Search by claim ref no"
+            className="w-full rounded-xl border border-black/8 bg-white py-2.5 pl-4 pr-10 text-[13px] text-[#13537B] placeholder:text-[#94A3B8] shadow-[0px_2px_16px_0px_#00000012] focus:outline-none focus:ring-2 focus:ring-[#07C1E9]/30"
+          />
+<img
+            src="/individual/icons/search.svg"
+            alt="Search"
+            className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#13537B]"
+          />        </div>
+      </div>
+
       <div className="flex flex-col gap-4">
         {isLoading ? (
           Array.from({ length: 3 }).map((_, index) => (
