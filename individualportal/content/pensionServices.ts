@@ -153,8 +153,8 @@ export function mapChildPensionExtensionDetails(
 
 /** Tailwind classes for the pill next to the dialog title, per status. */
 export const childExtensionStatusStyle: Record<string, string> = {
-  Accepted: "bg-[#CDE8A0] text-[#11252D]",
-  Active: "bg-[#CDE8A0] text-[#11252D]",
+  Accepted: "bg-[#10AD5EE5] text-[#FFFFFF]",
+  Active: "bg-[#10AD5EE5] text-[#FFFFFF]",
   Pending: "bg-[#FBE6B4] text-[#11252D]",
   Declined: "bg-[#F6CFCB] text-[#11252D]",
   Inactive: "bg-[#F6CFCB] text-[#11252D]",

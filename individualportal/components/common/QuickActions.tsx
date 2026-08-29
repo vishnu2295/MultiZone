@@ -4,7 +4,7 @@ import QuickActionCard from "@/components/common/QuickActionCard";
 export default function QuickActions() {
   return (
     <section className="relative z-10 mx-auto w-full max-w-[1440px] px-4 pb-16 sm:px-6 lg:px-[100px]">
-      <h2 className="text-[14px] font-normal leading-[17px] text-[#13537B]">
+      <h2 className="text-[14px] font-normal leading-[17px] text-[#24577A]">
         {homeContent.quickActionsLabel}
       </h2>
 

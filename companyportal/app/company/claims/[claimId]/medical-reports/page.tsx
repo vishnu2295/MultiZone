@@ -32,6 +32,9 @@ export default async function MedicalReportsPage({
 
     medicalReportDocuments =
       mapApiDocuments(documentsResponse).medicalReportDocuments;
+
+      console.log("medicalReportsResponse", medicalReportsResponse);
+
     medicalReports = mapApiMedicalReports(medicalReportsResponse);
   } catch (error) {
     console.error("Failed to load medical reports:", error);

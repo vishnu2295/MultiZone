@@ -131,7 +131,7 @@ export default function ChildExtensionModal({
               type="button"
               aria-label="Close dialog"
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-[#3C5564] transition hover:bg-[#F3F7FA]"
+              className="flex cursor-pointer h-8 w-8 items-center justify-center rounded-full text-[#3C5564] transition hover:bg-[#F3F7FA]"
             >
               <CloseIcon className="h-5 w-5" />
             </button>
@@ -139,7 +139,7 @@ export default function ChildExtensionModal({
         </div>
 
         <div className="px-5 py-6 sm:px-8 sm:py-7">
-          <h3 className="text-[16px] font-bold text-[#13537B] sm:text-[18px]">
+          <h3 className="text-[16px] font-bold text-[#24577A] sm:text-[18px]">
             {content.sectionTitle}
           </h3>
 
@@ -178,10 +178,10 @@ export default function ChildExtensionModal({
               >
                 {group.map((field) => (
                   <div key={field.label} className="min-w-0">
-                    <p className="text-[11px] font-normal uppercase tracking-[0.6px] text-[#6B7F8C]">
+                    <p className="text-[11px] font-normal uppercase tracking-[0.6px] text-[#24577A99]">
                       {field.label}
                     </p>
-                    <p className="mt-1.5 break-words text-[15px] font-bold text-[#13537B]">
+                    <p className="mt-1.5 break-words text-[15px] font-bold text-[#24577A]">
                       {field.value}
                     </p>
                   </div>

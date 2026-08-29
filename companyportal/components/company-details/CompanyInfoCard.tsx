@@ -16,7 +16,7 @@ function CompanyInfoCardSkeleton() {
     <aside className="w-full shrink-0 rounded-xl bg-white p-4 shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px]">
       <Skeleton className="h-4 w-32" />
 
-      <div className="relative mt-4 overflow-hidden rounded-lg bg-[linear-gradient(135deg,#07C1E9_0%,#008A99_100%)] p-4 shadow-[0px_4px_28.9px_rgba(0,0,0,0.25)]">
+      <div className="relative mt-4 overflow-hidden rounded-lg bg-[var(--blues-gradient-100,#006DA6)] shadow-[0px_4px_28.9px_0px_#00000040] p-4">
         <div className="pointer-events-none absolute -right-10 -top-16 h-64 w-64 rounded-full bg-white/10" />
 
         <div className="relative flex items-center justify-between">
@@ -111,13 +111,12 @@ export default function CompanyInfoCard() {
 
   return (
     <aside className="w-full shrink-0 rounded-xl bg-white p-4 shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px]">
-      <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
+      <h2 className="text-[16px] font-bold leading-[19px] text-[#24577A]">
         Company Details
       </h2>
 
-      <div className="relative mt-4 overflow-hidden rounded-lg bg-[linear-gradient(135deg,#07C1E9_0%,#008A99_100%)] p-4 shadow-[0px_4px_28.9px_rgba(0,0,0,0.25)]">
+      <div className="relative mt-4 overflow-hidden rounded-lg p-4 bg-[var(--blues-gradient-100,#006DA6)] shadow-[0px_4px_28.9px_0px_#00000040]">
         <div className="pointer-events-none absolute -right-10 -top-16 h-64 w-64 rounded-full bg-white/10" />
-
         <div className="relative flex items-center justify-between">
           <div className="flex h-11 w-[47px] items-center justify-center rounded-lg bg-[#F5B121]">
             <span className="text-[14px] font-bold leading-[17px] text-white">
@@ -143,10 +142,10 @@ export default function CompanyInfoCard() {
         {infoRows.map((row, index) => (
           <div key={row.label} className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-4">
-              <span className="text-[12px] font-normal leading-[15px] text-[#13537B]">
+              <span className="text-[12px] font-normal leading-[15px] text-[#24577ACC]">
                 {row.label}
               </span>
-              <span className="text-right text-[12px] font-semibold leading-[15px] text-[#13537B]">
+              <span className="text-right text-[12px] font-semibold leading-[15px] text-[#24577A]">
                 {row.value}
               </span>
             </div>

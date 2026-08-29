@@ -94,7 +94,7 @@ export function mapEmployerProfiles(
 export const homeContent = {
   brand: "Company Portal",
   navLinks: [
-    // { label: "My Policy", href: "#" },
+    { label: "My Policy", href: "/company/policies" },
     // { label: "Report an Incident", href: "#" },
     { label: "Claims", href: "/company/claims" },
     // { label: "Customer Care", href: "#" },

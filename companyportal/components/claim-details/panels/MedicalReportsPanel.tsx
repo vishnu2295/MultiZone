@@ -49,10 +49,10 @@ function ReportDetailsContent({ details }: { details: ClaimMedicalRecords }) {
         <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
           {details.report.fields.map((field) => (
             <div key={field.label} className="flex min-w-0 flex-col">
-              <span className="break-words text-[10px] font-semibold uppercase leading-[15px] tracking-[0.6px] text-[#64748B]">
+              <span className="break-words text-[10px] font-semibold uppercase leading-[15px] tracking-[0.6px] text-[#24577A99]">
                 {field.label}
               </span>
-              <span className="break-words pt-0.5 text-[13px] font-bold leading-5 text-[#13537B]">
+              <span className="break-words pt-0.5 text-[13px] font-bold leading-5 text-[#24577A]">
                 {field.value}
               </span>
             </div>
@@ -99,7 +99,7 @@ function ReportDetailsContent({ details }: { details: ClaimMedicalRecords }) {
       </section>
 
       <section className="flex flex-col gap-5">
-        <h4 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
+        <h4 className="text-[16px] font-bold leading-[19px] text-[#24577A]">
           ICD 10 Codes
         </h4>
         <div className="flex flex-col gap-4">
@@ -146,7 +146,7 @@ function ReportDetailsDrawer({
         aria-hidden={!isOpen}
       >
         <div className="flex items-center justify-between border-b border-black/5 px-6 py-5">
-          <h3 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
+          <h3 className="text-[16px] font-bold leading-[19px] text-[#24577A]">
             {details?.report.title ?? ""}
           </h3>
           <button
@@ -201,7 +201,7 @@ export default function MedicalReportsPanel({
             onClick={() => setActiveKey(tab.key)}
             className={`rounded-md px-4 py-1.5 text-[12px] font-semibold leading-[18px] transition cursor-pointer ${
               activeTab === tab
-                ? "bg-[#F59E0B] text-white shadow-[0px_4px_12px_rgba(10,102,255,0.25)]"
+                ? "bg-[#ECB143] text-white shadow-[0px_4px_12px_rgba(10,102,255,0.25)]"
                 : "border-[0.625px] border-black/8 bg-white text-[#64748B] hover:text-[#13537B]"
             }`}
           >
@@ -233,14 +233,14 @@ export default function MedicalReportsPanel({
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] leading-[18px] text-[#64748B]">
                   <span>
                     HCP Number
-                    <span className="font-semibold text-[#13537B]">
+                    <span className="">
                       {" "}
                       : {report.practiceNumber}
                     </span>
                   </span>
                   <span>
                     Consultation Date
-                    <span className="font-semibold text-[#13537B]">
+                    <span className="">
                       {" "}
                       : {report.consultationDate}
                     </span>
@@ -249,7 +249,7 @@ export default function MedicalReportsPanel({
               </div>
 
               <div className="flex shrink-0 items-center gap-2.5">
-                <span className="rounded-full bg-[#07C1E9] px-3 py-1 text-[12px] font-bold italic leading-[15px] text-white">
+                <span className="rounded-full bg-[#51B2E0]\ px-3 py-1 text-[12px] font-bold italic leading-[15px] text-white">
                   {report.status}
                 </span>
                 <button

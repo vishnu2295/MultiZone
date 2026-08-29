@@ -67,7 +67,7 @@ export default function HomeNavbar() {
   }, [isProfileOpen]);
 
   return (
-    <header className="fixed left-0 top-0 z-30 h-[72px] w-full bg-[#11252D]">
+    <header className="fixed left-0 top-0 z-30 h-[72px] w-full bg-[#24577A]">
       <div className="mx-auto flex h-full w-full max-w-[1440px] items-center px-4 sm:px-6 lg:px-14">
         <Link
           href={logoHref}
