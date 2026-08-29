@@ -67,18 +67,18 @@ export default function PortalCard({
   }`;
 
   const bubble =
-    "absolute bottom-5 cursor-pointer right-5 flex items-center justify-center rounded-full bg-[#F3F7FA] p-[10px] transition group-hover:bg-[#13537B]/10";
+    "absolute bottom-5 cursor-pointer right-5 flex items-center justify-center rounded-full bg-[#51B2E01A] p-[10px] transition group-hover:bg-[#51B2E0]/10";
 
   const body = (
     <>
-      <Icon className="h-[30px] w-[30px] text-[#13537B]" />
+      <Icon className="h-[30px] w-[30px] text-[#24577A]" />
 
-      <h3 className="mt-[27px] text-[22px] font-light leading-6 tracking-[-0.2824px] text-[#13537B]">
+      <h3 className="mt-[27px] text-[22px] font-light leading-6 tracking-[-0.2824px] text-[#24577A]">
         {title}
       </h3>
 
       {children ?? (
-        <p className="mt-2 max-w-[231px] text-[12px] font-light leading-5 tracking-[-0.1412px] text-[#3C5564]">
+        <p className="mt-2 max-w-[231px] text-[12px] font-light leading-5 tracking-[-0.1412px] text-[#58585B]">
           {description}
         </p>
       )}
@@ -90,11 +90,11 @@ export default function PortalCard({
           onClick={onActionClick}
           className={bubble}
         >
-          <ActionIcon className="h-6 w-6 text-[#13537B]" />
+          <ActionIcon className="h-6 w-6 text-[#24577A]" />
         </button>
       ) : (
         <span className={bubble}>
-          <ActionIcon className="h-6 w-6 text-[#13537B]" />
+          <ActionIcon className="h-6 w-6 text-[#24577A]" />
         </span>
       )}
     </>

@@ -96,13 +96,13 @@ export default function DocumentsPanel() {
   return (
     <div>
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
+        <h2 className="text-[16px] font-bold leading-[19px] text-[#24577A]">
           Documents
         </h2>
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className="rounded-lg cursor-pointer bg-[#07C1E9] px-5 py-2.5 text-[13px] font-bold text-white shadow-[0px_4px_16px_rgba(7,193,233,0.35)] transition hover:brightness-95"
+          className="rounded-lg cursor-pointer bg-[#51B2E0] px-5 py-2.5 text-[13px] font-bold text-white shadow-[0px_4px_16px_rgba(7,193,233,0.35)] transition hover:brightness-95"
         >
           Upload Documents
         </button>
@@ -128,12 +128,12 @@ export default function DocumentsPanel() {
                 <DocumentIcon className="h-5 w-5 text-[#07C1E9]" />
               </span>
               <div className="flex flex-col gap-1">
-                <span className="text-[15px] font-bold leading-[19px] text-[#13537B]">
+                <span className="text-[15px] font-bold leading-[19px] text-[#24577A]">
                   {document.name}
                 </span>
-                <span className="flex items-center gap-2 text-[13px] leading-[18px] text-[#64748B]">
+                <span className="flex items-center gap-2 text-[13px] leading-[18px] text-[#58585B]">
                   Document Type
-                  <span className="font-semibold text-[#13537B]">
+                  <span className="text-[#58585B]">
                     : {document.documentType}
                   </span>
                   <span aria-hidden>&middot;</span>

@@ -114,17 +114,17 @@ export default function ContactsPanel() {
           className="flex flex-col gap-3 rounded-xl bg-white px-3 py-2 shadow-[0px_2px_16px_rgba(218,218,218,0.08)] sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="flex items-start gap-3">
-            <UserIcon className="mt-1 h-[14px] w-[14px] shrink-0 text-[#00BBE6]" />
+            <UserIcon className="mt-1 h-[14px] w-[14px] shrink-0 text-[#24577A]" />
             <div className="flex flex-col gap-1.5">
-              <span className="text-[13.5px] font-semibold leading-[22px] text-[#13537B]">
+              <span className="text-[13.5px] font-semibold leading-[22px] text-[#24577A]">
                 {contact.name}
               </span>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-                <span className="flex items-center gap-2.5 text-[12px] font-normal leading-[18px] text-[#13537B]">
+                <span className="flex items-center gap-2.5 text-[12px] font-normal leading-[18px] text-[#24577A] opacity-80">
                   <MailIcon className="h-[13px] w-[13px] shrink-0" />
                   {contact.email}
                 </span>
-                <span className="flex items-center gap-2.5 text-[12px] font-normal leading-[18px] text-[#13537B]">
+                <span className="flex items-center gap-2.5 text-[12px] font-normal leading-[18px] text-[#24577A] opacity-80">
                   <PhoneIcon className="h-[13px] w-[13px] shrink-0" />
                   {contact.phone}
                 </span>
@@ -133,7 +133,7 @@ export default function ContactsPanel() {
           </div>
 
           <div className="flex items-center gap-2.5">
-            <span className="rounded-full bg-[#07C1E9] px-3 py-1 text-[12px] font-bold italic leading-[15px] text-white">
+            <span className="rounded-full bg-[#51B2E0] px-3 py-1 text-[12px] font-bold leading-[15px] text-white">
               {contact.badge}
             </span>
             <button
@@ -147,7 +147,7 @@ export default function ContactsPanel() {
             <button
               type="button"
               onClick={() => setDeletingIndex(index)}
-              className="flex items-center cursor-pointer gap-1.5 rounded-md border border-[#E90707]/12 bg-[#FFF6F6] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#E90707]/10"
+              className="flex items-center cursor-pointer gap-1.5 rounded-md border border-[#E90707]/12 bg-[#FFF6F6] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#CB1334E5] transition hover:bg-[#E90707]/10"
             >
               <TrashIcon className="h-4 w-4 text-[#E77B7B]" />
               Delete

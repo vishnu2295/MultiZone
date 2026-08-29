@@ -24,6 +24,7 @@ export default async function RequirementsPage({
       `/employer/documents/${claimantId}`,
       { token },
     );
+    console.log("documentsResponse", documentsResponse);
     requirements = mapApiDocuments(documentsResponse).requirements;
   } catch (error) {
     console.error("Failed to load claim requirements:", error);

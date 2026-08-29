@@ -84,10 +84,10 @@ export default function AddressPanel() {
           <div className="flex items-center gap-3">
             <PinIcon className="mt-0.5 h-[14px] w-[14px] shrink-0 text-[#07C1E9]" />
             <div className="flex flex-col">
-              <span className="text-[13.5px] font-semibold leading-[22px] text-[#13537B]">
+              <span className="text-[13.5px] font-semibold leading-[22px] text-[#24577A]">
                 {address.type}
               </span>
-              <span className="text-[13.5px] font-normal leading-[22px] text-[#13537B]">
+              <span className="text-[13.5px] font-normal leading-[22px] text-[#24577A] opacity-80">
                 {address.line}
               </span>
             </div>
@@ -95,7 +95,7 @@ export default function AddressPanel() {
 
           <div className="flex items-center gap-2.5">
             {address.primary && (
-              <span className="rounded-full bg-[#07C1E9] px-3 py-1 text-[12px] font-bold italic leading-[15px] text-white">
+              <span className="rounded-full bg-[#51B2E0] px-3 py-1 text-[12px] font-bold italic leading-[15px] text-white">
                 Primary
               </span>
             )}

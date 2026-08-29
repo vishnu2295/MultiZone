@@ -15,10 +15,10 @@ export default function FieldGroupsPanel({ groups }: { groups: ClaimFieldGroup[]
           <div className="mt-5 grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
             {group.fields.map((field) => (
               <div key={field.label} className="flex min-w-0 flex-col">
-                <span className="wrap-break-word text-[10px] font-semibold uppercase leading-[15px] tracking-[0.6px] text-[#64748B]">
+                <span className="wrap-break-word text-[10px] font-semibold uppercase leading-[15px] tracking-[0.6px] text-[#24577A80]">
                   {field.label}
                 </span>
-                <span className="wrap-break-word pt-0.5 text-[13px] font-bold leading-5 text-[#13537B]">
+                <span className="wrap-break-word pt-0.5 text-[13px] font-bold leading-5 text-[#24577A]">
                   {field.value}
                 </span>
               </div>

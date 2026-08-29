@@ -11,11 +11,11 @@ function IcdMetaItem({
 }) {
   return (
     <span className="flex items-center gap-2.5">
-      <span className="flex items-center gap-1.5">
-        <span className="text-[12px] font-normal leading-[18px] text-[#64748B]">
+      <span className="flex items-center gap-1.5 text-[#24577A]">
+        <span className="text-[11.5px] leading-[18px]">
           {label}
         </span>
-        <span className="text-[12px] font-bold leading-[18px] text-[#13537B]">
+        <span className="text-[11.5px] leading-[18px]">
           : {value}
         </span>
       </span>
@@ -34,7 +34,7 @@ export default function IcdCodeCard({ icdCode }: { icdCode: ClaimIcdCode }) {
 
   return (
     <article className="rounded-xl bg-white px-4 py-4 shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
-      <h3 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
+      <h3 className="text-[16px] font-bold leading-[19px] text-[#24577A]">
         {icdCode.description} ({icdCode.code})
       </h3>
 

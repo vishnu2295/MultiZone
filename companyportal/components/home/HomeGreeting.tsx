@@ -37,7 +37,7 @@ export default function HomeGreeting() {
           )}
         </h1>
 
-        <p className="mt-6 max-w-[380px] text-[13.15px] leading-[19px] text-[#6B7F8C]">
+        <p className="mt-6 max-w-[380px] text-[13.15px] leading-[19px] text-[#58585B] opacity-90">
           {homeContent.welcomeMessage}
         </p>
       </div>

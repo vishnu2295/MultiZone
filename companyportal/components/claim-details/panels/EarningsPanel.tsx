@@ -26,8 +26,8 @@ export default function EarningsPanel({
             onClick={() => setActiveTab(tab)}
             className={`rounded-md px-4 py-1.5 text-[12px] font-semibold leading-[18px] transition cursor-pointer ${
               activeTab === tab
-                ? "bg-[#F59E0B] text-white shadow-[0px_4px_12px_rgba(10,102,255,0.25)]"
-                : "border-[0.625px] border-black/8 bg-white text-[#64748B] hover:text-[#13537B]"
+                ? "bg-[#ECB143] text-white shadow-[0px_4px_12px_rgba(10,102,255,0.25)]"
+                : "border-[0.625px] border-black/8 bg-white text-[#58585B] hover:text-[#13537B]"
             }`}
           >
             {tab}
@@ -59,10 +59,10 @@ export default function EarningsPanel({
                           key={row.label}
                           className="flex items-center justify-between gap-4"
                         >
-                          <span className="text-[14px] font-normal leading-[21px] text-[#13537B]">
+                          <span className="text-[14px] font-normal leading-[21px] text-[#24577ACC]">
                             {row.label}
                           </span>
-                          <span className="text-right text-[14px] font-bold leading-[21px] text-[#13537B]">
+                          <span className="text-right text-[14px] font-bold leading-[21px] text-[#24577A]">
                             {row.value}
                           </span>
                         </div>

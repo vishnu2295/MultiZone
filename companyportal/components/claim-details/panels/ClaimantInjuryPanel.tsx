@@ -35,7 +35,7 @@ function SectionCard({
     <section className="rounded-xl bg-white px-3 py-3.5 shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
       <div className="flex flex-col gap-5">
         {title && (
-          <h3 className="text-[16px] font-bold leading-[19px] text-[#13537B]">{title}</h3>
+          <h3 className="text-[16px] font-bold leading-[19px] text-[#24577A]">{title}</h3>
         )}
         {children}
       </div>
@@ -48,10 +48,10 @@ function FieldGrid({ fields }: { fields: Array<{ label: string; value: string }>
     <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
       {fields.map((field) => (
         <div key={field.label} className="flex flex-col">
-          <span className="text-[10px] font-semibold uppercase leading-[15px] tracking-[0.6px] text-[#64748B]">
+          <span className="text-[10px] font-semibold uppercase leading-[15px] tracking-[0.6px] text-[#24577A] opacity-60">
             {field.label}
           </span>
-          <span className="pt-0.5 text-[13px] font-bold leading-5 text-[#13537B]">
+          <span className="pt-0.5 text-[13px] font-bold leading-5 text-[#24577A]">
             {field.value}
           </span>
         </div>
