@@ -17,23 +17,11 @@ import {
 const tabs = ["Earnings", "Employee Earnings Documents"] as const;
 type EarningsTab = (typeof tabs)[number];
 
-<<<<<<< Updated upstream
 export default function EarningsPanel({ claimId }: { claimId: string }) {
   const { token } = useCompanyProfile();
   const [earnings, setEarnings] = useState<ClaimEarningsRecord[]>([]);
   const [documents, setDocuments] = useState<ClaimUploadDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-=======
-export default function EarningsPanel({
-  earnings,
-  documents,
-  claimId,
-}: {
-  earnings: ClaimEarningsRecord[];
-  documents: ClaimUploadDocument[];
-  claimId: string;
-}) {
->>>>>>> Stashed changes
   const [activeTab, setActiveTab] = useState<EarningsTab>(tabs[0]);
 
   useEffect(() => {
