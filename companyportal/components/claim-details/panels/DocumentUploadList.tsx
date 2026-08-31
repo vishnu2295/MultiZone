@@ -3,7 +3,13 @@
 import { useState } from "react";
 import DocumentRow from "@/components/claim-details/panels/DocumentRow";
 import DocumentUploadModal from "@/components/claim-details/DocumentUploadModal";
-import type { ClaimUploadDocument } from "@/content/claimDetails";
+import {
+  formatDocumentTimestamp,
+  type ApiClaimDocument,
+  type ClaimUploadDocument,
+} from "@/content/claimDetails";
+import apiService from "@/lib/api/apiService";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 
 /**
  * A list of document slots with a single "Upload Documents" action: the modal
@@ -12,12 +18,43 @@ import type { ClaimUploadDocument } from "@/content/claimDetails";
 export default function DocumentUploadList({
   title,
   documents,
+  claimId,
 }: {
   title: string;
   documents: ClaimUploadDocument[];
+  claimId: string;
 }) {
+  const { token } = useCompanyProfile();
   const [rows, setRows] = useState<ClaimUploadDocument[]>(documents);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+
+  async function handleUpload(file: File, documentName: string) {
+    const formData = new FormData();
+    // ASP.NET model-binds a multipart array of complex objects via
+    // indexed keys, so a single-item array is `documents[0].<field>`.
+    formData.append("documents[0].documentKeySet", documentName);
+    formData.append("documents[0].documentType", title);
+    formData.append("documents[0].file", file, file.name);
+
+    const [uploaded] = await apiService.post<ApiClaimDocument[]>(
+      `/employer/documents/${claimId}`,
+      formData,
+      { token: token ?? undefined },
+    );
+
+    setRows((prev) =>
+      prev.map((row) =>
+        row.name === documentName
+          ? {
+              ...row,
+              documentId: uploaded.documentId,
+              fileName: uploaded.fileName,
+              uploadedAt: formatDocumentTimestamp(uploaded.uploadedDate),
+            }
+          : row,
+      ),
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -58,12 +95,8 @@ export default function DocumentUploadList({
         open={isUploadOpen}
         documentNames={rows.map((row) => row.name)}
         onClose={() => setIsUploadOpen(false)}
-        onSave={({ documentName, fileName, uploadedAt }) => {
-          setRows((prev) =>
-            prev.map((row) =>
-              row.name === documentName ? { ...row, fileName, uploadedAt } : row,
-            ),
-          );
+        onSave={async (file, documentName) => {
+          await handleUpload(file, documentName);
           setIsUploadOpen(false);
         }}
       />

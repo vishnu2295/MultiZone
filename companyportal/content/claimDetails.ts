@@ -353,7 +353,7 @@ function formatDocumentLabel(documentType: string): string {
   return documentType.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
 }
 
-function formatDocumentTimestamp(value: string): string {
+export function formatDocumentTimestamp(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
 
@@ -446,6 +446,42 @@ export function mapApiDocuments(response: ApiClaimDocument[]): MappedClaimDocume
     medicalReportDocuments,
     earningDocuments,
   };
+}
+
+/** Fixed set of upload slots always shown on the Employee Earnings Documents tab. */
+const EARNINGS_DOCUMENT_NAMES = [
+  "Statement Of Earnings",
+  "Current Earnings",
+  "Section51",
+  "Section51 Confirmation Letter",
+  "RMA Formula Sheet",
+  "Payslips",
+  "Contract Of Employment",
+  "TPE",
+] as const;
+
+/**
+ * Builds the Employee Earnings Documents slots: always the fixed names
+ * above, with already-uploaded files (matched by formatted label) filled in.
+ */
+export function mapEarningsDocuments(response: ApiClaimDocument[]): ClaimUploadDocument[] {
+  const uploaded = new Map(
+    response
+      .filter((doc) => doc.documentKeySet === EARNINGS_DOCUMENT_KEY_SET)
+      .map((doc) => [formatDocumentLabel(doc.documentType), doc] as const),
+  );
+
+  return EARNINGS_DOCUMENT_NAMES.map((name) => {
+    const doc = uploaded.get(name);
+    return doc
+      ? {
+          name,
+          documentId: doc.documentId,
+          fileName: doc.fileName,
+          uploadedAt: formatDocumentTimestamp(doc.uploadedDate),
+        }
+      : { name };
+  });
 }
 
 export type ClaimBeneficiary = {
