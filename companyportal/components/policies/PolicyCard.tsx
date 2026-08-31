@@ -43,7 +43,7 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
     if (!rolePlayerId) return;
 
     try {
-      // paymentType isn't sent yet — the remittanceDocument endpoint doesn't
+      // paymentType isn't sent yet - the remittanceDocument endpoint doesn't
       // accept it until that backend change ships.
       const response = await apiService.get<ApiRemittanceDocument[]>(
         `/employer/${rolePlayerId}/remittanceDocument`,

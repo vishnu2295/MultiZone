@@ -22,7 +22,7 @@ export interface PortalCardProps {
   /** Click handler for the whole card. Renders the card as a button. */
   onClick?: () => void;
   /**
-   * Handler for the corner button alone — makes it a real <button> nested in a
+   * Handler for the corner button alone - makes it a real <button> nested in a
    * static card (e.g. "download"). Requires `actionLabel`.
    */
   onActionClick?: () => void;

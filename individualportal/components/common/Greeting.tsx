@@ -45,7 +45,7 @@ export default function Greeting() {
 
   return (
     <section className="relative overflow-x-clip pt-[72px]">
-      {/* Decorative wave — mirrors Figma node 2831:1730 */}
+      {/* Decorative wave - mirrors Figma node 2831:1730 */}
       <div
         aria-hidden
         className="pointer-events-none absolute left-[63.05%] top-[69px] z-0 -translate-x-1/2 -translate-y-1/2"
@@ -84,7 +84,7 @@ export default function Greeting() {
           )}
         </h1>
 
-        {/* Employer line — Figma frame 2147217702 (24px icon, 10px gap). */}
+        {/* Employer line - Figma frame 2147217702 (24px icon, 10px gap). */}
         <div className="flex items-center gap-[10px]">
           <BuildingIcon className="h-6 w-6 shrink-0 text-[#13537B]" />
           <span className="[font-family:'Helvetica_Neue',Inter,sans-serif] text-[13.15px] font-normal leading-[19px] text-[#6B7F8C]">

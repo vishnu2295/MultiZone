@@ -1,7 +1,7 @@
 
 export const individualNavItems = [
   { label: "Claims", href: "/individual/claims" },
-  { label: "Pension Services", href: "/individual/pension-services" },
+  { label: "Pension Ledgers", href: "/individual/pension-services" },
   // { label: "Customer Care", href: "/customer-care" },
   // { label: "FAQs", href: "/faq" },
 ];
@@ -61,7 +61,7 @@ export const homeContent = {
   // Employer/scheme line shown under the member name on the dashboard.
   organisation: "",
   welcomeMessage:
-    "Welcome to your individual portal, you can manage your insurance, claims, and documents — all in one place.",
+    "Welcome to your individual portal, you can manage your insurance, claims, and documents - all in one place.",
   quickActionsLabel: "Quick Actions",
   quickActions: [
     {
@@ -74,9 +74,9 @@ export const homeContent = {
     },
     {
       icon: "users" as const,
-      title: "Pensioner Services",
+      title: "Pension Ledgers",
       description:
-        "View your commutation status, download your pension confirmation letter, and track child pension extensions.",
+        "Access your pension ledgers, details, commutation status, confirmation letters, and child pension extensions.",
       href: "/individual/pension-services",
       highlighted: true,
     },

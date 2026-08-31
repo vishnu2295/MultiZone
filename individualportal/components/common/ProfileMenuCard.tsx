@@ -40,9 +40,10 @@ export default function ProfileMenuCard({
   onLogout,
   className = "",
 }: ProfileMenuCardProps) {
-  const [profile, setProfile] = useState<{ name: string; email: string } | null>(
-    null,
-  );
+  const [profile, setProfile] = useState<{
+    name: string;
+    email: string;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -72,7 +73,7 @@ export default function ProfileMenuCard({
     };
   }, []);
 
-  // Only show the shimmer when we don't already have data to render — an
+  // Only show the shimmer when we don't already have data to render - an
   // explicit prop override, or a previously fetched profile.
   const showSkeleton = isLoading && !nameProp && !profile;
   const name = nameProp ?? profile?.name ?? profileMenu.name;
@@ -116,7 +117,10 @@ export default function ProfileMenuCard({
         </div>
       </div>
 
-      <span className="my-4 block h-px w-full bg-[#E3EAEE] sm:my-5" aria-hidden />
+      <span
+        className="my-4 block h-px w-full bg-[#E3EAEE] sm:my-5"
+        aria-hidden
+      />
 
       <Link
         href={logoutHref}

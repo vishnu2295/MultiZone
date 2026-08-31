@@ -9,7 +9,7 @@ import apiService, { type ApiRequestOptions } from "./apiService";
  * Requires AUTH0_AUDIENCE to be set, otherwise Auth0 issues no access token.
  *
  * Note: server components cannot write cookies, so a token refreshed here is
- * not persisted — the proxy refreshes it on the next request.
+ * not persisted - the proxy refreshes it on the next request.
  */
 async function withToken(options: ApiRequestOptions = {}): Promise<ApiRequestOptions> {
   if (options.skipAuth || options.token) return options;

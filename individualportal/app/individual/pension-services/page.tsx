@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import IndividualBackground from "@/components/common/IndividualBackground";
 import { ArrowLeftIcon } from "@/components/common/icons";
-import PensionServiceCards from "@/components/pension/PensionServiceCards";
+import PensionLedgerList from "@/components/pension/PensionLedgerList";
 import { pensionServicesContent as content } from "@/content/pensionServices";
 
 export default function PensionServicesPage() {
@@ -21,7 +21,7 @@ export default function PensionServicesPage() {
           {content.title}
         </h1>
 
-        <PensionServiceCards />
+        <PensionLedgerList />
       </div>
     </IndividualBackground>
   );
