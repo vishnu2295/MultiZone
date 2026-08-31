@@ -10,7 +10,7 @@ export const siteContent = {
   heroTitle: "Welcome to RMA",
   heroTitleAccent: "Client Portal",
   heroDescription:
-    "Everything you need to manage your insurance —claims, policies, documents, benefits, and more, all in one secure place.",
+    "Everything you need to manage your insurance -claims, policies, documents, benefits, and more, all in one secure place.",
   loginButton: "Login / Register",
   // Broker is rewritten to the external broker portal (see next.config.ts).
   // The rest go through the Auth0 login flow mounted at /auth/login.
@@ -35,7 +35,7 @@ export const homeContent = {
   greeting: "Good Morning,",
   memberName: "Impala Platinum Limited",
   welcomeMessage:
-    "Welcome to member portal, you can manage your insurance, claims, and documents — all in one place.",
+    "Welcome to member portal, you can manage your insurance, claims, and documents - all in one place.",
   quickActionsLabel: "Quick Actions",
   quickActions: [
     {

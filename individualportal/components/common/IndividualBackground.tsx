@@ -17,7 +17,7 @@ export interface IndividualBackgroundProps {
  * Shared chrome for individual portal inner screens.
  *
  * Wave mirrors Figma node 2831:1204: natural aspect (~3.34), width 78.23vw,
- * centered on the Figma box center (79.7%W / 4.02vw), tilted ~3.7° — the
+ * centered on the Figma box center (79.7%W / 4.02vw), tilted ~3.7° - the
  * same technique as the hero wave. Left edge is faded so the raw PNG edge
  * never shows as a hard cut. Reference frame 1440px.
  */
@@ -31,7 +31,7 @@ export default function IndividualBackground({
 }: IndividualBackgroundProps) {
   return (
     <div className="relative min-h-screen overflow-x-clip bg-[#F3F7FA]">
-      {/* Decorative wave — mirrors Figma node 2831:1204 */}
+      {/* Decorative wave - mirrors Figma node 2831:1204 */}
       <div
         aria-hidden
         className="pointer-events-none absolute left-[79.7vw] top-[4.02vw] z-0 -translate-x-1/2 -translate-y-1/2"

@@ -15,7 +15,7 @@ const DATE_RANGE_PRESETS = [
   "Last 90 Days",
 ] as const;
 
-// Not yet sent to the API — the remittanceDocument endpoint doesn't accept a
+// Not yet sent to the API - the remittanceDocument endpoint doesn't accept a
 // payment type filter yet (backend change in progress). Kept in the form so
 // the UI matches the design; wire it into the request once that ships.
 const PAYMENT_TYPES = [

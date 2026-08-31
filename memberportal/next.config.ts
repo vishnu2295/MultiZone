@@ -3,11 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   async rewrites() {
     return [
-      // TODO: point back at https://cctest.randmutual.co.za before pushing —
+      // TODO: point back at https://cctest.randmutual.co.za before pushing -
       // pointed at the local ClientConnectFrontEnd dev server for testing.
       // ClientConnectFrontEnd now has basePath: "/broker" baked into its own
       // build, so its real routes (including static assets and auth routes)
-      // live at /broker/* — the prefix must be forwarded as-is, not
+      // live at /broker/* - the prefix must be forwarded as-is, not
       // stripped, and no separate /api/auth/* rule is needed anymore.
       {
         source: "/broker",
@@ -38,7 +38,7 @@ const nextConfig: NextConfig = {
       },
       // The Group Life portals call ClientConnectFrontEnd's API routes with
       // root-relative fetches (/api/accessToken, /api/rmaForward/*), which
-      // land on this zone's origin — forward them to CCFE under its /broker
+      // land on this zone's origin - forward them to CCFE under its /broker
       // basePath. This app itself serves auth under /auth/*, so /api/* is
       // free to delegate.
       {

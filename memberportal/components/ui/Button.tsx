@@ -7,7 +7,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   href?: string;
   /**
    * Render a plain <a> instead of next/link. Required for the Auth0 routes
-   * (/auth/login, /auth/logout) — client-side navigation breaks the redirect.
+   * (/auth/login, /auth/logout) - client-side navigation breaks the redirect.
    */
   external?: boolean;
 };

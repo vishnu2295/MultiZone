@@ -22,7 +22,7 @@ export default function HomeNavbar() {
   // makes the hook return `user: null` even after a successful load, which
   // would otherwise flicker the profile card back to a plain "Logout" link.
   // Once we've seen a real user, keep treating the session as authenticated
-  // client-side — an actual logout is a full page navigation anyway.
+  // client-side - an actual logout is a full page navigation anyway.
   const [hasAuthenticated, setHasAuthenticated] = useState(false);
   useEffect(() => {
     if (user) setHasAuthenticated(true);
