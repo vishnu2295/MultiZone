@@ -12,10 +12,11 @@ import {
 } from "@/components/common/icons";
 import ChildExtensionModal from "@/components/pension/ChildExtensionModal";
 import {
-  mapCommutationStatus,
+  mapCommutationValidation,
   pensionServiceCards,
   PENSIONER_API_BASE_URL,
-  type ApiCommutationDetails,
+  type ApiCommutationValidation,
+  type CommutationEligibility,
 } from "@/content/pensionServices";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
@@ -30,31 +31,37 @@ const cardIcons = {
 
 export default function PensionServiceCards() {
   const [isChildExtensionOpen, setIsChildExtensionOpen] = useState(false);
-  const [commutationStatus, setCommutationStatus] = useState<string | null>(
-    null,
-  );
+  const [commutationEligibility, setCommutationEligibility] =
+    useState<CommutationEligibility | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function loadCommutationStatus() {
+    async function loadCommutationEligibility() {
       try {
         const { token, coidId } = await getEmployeeCoidId();
         if (!coidId) return;
 
-        const details = await apiService.get<ApiCommutationDetails>(
-          `${PENSIONER_API_BASE_URL}/pensioner/${coidId}/commutationDetails`,
+        const validation = await apiService.get<ApiCommutationValidation>(
+          `${PENSIONER_API_BASE_URL}/pensioner/${coidId}/commutation/validate`,
           { token },
         );
 
-        if (!cancelled) setCommutationStatus(mapCommutationStatus(details));
+        if (!cancelled) {
+          setCommutationEligibility(mapCommutationValidation(validation));
+        }
       } catch (error) {
-        console.error("Failed to load commutation status:", error);
-        if (!cancelled) setCommutationStatus("N/A");
+        console.error("Failed to load commutation eligibility:", error);
+        if (!cancelled) {
+          setCommutationEligibility({
+            isEligible: false,
+            availableAmount: "N/A",
+          });
+        }
       }
     }
 
-    loadCommutationStatus();
+    loadCommutationEligibility();
     return () => {
       cancelled = true;
     };
@@ -72,16 +79,39 @@ export default function PensionServiceCards() {
             description: card.description,
             // Commutation Status shows a highlighted status line instead of copy.
             children: card.status ? (
-              <p className="mt-2 max-w-[231px] text-[12px] font-semibold leading-5 text-[#C0392B]">
-                {card.status.label} :{" "}
-                {isCommutationCard && commutationStatus === null ? (
-                  <Skeleton className="h-3.5 w-16 align-middle" />
-                ) : (
-                  <span className="font-bold">
-                    {isCommutationCard ? commutationStatus : card.status.value}
-                  </span>
+              <div className="mt-2 max-w-[231px]">
+                <p
+                  className={`text-[12px] font-semibold leading-5 ${
+                    isCommutationCard
+                      ? commutationEligibility?.isEligible
+                        ? "text-[#10AD5E]"
+                        : "text-[#C0392B]"
+                      : "text-[#C0392B]"
+                  }`}
+                >
+                  {card.status.label} :{" "}
+                  {isCommutationCard && commutationEligibility === null ? (
+                    <Skeleton className="h-3.5 w-16 align-middle" />
+                  ) : (
+                    <span className="font-bold">
+                      {isCommutationCard
+                        ? commutationEligibility?.isEligible
+                          ? "Eligible"
+                          : "Pending"
+                        : card.status.value}
+                    </span>
+                  )}
+                </p>
+                {isCommutationCard && (
+                  <p className="mt-1 text-[11px] font-medium leading-4 text-[#58585B]">
+                    {commutationEligibility === null ? (
+                      <Skeleton className="h-3 w-28" />
+                    ) : (
+                      <>Available {commutationEligibility.availableAmount}</>
+                    )}
+                  </p>
                 )}
-              </p>
+              </div>
             ) : undefined,
           };
 

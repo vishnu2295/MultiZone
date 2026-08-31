@@ -29,21 +29,35 @@ export const pensionServicesContent = {
 // under /pensioner, not /coid like the rest of the mobileApp API.
 export const PENSIONER_API_BASE_URL = API_ROOT_BASE_URL;
 
-export interface ApiCommutationDetails {
-  pensionNumber: string;
-  requestReferenceNumber: string;
-  requestedAmount: number;
-  status: string;
-  requestedDate: string;
-  approvedDate: string | null;
-  rejectionReason: string | null;
-}
-
 const checkValueExists = (value: string | undefined | null): string =>
   value && value.trim() ? value : "N/A";
 
-export function mapCommutationStatus(details: ApiCommutationDetails): string {
-  return checkValueExists(details.status);
+export interface ApiCommutationValidation {
+  isEligible: boolean;
+  totalAllowableCommuteAmount: number;
+  totalCommutationAmountUsed: number;
+  availableAllowableCommutableAmount: number;
+}
+
+export interface CommutationEligibility {
+  isEligible: boolean;
+  availableAmount: string;
+}
+
+function formatCurrency(value: number): string {
+  return `R ${value.toLocaleString("en-ZA", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+export function mapCommutationValidation(
+  details: ApiCommutationValidation,
+): CommutationEligibility {
+  return {
+    isEligible: details.isEligible,
+    availableAmount: formatCurrency(details.availableAllowableCommutableAmount),
+  };
 }
 
 export const pensionServiceCards: PensionServiceCard[] = [
