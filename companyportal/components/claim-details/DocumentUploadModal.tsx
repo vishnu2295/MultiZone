@@ -5,32 +5,13 @@ import { ChevronDownIcon, CloseIcon, DocumentIcon, UploadIcon } from "@/componen
 
 const ACCEPTED_EXTENSIONS = ["pdf", "xlsx"];
 
-export type DocumentUpload = {
-  documentName: string;
-  fileName: string;
-  uploadedAt: string;
-};
-
 type DocumentUploadModalProps = {
   open: boolean;
   /** Document slots the file can be attached to. A single entry locks the target. */
   documentNames: readonly string[];
   onClose: () => void;
-  onSave: (upload: DocumentUpload) => void;
+  onSave: (file: File, documentName: string) => Promise<void>;
 };
-
-function formatUploadedAt(date: Date) {
-  const day = date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-  const time = date
-    .toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true })
-    .toLowerCase();
-
-  return `${day} · ${time}`;
-}
 
 export default function DocumentUploadModal({
   open,
@@ -42,6 +23,7 @@ export default function DocumentUploadModal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!open) return null;
@@ -51,6 +33,7 @@ export default function DocumentUploadModal({
     setDocumentName(documentNames[0]);
     setIsDragging(false);
     setError(null);
+    setIsSaving(false);
   };
 
   const handleClose = () => {
@@ -77,15 +60,18 @@ export default function DocumentUploadModal({
     if (file) acceptFile(file);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedFile) return;
 
-    onSave({
-      documentName,
-      fileName: selectedFile.name,
-      uploadedAt: formatUploadedAt(new Date()),
-    });
-    reset();
+    setIsSaving(true);
+    setError(null);
+    try {
+      await onSave(selectedFile, documentName);
+      reset();
+    } catch {
+      setError("Failed to upload document. Please try again.");
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -212,17 +198,18 @@ export default function DocumentUploadModal({
           <button
             type="button"
             onClick={handleClose}
-            className="cursor-pointer rounded-md border border-black/10 bg-white px-6 py-2.5 text-[13px] font-semibold text-[#13537B] transition hover:bg-[#F3F7FA]"
+            disabled={isSaving}
+            className="cursor-pointer rounded-md border border-black/10 bg-white px-6 py-2.5 text-[13px] font-semibold text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSave}
-            disabled={!selectedFile}
+            disabled={!selectedFile || isSaving}
             className="cursor-pointer rounded-md bg-[#07C1E9] px-6 py-2.5 text-[13px] font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Save Changes
+            {isSaving ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>
