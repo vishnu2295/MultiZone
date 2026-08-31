@@ -24,8 +24,8 @@ export interface ApiPolicy {
   policyNumber: string;
   productName: string;
   productOption?: string;
-  annualPremium: number;
-  premium: number;
+  annualPremium: number | null;
+  premium: number | null;
   coverAmount: number;
   status: string;
   inceptionDate?: string;
@@ -68,8 +68,14 @@ export function mapApiPolicy(policy: ApiPolicy): Policy {
     policyNumber: policy.policyNumber,
     compliant: true,
     productOption: policy.productOption ?? policy.productName,
-    annualPremium: `R ${policy.annualPremium.toLocaleString("en-ZA")}`,
-    premium: `R ${policy.premium.toLocaleString("en-ZA")}/mo`,
+    annualPremium:
+      policy.annualPremium != null
+        ? `R ${policy.annualPremium.toLocaleString("en-ZA")}`
+        : "N/A",
+    premium:
+      policy.premium != null
+        ? `R ${policy.premium.toLocaleString("en-ZA")}/mo`
+        : "N/A",
     inceptionDate: policy?.inceptionDate
       ? new Date(policy.inceptionDate).toLocaleDateString("en-GB")
       : "-",
