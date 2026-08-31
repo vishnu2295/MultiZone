@@ -30,6 +30,60 @@ export type ClaimAuthorization = {
   status: string;
 };
 
+export type ApiPreAuthorizationDetails = {
+  preAuthId: number;
+  preAuthNumber: string;
+  claimId: number;
+  dateAuthorisedFrom: string;
+  dateAuthorisedTo: string;
+  dateAuthorised: string;
+  preAuthType: number;
+  preAuthStatus: string;
+  requestedAmount: number;
+  authorisedAmount: number;
+  claimReferenceNumber: string;
+  employeeName: string;
+  injury: string;
+  employeeSaId: string | null;
+  claimCreatedDate: string | null;
+  eventDate: string | null;
+  employerName: string | null;
+  claimType: string | null;
+};
+
+export type ApiPreAuthorizationDetailsResponse = {
+  data: ApiPreAuthorizationDetails[];
+};
+
+function formatPreAuthDate(value: string | null): string {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("en-ZA", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function mapApiPreAuthorization(
+  response: ApiPreAuthorizationDetails,
+): ClaimAuthorization {
+  return {
+    authorizationNumber: response.preAuthNumber,
+    treatmentType: response.injury || "N/A",
+    provider: response.employerName || "N/A",
+    validUntil: formatPreAuthDate(response.dateAuthorisedTo),
+    status: response.preAuthStatus,
+  };
+}
+
+export function mapApiPreAuthorizations(
+  response: ApiPreAuthorizationDetailsResponse,
+): ClaimAuthorization[] {
+  return (response.data ?? []).map(mapApiPreAuthorization);
+}
+
 export type ClaimPayment = {
   paymentNumber: string;
   paidTo: string;
@@ -38,6 +92,50 @@ export type ClaimPayment = {
   amount: string;
   status: string;
 };
+
+export type ApiClaimPayment = {
+  claimId: string;
+  amount: number;
+  paymentDate: string;
+  invoiceType: number;
+  invoiceTypeName: string;
+  paymentStatus: number;
+  paymentStatusName: string;
+};
+
+const checkPaymentValueExists = (value: string | undefined | null): string =>
+  value && value.trim() ? value : "N/A";
+
+function formatPaymentAmount(value: number): string {
+  return `R ${value.toLocaleString("en-ZA", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function mapApiClaimPayment(payment: ApiClaimPayment): ClaimPayment {
+  return {
+    paymentNumber: checkPaymentValueExists(payment.invoiceTypeName),
+    paidTo: "N/A",
+    paymentDate: formatPreAuthDate(payment.paymentDate),
+    method: "N/A",
+    amount: formatPaymentAmount(payment.amount),
+    status: checkPaymentValueExists(payment.paymentStatusName),
+  };
+}
+
+/**
+ * The payments endpoint is employer-wide (scoped by rolePlayerId, not claim),
+ * and every record's `claimId` field currently just echoes back the queried
+ * rolePlayerId rather than a real per-claim id, so it can't be used to filter
+ * to the current claim. Shows every payment for the employer until the
+ * backend returns a genuine claim id here.
+ */
+export function mapApiClaimPayments(
+  response: ApiClaimPayment[],
+): ClaimPayment[] {
+  return response.map(mapApiClaimPayment);
+}
 
 export type ClaimantTab =
   | "Claimant Details"

@@ -1,8 +1,56 @@
-import type { ClaimFieldGroup } from "@/content/claimDetails";
+"use client";
 
-export default function FieldGroupsPanel({ groups }: { groups: ClaimFieldGroup[] }) {
+import { useEffect, useState } from "react";
+import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
+import apiService from "@/lib/api/apiService";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import {
+  mapApiEmploymentDetails,
+  type ApiEmploymentDetails,
+  type ClaimFieldGroup,
+} from "@/content/claimDetails";
+
+export default function FieldGroupsPanel({ claimId }: { claimId: string }) {
+  const { token } = useCompanyProfile();
+  const [groups, setGroups] = useState<ClaimFieldGroup[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+    setIsLoading(true);
+
+    async function loadEmployment() {
+      try {
+        const response = await apiService.get<ApiEmploymentDetails>(
+          `/employer/employment/${claimId}`,
+          { token: token ?? undefined },
+        );
+        if (!cancelled) setGroups(mapApiEmploymentDetails(response));
+      } catch (error) {
+        console.error("Failed to load employment details:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadEmployment();
+    return () => {
+      cancelled = true;
+    };
+  }, [claimId, token]);
+
+  if (isLoading) {
+    return <PanelSkeleton />;
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
+        Employment Details
+      </h2>
+
       {groups.map((group) => (
         <div
           key={group.title}

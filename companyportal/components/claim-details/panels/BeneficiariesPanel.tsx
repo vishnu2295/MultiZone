@@ -1,8 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CloseIcon, MailIcon, PhoneIcon, PinIcon } from "@/components/home/icons";
-import type { ClaimBeneficiary } from "@/content/claimDetails";
+import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
+import apiService from "@/lib/api/apiService";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import {
+  mapApiBeneficiaries,
+  type ApiBeneficiary,
+  type ClaimBeneficiary,
+} from "@/content/claimDetails";
 
 function FieldGrid({ fields }: { fields: Array<{ label: string; value: string }> }) {
   return (
@@ -98,16 +105,48 @@ function BeneficiaryDetailsModal({
   );
 }
 
-export default function BeneficiariesPanel({
-  beneficiaries,
-}: {
-  beneficiaries: ClaimBeneficiary[];
-}) {
+export default function BeneficiariesPanel({ claimId }: { claimId: string }) {
+  const { token } = useCompanyProfile();
+  const [beneficiaries, setBeneficiaries] = useState<ClaimBeneficiary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [viewingIndex, setViewingIndex] = useState<number | null>(null);
   const viewing = viewingIndex !== null ? beneficiaries[viewingIndex] : null;
 
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+    setIsLoading(true);
+
+    async function loadBeneficiaries() {
+      try {
+        const response = await apiService.get<ApiBeneficiary[]>(
+          `/employer/beneficiaries/${claimId}`,
+          { token: token ?? undefined },
+        );
+        if (!cancelled) setBeneficiaries(mapApiBeneficiaries(response));
+      } catch (error) {
+        console.error("Failed to load beneficiaries:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadBeneficiaries();
+    return () => {
+      cancelled = true;
+    };
+  }, [claimId, token]);
+
+  if (isLoading) {
+    return <PanelSkeleton />;
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
+        Beneficiaries
+      </h2>
       {beneficiaries.map((beneficiary, index) => (
         <div
           key={`${beneficiary.email}-${index}`}

@@ -5,9 +5,9 @@ import type { ClaimPayment } from "@/content/claimDetails";
 export default function PaymentsPanel({ payments }: { payments: ClaimPayment[] }) {
   return (
     <div className="flex flex-col gap-3">
-      {payments.map((payment) => (
+      {payments.map((payment, index) => (
         <div
-          key={payment.paymentNumber}
+          key={`${payment.paymentNumber}-${index}`}
           className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-[0px_2px_12px_rgba(0,0,0,0.06)] sm:flex-row sm:items-center"
         >
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#EEFCFF]">

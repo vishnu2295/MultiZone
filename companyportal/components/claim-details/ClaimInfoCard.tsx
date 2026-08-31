@@ -3,17 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { claimSections, claimSectionSlugs } from "@/content/claimDetails";
+import {
+  claimSections,
+  claimSectionSlugs,
+  getClaimantFullName,
+  getClaimantInitials,
+  type ApiClaimantDetailsResponse,
+} from "@/content/claimDetails";
 import apiService from "@/lib/api/apiService";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import Skeleton from "@/components/ui/Skeleton";
 import type { ApiClaim } from "@/content/claims";
 
 type ClaimInfoCardProps = {
   claimId: string;
-  claimantName: string;
-  initials: string;
-  status: string;
-  claimRef: string;
 };
 
 type ClaimIdentity = {
@@ -33,42 +36,24 @@ function getInitialsFromName(name: string): string {
   return initials.slice(0, 2).toUpperCase();
 }
 
-export default function ClaimInfoCard({
-  claimId,
-  claimantName: fallbackClaimantName,
-  initials: fallbackInitials,
-  status: fallbackStatus,
-  claimRef: fallbackClaimRef,
-}: ClaimInfoCardProps) {
+export default function ClaimInfoCard({ claimId }: ClaimInfoCardProps) {
+  const { token } = useCompanyProfile();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const ref = searchParams.get("ref");
-  const fallback: ClaimIdentity = {
-    claimantName: fallbackClaimantName,
-    initials: fallbackInitials,
-    status: fallbackStatus,
-    claimRef: fallbackClaimRef,
-  };
 
-  // No mock placeholder while a real ref is loading — showing then swapping
-  // out fake claimant data reads as a bug, so this stays null (skeleton)
-  // until the real claim resolves.
-  const [identity, setIdentity] = useState<ClaimIdentity | null>(
-    ref ? null : fallback,
-  );
+  const [identity, setIdentity] = useState<ClaimIdentity | null>(null);
 
   useEffect(() => {
-    if (!ref) return;
-
     let cancelled = false;
     setIdentity(null);
 
-    async function loadClaim() {
+    async function loadByRef(refValue: string) {
       try {
         const claim = await apiService.get<ApiClaim>("/company/api/claim", {
           baseUrl: "",
           skipAuth: true,
-          params: { ref: ref as string },
+          params: { ref: refValue },
         });
 
         if (cancelled) return;
@@ -76,20 +61,50 @@ export default function ClaimInfoCard({
           claimantName: claim.claimantDisplayName,
           initials: getInitialsFromName(claim.claimantDisplayName),
           status: claim.claimStatus,
-          claimRef: claim.claimReferenceNumber ?? (ref as string),
+          claimRef: claim.claimReferenceNumber ?? refValue,
         });
       } catch (error) {
         console.error("Failed to load claim:", error);
-        if (!cancelled) setIdentity(fallback);
+        if (!cancelled) {
+          setIdentity({ claimantName: "", initials: "", status: "", claimRef: refValue });
+        }
       }
     }
 
-    loadClaim();
+    async function loadByClaimant() {
+      if (!token) return;
+
+      try {
+        const claimant = await apiService.get<ApiClaimantDetailsResponse>(
+          `/employer/claimant/${claimId}`,
+          { token: token ?? undefined },
+        );
+
+        if (cancelled) return;
+        setIdentity({
+          claimantName: getClaimantFullName(claimant.personalDetails),
+          initials: getClaimantInitials(claimant.personalDetails),
+          status: "",
+          claimRef: "",
+        });
+      } catch (error) {
+        console.error("Failed to load claimant details:", error);
+        if (!cancelled) {
+          setIdentity({ claimantName: "", initials: "", status: "", claimRef: "" });
+        }
+      }
+    }
+
+    if (ref) {
+      loadByRef(ref);
+    } else {
+      loadByClaimant();
+    }
+
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ref]);
+  }, [ref, claimId, token]);
 
   const basePath = `/company/claims/${claimId}`;
   const isIndexActive = pathname === basePath;
