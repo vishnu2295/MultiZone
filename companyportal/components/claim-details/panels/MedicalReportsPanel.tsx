@@ -1,17 +1,31 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { CloseIcon } from "@/components/home/icons";
 import DocumentRow from "@/components/claim-details/panels/DocumentRow";
 import IcdCodeCard from "@/components/claim-details/panels/IcdCodeCard";
+import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
+import apiService from "@/lib/api/apiService";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import {
+  mapApiDocuments,
   mapApiMedicalReportDetail,
+  mapApiMedicalReports,
+  type ApiClaimDocument,
+  type ApiMedicalReportsResponse,
   type ClaimMedicalDocument,
   type ClaimMedicalRecords,
   type ClaimMedicalReport,
   type ClaimMedicalReports,
 } from "@/content/claimDetails";
+
+const EMPTY_MEDICAL_REPORTS: ClaimMedicalReports = {
+  firstMedicalReport: [],
+  progressMedicalReports: [],
+  finalMedicalReports: [],
+  sickNoteMedicalReports: [],
+};
 
 /** Turns an API category key like "sickNoteMedicalReports" into "Sick Note Medical Reports". */
 function formatReportCategoryLabel(key: string): string {
@@ -170,13 +184,47 @@ function ReportDetailsDrawer({
   );
 }
 
-export default function MedicalReportsPanel({
-  reports,
-  documents,
-}: {
-  reports: ClaimMedicalReports;
-  documents: ClaimMedicalDocument[];
-}) {
+export default function MedicalReportsPanel({ claimId }: { claimId: string }) {
+  const { token } = useCompanyProfile();
+  const [reports, setReports] = useState<ClaimMedicalReports>(EMPTY_MEDICAL_REPORTS);
+  const [documents, setDocuments] = useState<ClaimMedicalDocument[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+    setIsLoading(true);
+
+    async function loadMedicalReports() {
+      try {
+        const [documentsResponse, medicalReportsResponse] = await Promise.all([
+          apiService.get<ApiClaimDocument[]>(`/employer/documents/${claimId}`, {
+            token: token ?? undefined,
+          }),
+          apiService.get<ApiMedicalReportsResponse>(
+            `/employer/medicalRecords/${claimId}`,
+            { token: token ?? undefined },
+          ),
+        ]);
+
+        if (!cancelled) {
+          setDocuments(mapApiDocuments(documentsResponse).medicalReportDocuments);
+          setReports(mapApiMedicalReports(medicalReportsResponse));
+        }
+      } catch (error) {
+        console.error("Failed to load medical reports:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadMedicalReports();
+    return () => {
+      cancelled = true;
+    };
+  }, [claimId, token]);
+
   const tabs = (Object.keys(reports) as Array<keyof ClaimMedicalReports>).map(
     (key) => ({ key, label: formatReportCategoryLabel(key) }),
   );
@@ -190,6 +238,10 @@ export default function MedicalReportsPanel({
 
   const activeTab = tabs.find((tab) => tab.key === activeKey) ?? tabs[0];
   const activeReports = reports[activeKey];
+
+  if (isLoading) {
+    return <PanelSkeleton />;
+  }
 
   return (
     <div className="flex flex-col gap-6">

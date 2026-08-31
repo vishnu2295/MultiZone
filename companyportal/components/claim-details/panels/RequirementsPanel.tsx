@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import DocumentRow from "@/components/claim-details/panels/DocumentRow";
+import DocumentUploadList from "@/components/claim-details/panels/DocumentUploadList";
 import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import {
   mapApiDocuments,
   type ApiClaimDocument,
-  type ClaimDocumentGroup,
+  type ClaimUploadDocument,
 } from "@/content/claimDetails";
 
-export default function DocumentsPanel({ claimId }: { claimId: string }) {
+export default function RequirementsPanel({ claimId }: { claimId: string }) {
   const { token } = useCompanyProfile();
-  const [groups, setGroups] = useState<ClaimDocumentGroup[]>([]);
+  const [requirements, setRequirements] = useState<ClaimUploadDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -22,21 +22,21 @@ export default function DocumentsPanel({ claimId }: { claimId: string }) {
     let cancelled = false;
     setIsLoading(true);
 
-    async function loadDocuments() {
+    async function loadRequirements() {
       try {
         const response = await apiService.get<ApiClaimDocument[]>(
           `/employer/documents/${claimId}`,
           { token: token ?? undefined },
         );
-        if (!cancelled) setGroups(mapApiDocuments(response).documentGroups);
+        if (!cancelled) setRequirements(mapApiDocuments(response).requirements);
       } catch (error) {
-        console.error("Failed to load documents:", error);
+        console.error("Failed to load claim requirements:", error);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
     }
 
-    loadDocuments();
+    loadRequirements();
     return () => {
       cancelled = true;
     };
@@ -47,20 +47,6 @@ export default function DocumentsPanel({ claimId }: { claimId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">Documents</h2>
-
-      {groups.map((group) => (
-        <section key={group.title} className="flex flex-col gap-4">
-          <h3 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
-            {group.title}
-          </h3>
-
-          {group.documents.map((document) => (
-            <DocumentRow key={document.name} document={document} />
-          ))}
-        </section>
-      ))}
-    </div>
+    <DocumentUploadList title="Claim Requirements" documents={requirements} />
   );
 }

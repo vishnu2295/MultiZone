@@ -6,14 +6,14 @@ import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import {
-  mapApiDocuments,
+  mapApiLetters,
   type ApiClaimDocument,
-  type ClaimDocumentGroup,
+  type ClaimMedicalDocument,
 } from "@/content/claimDetails";
 
-export default function DocumentsPanel({ claimId }: { claimId: string }) {
+export default function LettersPanel({ claimId }: { claimId: string }) {
   const { token } = useCompanyProfile();
-  const [groups, setGroups] = useState<ClaimDocumentGroup[]>([]);
+  const [letters, setLetters] = useState<ClaimMedicalDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -22,21 +22,21 @@ export default function DocumentsPanel({ claimId }: { claimId: string }) {
     let cancelled = false;
     setIsLoading(true);
 
-    async function loadDocuments() {
+    async function loadLetters() {
       try {
         const response = await apiService.get<ApiClaimDocument[]>(
-          `/employer/documents/${claimId}`,
+          `/employer/lettersAndTemplates/${claimId}`,
           { token: token ?? undefined },
         );
-        if (!cancelled) setGroups(mapApiDocuments(response).documentGroups);
+        if (!cancelled) setLetters(mapApiLetters(response));
       } catch (error) {
-        console.error("Failed to load documents:", error);
+        console.error("Failed to load letters:", error);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
     }
 
-    loadDocuments();
+    loadLetters();
     return () => {
       cancelled = true;
     };
@@ -47,19 +47,12 @@ export default function DocumentsPanel({ claimId }: { claimId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">Documents</h2>
-
-      {groups.map((group) => (
-        <section key={group.title} className="flex flex-col gap-4">
-          <h3 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
-            {group.title}
-          </h3>
-
-          {group.documents.map((document) => (
-            <DocumentRow key={document.name} document={document} />
-          ))}
-        </section>
+    <div className="flex flex-col gap-4">
+      <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
+        Letters and Templates
+      </h2>
+      {letters.map((letter) => (
+        <DocumentRow key={letter.name} document={letter} />
       ))}
     </div>
   );

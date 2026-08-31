@@ -1,20 +1,66 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DocumentUploadList from "@/components/claim-details/panels/DocumentUploadList";
-import type { ClaimEarningsRecord, ClaimUploadDocument } from "@/content/claimDetails";
+import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
+import apiService from "@/lib/api/apiService";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import {
+  mapApiDocuments,
+  mapApiEarnings,
+  type ApiClaimDocument,
+  type ApiEarningsRecord,
+  type ClaimEarningsRecord,
+  type ClaimUploadDocument,
+} from "@/content/claimDetails";
 
 const tabs = ["Earnings", "Employee Earnings Documents"] as const;
 type EarningsTab = (typeof tabs)[number];
 
-export default function EarningsPanel({
-  earnings,
-  documents,
-}: {
-  earnings: ClaimEarningsRecord[];
-  documents: ClaimUploadDocument[];
-}) {
+export default function EarningsPanel({ claimId }: { claimId: string }) {
+  const { token } = useCompanyProfile();
+  const [earnings, setEarnings] = useState<ClaimEarningsRecord[]>([]);
+  const [documents, setDocuments] = useState<ClaimUploadDocument[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<EarningsTab>(tabs[0]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+    setIsLoading(true);
+
+    async function loadEarnings() {
+      try {
+        const [earningsResponse, documentsResponse] = await Promise.all([
+          apiService.get<ApiEarningsRecord[]>(`/employer/earnings/${claimId}`, {
+            token: token ?? undefined,
+          }),
+          apiService.get<ApiClaimDocument[]>(`/employer/documents/${claimId}`, {
+            token: token ?? undefined,
+          }),
+        ]);
+
+        if (!cancelled) {
+          setEarnings(mapApiEarnings(earningsResponse));
+          setDocuments(mapApiDocuments(documentsResponse).earningDocuments ?? []);
+        }
+      } catch (error) {
+        console.error("Failed to load earnings:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadEarnings();
+    return () => {
+      cancelled = true;
+    };
+  }, [claimId, token]);
+
+  if (isLoading) {
+    return <PanelSkeleton />;
+  }
 
   return (
     <div className="flex flex-col gap-6">

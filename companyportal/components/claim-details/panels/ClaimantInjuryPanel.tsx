@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   EditIcon,
   MailIcon,
@@ -17,8 +17,17 @@ import EditContactModal, {
   type EditableContact,
 } from "@/components/company-details/EditContactModal";
 import IcdCodeCard from "@/components/claim-details/panels/IcdCodeCard";
+import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
+import apiService from "@/lib/api/apiService";
+import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import {
   claimantTabs,
+  mapApiClaimantDetails,
+  mapApiIcdCodes,
+  mapApiInjuryDetails,
+  type ApiClaimantDetailsResponse,
+  type ApiIcdCode,
+  type ApiInjuryDetailsResponse,
   type ClaimIcdCode,
   type ClaimantDetails,
   type ClaimantTab,
@@ -85,7 +94,7 @@ function EditButton({ label, onClick }: { label: string; onClick: () => void }) 
 type ContactRow = EditableContact & { primary?: boolean };
 type AddressRow = EditableAddress & { primary?: boolean };
 
-export default function ClaimantInjuryPanel({
+function ClaimantInjuryPanelContent({
   details,
   injuryDetails,
   icdCodes,
@@ -305,5 +314,74 @@ export default function ClaimantInjuryPanel({
         </div>
       )}
     </div>
+  );
+}
+
+const EMPTY_CLAIMANT_DETAILS: ClaimantDetails = {
+  demographics: [],
+  contacts: [],
+  addresses: [],
+};
+
+export default function ClaimantInjuryPanel({ claimId }: { claimId: string }) {
+  const { token } = useCompanyProfile();
+  const [details, setDetails] = useState<ClaimantDetails>(EMPTY_CLAIMANT_DETAILS);
+  const [injuryDetails, setInjuryDetails] = useState<
+    Array<{ label: string; value: string }>
+  >([]);
+  const [icdCodes, setIcdCodes] = useState<ClaimIcdCode[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+    setIsLoading(true);
+
+    async function loadClaimantInjury() {
+      try {
+        const [claimantResponse, injuryResponse, icdCodesResponse] =
+          await Promise.all([
+            apiService.get<ApiClaimantDetailsResponse>(
+              `/employer/claimant/${claimId}`,
+              { token: token ?? undefined },
+            ),
+            apiService.get<ApiInjuryDetailsResponse>(
+              `/employer/injury/${claimId}`,
+              { token: token ?? undefined },
+            ),
+            apiService.get<ApiIcdCode[]>(`/employer/icd10codes/${claimId}`, {
+              token: token ?? undefined,
+            }),
+          ]);
+
+        if (!cancelled) {
+          setDetails(mapApiClaimantDetails(claimantResponse));
+          setInjuryDetails(mapApiInjuryDetails(injuryResponse));
+          setIcdCodes(mapApiIcdCodes(icdCodesResponse));
+        }
+      } catch (error) {
+        console.error("Failed to load claimant/injury details:", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    loadClaimantInjury();
+    return () => {
+      cancelled = true;
+    };
+  }, [claimId, token]);
+
+  if (isLoading) {
+    return <PanelSkeleton />;
+  }
+
+  return (
+    <ClaimantInjuryPanelContent
+      details={details}
+      injuryDetails={injuryDetails}
+      icdCodes={icdCodes}
+    />
   );
 }
