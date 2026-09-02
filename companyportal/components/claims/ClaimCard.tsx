@@ -7,7 +7,7 @@ export default function ClaimCard({ claim }: { claim: Claim }) {
     // ref carries the claimReferenceNumber through so the detail page can
     // look the claim up directly instead of scanning the paginated list.
     router.push(
-      `/company/claims/${claim.id}?ref=${encodeURIComponent(claim.reference)}`,
+      `/company/claims/${claim.id}`,
     );
   };
   return (

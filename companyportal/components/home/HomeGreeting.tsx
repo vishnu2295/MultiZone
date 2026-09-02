@@ -21,7 +21,7 @@ export default function HomeGreeting() {
         />
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 pb-16 pt-14 sm:px-6 lg:px-14">
+      <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 pb-12 pt-14 sm:px-6 lg:px-14">
         <p className="text-[15.8px] leading-[19px] text-[#13537B]">
           {homeContent.greeting}
         </p>

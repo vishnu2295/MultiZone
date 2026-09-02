@@ -55,7 +55,7 @@ export default function LoginMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
-        className={`inline-flex items-center justify-center gap-1.5 rounded-lg bg-[linear-gradient(90deg,#0090B5_0%,#00BBE6_100%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(0,144,181,0.25)] transition hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00bbe6] ${className}`.trim()}
+        className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-[linear-gradient(90deg,#0090B5_0%,#00BBE6_100%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(0,144,181,0.25)] transition hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00bbe6] ${className}`.trim()}
       >
         {label}
         <svg
