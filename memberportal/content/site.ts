@@ -18,7 +18,6 @@ export const siteContent = {
     { label: "Broker", href: "/broker" },
     { label: "Employee", href: "/auth/login" },
     { label: "Employer", href: "/auth/login" },
-    { label: "HCP", href: "/auth/login" },
   ],
 };
 

@@ -3,13 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import {
-  claimSections,
-  claimSectionSlugs,
-  getClaimantFullName,
-  getClaimantInitials,
-  type ApiClaimantDetailsResponse,
-} from "@/content/claimDetails";
+import { claimSections, claimSectionSlugs } from "@/content/claimDetails";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import Skeleton from "@/components/ui/Skeleton";
@@ -37,7 +31,7 @@ function getInitialsFromName(name: string): string {
 }
 
 export default function ClaimInfoCard({ claimId }: ClaimInfoCardProps) {
-  const { token } = useCompanyProfile();
+  const { token, rolePlayerId } = useCompanyProfile();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const ref = searchParams.get("ref");
@@ -45,15 +39,16 @@ export default function ClaimInfoCard({ claimId }: ClaimInfoCardProps) {
   const [identity, setIdentity] = useState<ClaimIdentity | null>(null);
 
   useEffect(() => {
+    if (!rolePlayerId) return;
+
     let cancelled = false;
     setIdentity(null);
 
-    async function loadByRef(refValue: string) {
+    async function loadClaim() {
       try {
-        const claim = await apiService.get<ApiClaim>("/company/api/claim", {
-          baseUrl: "",
-          skipAuth: true,
-          params: { ref: refValue },
+        const claim = await apiService.get<ApiClaim>(`/employer/claim/${claimId}`, {
+          token: token ?? undefined,
+          params: { rolePlayerId },
         });
 
         if (cancelled) return;
@@ -61,50 +56,22 @@ export default function ClaimInfoCard({ claimId }: ClaimInfoCardProps) {
           claimantName: claim.claimantDisplayName,
           initials: getInitialsFromName(claim.claimantDisplayName),
           status: claim.claimStatus,
-          claimRef: claim.claimReferenceNumber ?? refValue,
+          claimRef: claim.claimReferenceNumber,
         });
       } catch (error) {
         console.error("Failed to load claim:", error);
-        if (!cancelled) {
-          setIdentity({ claimantName: "", initials: "", status: "", claimRef: refValue });
-        }
-      }
-    }
-
-    async function loadByClaimant() {
-      if (!token) return;
-
-      try {
-        const claimant = await apiService.get<ApiClaimantDetailsResponse>(
-          `/employer/claimant/${claimId}`,
-          { token: token ?? undefined },
-        );
-
-        if (cancelled) return;
-        setIdentity({
-          claimantName: getClaimantFullName(claimant.personalDetails),
-          initials: getClaimantInitials(claimant.personalDetails),
-          status: "",
-          claimRef: "",
-        });
-      } catch (error) {
-        console.error("Failed to load claimant details:", error);
         if (!cancelled) {
           setIdentity({ claimantName: "", initials: "", status: "", claimRef: "" });
         }
       }
     }
 
-    if (ref) {
-      loadByRef(ref);
-    } else {
-      loadByClaimant();
-    }
+    loadClaim();
 
     return () => {
       cancelled = true;
     };
-  }, [ref, claimId, token]);
+  }, [claimId, rolePlayerId, token]);
 
   const basePath = `/company/claims/${claimId}`;
   const isIndexActive = pathname === basePath;
