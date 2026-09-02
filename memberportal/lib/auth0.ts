@@ -16,6 +16,39 @@ function decodeAccessTokenClaims(accessToken: string): Record<string, unknown> {
   return JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
 }
 
+// Role required to access each zone. A member can hold both roles (e.g. an
+// Organization admin who is also an Individual member) and gets both zones -
+// this is a membership check per zone, not a single computed "home".
+export const ZONE_ROLES: Record<string, string> = {
+  "/company": "Organization",
+  "/individual": "Individual",
+};
+
+export function getRoles(accessToken: string | undefined): string[] {
+  if (!accessToken) return [];
+  const claims = decodeAccessTokenClaims(accessToken);
+  return (claims[RMA_ROLES_CLAIM] as string[] | undefined) ?? [];
+}
+
+export function canAccessZone(
+  accessToken: string | undefined,
+  zone: string,
+): boolean {
+  const requiredRole = ZONE_ROLES[zone];
+  if (!requiredRole) return true;
+  return getRoles(accessToken).includes(requiredRole);
+}
+
+// Default zone to land a member on right after login or when they hit "/" -
+// used only to pick one starting point for someone with multiple roles, not
+// to gate access (see canAccessZone for that).
+export function getRoleHomePath(accessToken: string | undefined): string | null {
+  const roles = getRoles(accessToken);
+  if (roles.includes("Organization")) return "/company";
+  if (roles.includes("Individual")) return "/individual";
+  return null;
+}
+
 // Reads AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, AUTH0_SECRET and
 // APP_BASE_URL from the environment. See .env.example for the full list.
 export const auth0 = new Auth0Client({
@@ -52,13 +85,7 @@ export const auth0 = new Auth0Client({
       }
     }
 
-    const claims = accessToken ? decodeAccessTokenClaims(accessToken) : {};
-    const roles = (claims[RMA_ROLES_CLAIM] as string[] | undefined) ?? [];
-    const returnTo = roles.includes("Organization")
-      ? "/company"
-      : roles.includes("Individual")
-        ? "/individual"
-        : (ctx.returnTo ?? "/");
+    const returnTo = getRoleHomePath(accessToken) ?? ctx.returnTo ?? "/";
 
     return NextResponse.redirect(`${baseUrl}${returnTo}`);
   },
