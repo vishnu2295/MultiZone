@@ -1,47 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 
-import {
-  homeContent,
-  mapProfile,
-  type ApiProfileResponse,
-} from "@/content/site";
+import { homeContent, mapProfile } from "@/content/site";
 import { BuildingIcon } from "@/components/common/icons";
-import apiService, { API_ROOT_BASE_URL } from "@/lib/api/apiService";
-import { getEmployeeCoidId } from "@/lib/auth/employeeClaims";
+import { useProfile } from "@/lib/profile/ProfileContext";
 
 export default function Greeting() {
-  const [memberName, setMemberName] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadProfile() {
-      try {
-        const { token, coidId } = await getEmployeeCoidId();
-        if (!coidId) return;
-
-        const response = await apiService.get<ApiProfileResponse>(
-          `${API_ROOT_BASE_URL}/profile/individual/${coidId}`,
-          { token },
-        );
-
-        if (!cancelled) setMemberName(mapProfile(response).name);
-      } catch (error) {
-        console.error("Failed to load profile:", error);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
-
-    loadProfile();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { profile, isLoading } = useProfile();
+  const memberName = profile ? mapProfile(profile).name : null;
 
   return (
     <section className="relative overflow-x-clip pt-[72px]">

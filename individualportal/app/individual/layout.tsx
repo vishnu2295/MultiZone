@@ -1,5 +1,6 @@
 import AccessRestricted from "@/components/common/AccessRestricted";
 import { hasIndividualAccessServer } from "@/lib/auth/employeeClaims.server";
+import { ProfileProvider } from "@/lib/profile/ProfileContext";
 
 // Gates every /individual route: users without an individual role on their
 // rma_ids claim (e.g. organization/employer-only accounts, or logged-out
@@ -15,5 +16,5 @@ export default async function IndividualLayout({
     return <AccessRestricted />;
   }
 
-  return <>{children}</>;
+  return <ProfileProvider>{children}</ProfileProvider>;
 }

@@ -1,7 +1,8 @@
 
 export const individualNavItems = [
   { label: "Claims", href: "/individual/claims" },
-  { label: "Pension Ledgers", href: "/individual/pension-services" },
+  // Only shown once the profile response confirms a pensionerDetails record.
+  { label: "Pension Ledgers", href: "/individual/pension-services", requiresPensioner: true },
   // { label: "Customer Care", href: "/customer-care" },
   // { label: "FAQs", href: "/faq" },
 ];
@@ -79,6 +80,8 @@ export const homeContent = {
         "Access your pension ledgers, details, commutation status, confirmation letters, and child pension extensions.",
       href: "/individual/pension-services",
       highlighted: true,
+      // Only shown once the profile response confirms a pensionerDetails record.
+      requiresPensioner: true,
     },
     {
       icon: "shield" as const,
