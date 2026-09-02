@@ -65,7 +65,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Runs on everything except static assets and metadata files. The broad
-  // matcher is required for rolling sessions to work.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|(?:company|individual)\\/.*\\.(?:svg|png|jpe?g|gif|ico|ttf|woff2?)$).*)",
+  ],
 };
