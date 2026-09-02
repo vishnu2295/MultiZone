@@ -3,6 +3,14 @@ import StatusPill from "@/components/claim-details/panels/StatusPill";
 import type { ClaimPayment } from "@/content/claimDetails";
 
 export default function PaymentsPanel({ payments }: { payments: ClaimPayment[] }) {
+  if (payments.length === 0) {
+    return (
+      <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_12px_rgba(0,0,0,0.06)]">
+        No records found.
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-3">
       {payments.map((payment, index) => (

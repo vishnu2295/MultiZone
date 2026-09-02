@@ -51,9 +51,13 @@ export default function LettersPanel({ claimId }: { claimId: string }) {
       <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
         Letters and Templates
       </h2>
-      {letters.map((letter) => (
-        <DocumentRow key={letter.name} document={letter} />
-      ))}
+      {letters.length === 0 ? (
+        <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
+          No records found.
+        </div>
+      ) : (
+        letters.map((letter) => <DocumentRow key={letter.name} document={letter} />)
+      )}
     </div>
   );
 }

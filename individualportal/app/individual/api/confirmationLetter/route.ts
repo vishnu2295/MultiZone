@@ -14,7 +14,7 @@ interface UpstreamResponse {
  * a JSON body rather than the query string (confirmed: POST -> 405, GET with
  * a body -> 200 in Postman). Browsers refuse to send a body on a GET fetch()
  * (the Fetch spec throws on it), so this proxies the request through a raw
- * Node `https` call — which has no such restriction — instead.
+ * Node `https` call - which has no such restriction - instead.
  */
 function fetchWithGetBody(url: URL, headers: Record<string, string>, body: string) {
   return new Promise<UpstreamResponse>((resolve, reject) => {
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     // The upstream endpoint returns { fileName, contentType, base64Content }
-    // JSON (same shape as commutation/documents), not a raw file — pass that
+    // JSON (same shape as commutation/documents), not a raw file - pass that
     // JSON straight through so the client can decode it the same way.
     return new NextResponse(upstream.data.toString("utf-8"), {
       status: 200,

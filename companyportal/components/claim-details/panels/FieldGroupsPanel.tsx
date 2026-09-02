@@ -51,6 +51,12 @@ export default function FieldGroupsPanel({ claimId }: { claimId: string }) {
         Employment Details
       </h2>
 
+      {groups.length === 0 && (
+        <div className="rounded-xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
+          No records found.
+        </div>
+      )}
+
       {groups.map((group) => (
         <div
           key={group.title}

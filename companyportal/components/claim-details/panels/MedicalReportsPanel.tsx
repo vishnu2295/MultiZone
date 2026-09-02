@@ -106,9 +106,15 @@ function ReportDetailsContent({ details }: { details: ClaimMedicalRecords }) {
           Documents
         </h4>
         <div className="flex flex-col gap-4">
-          {details.documents.map((document) => (
-            <DocumentRow key={document.name} document={document} />
-          ))}
+          {details.documents.length === 0 ? (
+            <p className="text-center text-[13px] font-normal text-[#64748B]">
+              No documents found.
+            </p>
+          ) : (
+            details.documents.map((document) => (
+              <DocumentRow key={document.name} document={document} />
+            ))
+          )}
         </div>
       </section>
 
@@ -117,9 +123,15 @@ function ReportDetailsContent({ details }: { details: ClaimMedicalRecords }) {
           ICD 10 Codes
         </h4>
         <div className="flex flex-col gap-4">
-          {details.icdCodes.map((icdCode, index) => (
-            <IcdCodeCard key={`${icdCode.code}-${index}`} icdCode={icdCode} />
-          ))}
+          {details.icdCodes.length === 0 ? (
+            <p className="text-center text-[13px] font-normal text-[#64748B]">
+              No records found.
+            </p>
+          ) : (
+            details.icdCodes.map((icdCode, index) => (
+              <IcdCodeCard key={`${icdCode.code}-${index}`} icdCode={icdCode} />
+            ))
+          )}
         </div>
       </section>
     </div>

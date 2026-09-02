@@ -151,6 +151,10 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
         {activeTab === "Invoices" &&
           (isLoadingDocuments ? (
             <PanelSkeleton />
+          ) : invoiceDocuments.length === 0 ? (
+            <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
+              No documents found.
+            </div>
           ) : (
             <div className="flex flex-col gap-4">
               {invoiceDocuments.map((document) => (

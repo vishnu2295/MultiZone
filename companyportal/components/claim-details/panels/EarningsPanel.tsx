@@ -87,6 +87,12 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
             {activeTab}
           </h2>
 
+          {earnings.length === 0 && (
+            <div className="rounded-xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
+              No records found.
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-4">
             {earnings.map((record, recordIndex) => (
               <div
