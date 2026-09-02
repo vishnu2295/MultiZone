@@ -7,8 +7,9 @@ import { usePathname } from "next/navigation";
 import { homeContent } from "@/content/site";
 import { ChevronDownIcon, CloseIcon, MenuIcon } from "@/components/common/icons";
 import ProfileMenuCard from "@/components/common/ProfileMenuCard";
+import { hasPensionerRecord, useProfile } from "@/lib/profile/ProfileContext";
 
-export type NavItem = { label: string; href: string };
+export type NavItem = { label: string; href: string; requiresPensioner?: boolean };
 
 export interface NavbarProps {
   /** Text shown next to the logo/divider. Defaults to the home page brand string. */
@@ -52,6 +53,11 @@ export default function Navbar({
   const profileRef = useRef<HTMLDivElement>(null);
   const mobileProfileRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const { profile } = useProfile();
+  const isPensioner = hasPensionerRecord(profile);
+  const visibleNavItems = navItems.filter(
+    (link) => !link.requiresPensioner || isPensioner,
+  );
   // Both portals are separate apps mounted at /company and /individual, so
   // the logo should return to whichever zone the user is currently in
   // rather than a shared "/" that neither app actually serves.
@@ -110,7 +116,7 @@ export default function Navbar({
         </Link>
 
         <nav className="ml-auto hidden items-center gap-[42px] lg:flex">
-          {navItems.map((link) => (
+          {visibleNavItems.map((link) => (
             <Link
               key={link.label}
               href={link.href}
@@ -188,7 +194,7 @@ export default function Navbar({
         </div>
 
         <nav className="flex flex-col gap-6 px-6 py-4">
-          {navItems.map((link) => (
+          {visibleNavItems.map((link) => (
             <Link
               key={link.label}
               href={link.href}

@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { mapProfile, profileMenu, type ApiProfileResponse } from "@/content/site";
+import { mapProfile, profileMenu } from "@/content/site";
 import { LogoutIcon } from "@/components/common/icons";
-import apiService, { API_ROOT_BASE_URL } from "@/lib/api/apiService";
-import { getEmployeeCoidId } from "@/lib/auth/employeeClaims";
+import { useProfile } from "@/lib/profile/ProfileContext";
 
 export interface ProfileMenuCardProps {
   name?: string;
@@ -40,38 +38,8 @@ export default function ProfileMenuCard({
   onLogout,
   className = "",
 }: ProfileMenuCardProps) {
-  const [profile, setProfile] = useState<{
-    name: string;
-    email: string;
-  } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadProfile() {
-      try {
-        const { token, coidId } = await getEmployeeCoidId();
-        if (!coidId) return;
-
-        const response = await apiService.get<ApiProfileResponse>(
-          `${API_ROOT_BASE_URL}/profile/individual/${coidId}`,
-          { token },
-        );
-
-        if (!cancelled) setProfile(mapProfile(response));
-      } catch (error) {
-        console.error("Failed to load profile:", error);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
-
-    loadProfile();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { profile: apiProfile, isLoading } = useProfile();
+  const profile = apiProfile ? mapProfile(apiProfile) : null;
 
   // Only show the shimmer when we don't already have data to render - an
   // explicit prop override, or a previously fetched profile.
