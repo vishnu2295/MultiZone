@@ -12,6 +12,16 @@ function decodeAccessTokenClaims(accessToken: string): Record<string, unknown> {
   return JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
 }
 
+// This zone decrypts the session cookie memberportal's login created (same
+// AUTH0_SECRET), so it can - and must - check the role itself: memberportal's
+// rewrite is the normal way in, but it's not the only possible way in.
+export function hasOrganizationRole(accessToken: string | undefined): boolean {
+  if (!accessToken) return false;
+  const claims = decodeAccessTokenClaims(accessToken);
+  const roles = (claims[RMA_ROLES_CLAIM] as string[] | undefined) ?? [];
+  return roles.includes("Organization");
+}
+
 // Reads AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, AUTH0_SECRET and
 // APP_BASE_URL from the environment. See .env.example for the full list.
 export const auth0 = new Auth0Client({

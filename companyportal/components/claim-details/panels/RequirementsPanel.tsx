@@ -47,6 +47,10 @@ export default function RequirementsPanel({ claimId }: { claimId: string }) {
   }
 
   return (
-    <DocumentUploadList title="Claim Requirements" documents={requirements} />
+    <DocumentUploadList
+      title="Claim Requirements"
+      documents={requirements}
+      claimId={claimId}
+    />
   );
 }
