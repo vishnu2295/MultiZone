@@ -155,6 +155,11 @@ function ClaimantInjuryPanelContent({
 
           <SectionCard title="Contacts">
             <div className="flex flex-col gap-3">
+              {contacts.length === 0 && (
+                <p className="text-center text-[13px] font-normal text-[#64748B]">
+                  No records found.
+                </p>
+              )}
               {contacts.map((contact, index) => (
                 <div
                   key={`${contact.email}-${index}`}
@@ -206,6 +211,11 @@ function ClaimantInjuryPanelContent({
 
           <SectionCard title="Address Details">
             <div className="flex flex-col gap-3">
+              {addresses.length === 0 && (
+                <p className="text-center text-[13px] font-normal text-[#64748B]">
+                  No records found.
+                </p>
+              )}
               {addresses.map((address, index) => (
                 <div
                   key={`${address.type}-${index}`}
@@ -308,9 +318,15 @@ function ClaimantInjuryPanelContent({
 
       {activeTab === "ICD 10 Codes" && (
         <div className="flex flex-col gap-4">
-          {icdCodes.map((icdCode, index) => (
-            <IcdCodeCard key={`${icdCode.code}-${index}`} icdCode={icdCode} />
-          ))}
+          {icdCodes.length === 0 ? (
+            <p className="text-center text-[13px] font-normal text-[#64748B]">
+              No records found.
+            </p>
+          ) : (
+            icdCodes.map((icdCode, index) => (
+              <IcdCodeCard key={`${icdCode.code}-${index}`} icdCode={icdCode} />
+            ))
+          )}
         </div>
       )}
     </div>
