@@ -116,7 +116,7 @@ export default function ContactsPanel() {
           <div className="flex items-start gap-3">
             <UserIcon className="mt-1 h-[14px] w-[14px] shrink-0 text-[#24577A]" />
             <div className="flex flex-col gap-1.5">
-              <span className="text-[13.5px] font-semibold leading-[22px] text-[#24577A]">
+              <span className="text-[13.5px] font-heading font-bold leading-[22px] text-[#24577A]">
                 {contact.name}
               </span>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
@@ -133,7 +133,7 @@ export default function ContactsPanel() {
           </div>
 
           <div className="flex items-center gap-2.5">
-            <span className="rounded-full bg-[#51B2E0] px-3 py-1 text-[12px] font-bold leading-[15px] text-white">
+            <span className="rounded-full bg-[#51B2E0] px-3 py-1 text-[12px] leading-[15px] text-white">
               {contact.badge}
             </span>
             <button

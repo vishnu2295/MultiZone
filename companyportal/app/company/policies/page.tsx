@@ -15,7 +15,7 @@ export default function PoliciesPage() {
           Back
         </Link>
 
-        <h1 className="mt-4 text-[18px] font-bold leading-6 text-[#13537B] sm:text-[20px] sm:leading-[24px]">
+        <h1 className="font-heading mt-4 text-[18px] font-bold leading-6 text-[#13537B] sm:text-[20px] sm:leading-[24px]">
           {policiesContent.heading}
         </h1>
 

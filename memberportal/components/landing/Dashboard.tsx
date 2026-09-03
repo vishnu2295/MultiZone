@@ -12,7 +12,7 @@ export default function Dashboard() {
           <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(500px,0.92fr)] lg:gap-12 lg:items-center 2xl:grid-cols-[minmax(0,1.08fr)_minmax(0.92fr,720px)] 2xl:items-center">
             <div className="relative z-10 pt-[8vw] lg:pl-[56px] lg:pt-[0vw] 2xl:pt-[6vw] 2xl:pl-[56px]">
               <div className="max-w-[470px] 2xl:max-w-[650px]">
-                <h1 className="text-[clamp(2.4rem,3.4vw,3.8rem)] font-normal leading-[0.95] tracking-[-0.02em] text-white">
+                <h1 className="font-heading text-[clamp(2.4rem,3.4vw,3.8rem)] font-normal leading-[0.95] tracking-[-0.02em] text-white">
                   {siteContent.heroTitle}
                 </h1>
                 <p

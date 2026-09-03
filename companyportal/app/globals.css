@@ -15,15 +15,500 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
+  --font-sans: "Gotham", "Segoe UI", Arial, Helvetica, sans-serif;
+  --font-heading: "Graphik", "Segoe UI", Arial, Helvetica, sans-serif;
 }
 
 @font-face {
   font-family: "Absolutely Silent DEMO";
-  src: url("/fonts/Absolutely Silent DEMO.ttf") format("truetype");
+  src: url("/company/fonts/Absolutely Silent DEMO.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
+}
+
+/* Gotham - body/nav copy. Weights map to the ladder Hoefler shipped;
+
+   only Thin/ExtraLight/Book/Bold have matching italic masters. */
+
+@font-face {
+
+  font-family: "Gotham";
+
+  src: url("/company/fonts/Gotham-Thin.woff2") format("woff2");
+
+  font-weight: 100;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Gotham";
+
+  src: url("/company/fonts/Gotham-ThinItalic.woff2") format("woff2");
+
+  font-weight: 100;
+
+  font-style: italic;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Gotham";
+
+  src: url("/company/fonts/Gotham-ExtraLight.woff2") format("woff2");
+
+  font-weight: 200;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Gotham";
+
+  src: url("/company/fonts/Gotham-ExtraLightItalic.woff2") format("woff2");
+
+  font-weight: 200;
+
+  font-style: italic;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Gotham";
+
+  src: url("/company/fonts/Gotham-Light.woff2") format("woff2");
+
+  font-weight: 300;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Gotham";
+
+  src: url("/company/fonts/Gotham-Book.woff2") format("woff2");
+
+  font-weight: 400;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Gotham";
+
+  src: url("/company/fonts/Gotham-Italic.woff2") format("woff2");
+
+  font-weight: 400;
+
+  font-style: italic;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Gotham";
+
+  src: url("/company/fonts/Gotham-Medium.woff2") format("woff2");
+
+  font-weight: 500;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Gotham";
+
+  src: url("/company/fonts/Gotham-Bold.woff2") format("woff2");
+
+  font-weight: 700;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Gotham";
+
+  src: url("/company/fonts/Gotham-BoldItalic.woff2") format("woff2");
+
+  font-weight: 700;
+
+  font-style: italic;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Gotham";
+
+  src: url("/company/fonts/Gotham-Black.woff2") format("woff2");
+
+  font-weight: 800;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Gotham";
+
+  src: url("/company/fonts/Gotham-Ultra.woff2") format("woff2");
+
+  font-weight: 900;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+/* Graphik - headings. Full weight ladder, every weight has an italic master. */
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-Thin.woff2") format("woff2");
+
+  font-weight: 100;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-ThinItalic.woff2") format("woff2");
+
+  font-weight: 100;
+
+  font-style: italic;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-Extralight.woff2") format("woff2");
+
+  font-weight: 200;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-ExtralightItalic.woff2") format("woff2");
+
+  font-weight: 200;
+
+  font-style: italic;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-Light.woff2") format("woff2");
+
+  font-weight: 300;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-LightItalic.woff2") format("woff2");
+
+  font-weight: 300;
+
+  font-style: italic;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-Regular.woff2") format("woff2");
+
+  font-weight: 400;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-RegularItalic.woff2") format("woff2");
+
+  font-weight: 400;
+
+  font-style: italic;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-Medium.woff2") format("woff2");
+
+  font-weight: 500;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-MediumItalic.woff2") format("woff2");
+
+  font-weight: 500;
+
+  font-style: italic;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-Semibold.woff2") format("woff2");
+
+  font-weight: 600;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-SemiboldItalic.woff2") format("woff2");
+
+  font-weight: 600;
+
+  font-style: italic;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-Bold.woff2") format("woff2");
+
+  font-weight: 700;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-BoldItalic.woff2") format("woff2");
+
+  font-weight: 700;
+
+  font-style: italic;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-Black.woff2") format("woff2");
+
+  font-weight: 800;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-BlackItalic.woff2") format("woff2");
+
+  font-weight: 800;
+
+  font-style: italic;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-Super.woff2") format("woff2");
+
+  font-weight: 900;
+
+  font-style: normal;
+
+  font-display: swap;
+
+}
+
+
+
+@font-face {
+
+  font-family: "Graphik";
+
+  src: url("/company/fonts/Graphik-SuperItalic.woff2") format("woff2");
+
+  font-weight: 900;
+
+  font-style: italic;
+
+  font-display: swap;
+
 }
 
 * {

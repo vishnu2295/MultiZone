@@ -26,7 +26,7 @@ export default function HomeGreeting() {
           {homeContent.greeting}
         </p>
 
-        <h1 className="mt-2 max-w-[500px] text-[clamp(2.2rem,4.5vw,3rem)] font-normal leading-[1.2] text-[#13537B]">
+        <h1 className="mt-2 max-w-[500px] text-[clamp(2.2rem,4.5vw,3rem)] font-normal leading-[1.2] text-[#24577A]">
           {isLoading ? (
             <span
               aria-hidden

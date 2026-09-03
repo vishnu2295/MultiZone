@@ -43,7 +43,7 @@ export default function CompanyDetailsTabs() {
 
       <div className="mt-6 flex flex-col gap-4">
         {activeTab !== "Documents" && (
-          <h2 className="text-[16px] font-bold leading-[19px] text-[#24577A]">
+          <h2 className="text-[16px] font-heading font-bold leading-[19px] text-[#24577A]">
             {activeTab}
           </h2>
         )}
