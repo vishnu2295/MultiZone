@@ -44,10 +44,10 @@ function BankingCardSkeleton() {
 function DetailField({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-[10px] font-semibold uppercase leading-[15px] tracking-[0.6px] text-[#24577A99]">
+      <span className="text-[10px] font-sans uppercase leading-[15px] tracking-[0.6px] text-[#24577A99]">
         {label}
       </span>
-      <span className="text-[13px] font-bold leading-5 text-[#24577A]">{value}</span>
+      <span className="text-[13px] font-semibold leading-5 text-[#24577A]">{value}</span>
     </div>
   );
 }
@@ -96,7 +96,7 @@ export default function BankingPanel() {
         >
           <div className="flex items-center gap-2">
             <BankIcon className="h-4 w-4 shrink-0 text-[#24577A]" />
-            <span className="text-[13.5px] font-semibold leading-[22px] text-[#24577A]">
+            <span className="text-[13.5px] font-heading font-bold leading-[22px] text-[#24577A]">
               {bank.accountHolder}
             </span>
           </div>

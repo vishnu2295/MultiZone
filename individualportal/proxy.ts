@@ -33,6 +33,11 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Runs on everything except static assets and metadata files. The broad
-  // matcher is required for rolling sessions to work.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)"],
+  // matcher is required for rolling sessions to work. Static files under
+  // /individual/ (images, icons, fonts) must stay excluded too, or they get
+  // caught by the "!pathname.startsWith('/individual')" check above and
+  // redirected to login for anyone without the Individual role.
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|individual-static|individual\\/.*\\.(?:svg|png|jpe?g|gif|ico|ttf|otf|woff2?)$).*)",
+  ],
 };

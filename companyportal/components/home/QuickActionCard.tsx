@@ -26,11 +26,11 @@ export default function QuickActionCard({
     >
       <Icon className="h-[30px] w-[30px] text-[#24577A]" />
 
-      <h3 className="mt-[45px] text-[22px] font-light leading-6 tracking-[-0.28px] text-[#24577A]">
+      <h3 className="mt-[45px] font-heading text-[22px] font-[500] leading-6 tracking-[-0.28px] text-[#24577A]">
         {title}
       </h3>
 
-      <p className="mt-4 max-w-[231px] text-[12px] font-light leading-5 tracking-[-0.14px] text-[#58585B]">
+      <p className="mt-4 font-sans max-w-[231px] text-[12px] font-light leading-5 tracking-[-0.14px] text-[#58585B]">
         {description}
       </p>
 

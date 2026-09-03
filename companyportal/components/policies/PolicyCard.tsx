@@ -43,8 +43,6 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
     if (!rolePlayerId) return;
 
     try {
-      // paymentType isn't sent yet - the remittanceDocument endpoint doesn't
-      // accept it until that backend change ships.
       const response = await apiService.get<ApiRemittanceDocument[]>(
         `/employer/${rolePlayerId}/remittanceDocument`,
         {
@@ -113,7 +111,7 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
   return (
     <article className="w-full rounded-2xl bg-white p-4 shadow-[0px_2px_16px_rgba(0,0,0,0.07)] sm:p-6">
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-[16px] font-extrabold leading-[24px] text-[#13537B] sm:text-[18px] sm:leading-[27px]">
+        <h3 className="font-sans text-[16px] font-extrabold leading-[24px] text-[#24577A] sm:text-[18px] sm:leading-[27px]">
           {policy.title}
         </h3>
         {/* <pre>{JSON.stringify(policy, null, 2)}</pre> */}
@@ -124,17 +122,17 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
           </span>
         )}
       </div>
-      <p className="mt-1 text-[12.5px] font-normal leading-[19px] text-[#64748B]">
+      <p className="font-sans font-[350] mt-1 text-[12.5px] font-normal leading-[19px] text-[#24577A99]">
         Policy Number &middot; {policy.policyNumber}
       </p>
 
       <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3 lg:grid-cols-5">
         {infoColumns(policy).map((column) => (
           <div key={column.label} className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-semibold uppercase leading-[15px] tracking-[0.6px] text-[#64748B]">
+            <span className="text-[10px] font-[350] uppercase leading-[15px] tracking-[0.6px] text-[#24577A] opacity-95">
               {column.label}
             </span>
-            <span className="text-[13px] font-bold leading-5 text-[#13537B]">
+            <span className="font-sans font-bold text-[13px] leading-5 text-[#24577A]">
               {column.value}
             </span>
           </div>

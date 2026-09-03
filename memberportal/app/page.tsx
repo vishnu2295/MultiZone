@@ -14,7 +14,7 @@ export default async function Home() {
   }
 
   return (
-    <main className="relative h-dvh overflow-hidden bg-(--page-dark-background)">
+    <main className="relative h-dvh overflow-hidden [background:var(--page-dark-background)]">
       <Navbar />
       <Dashboard />
     </main>

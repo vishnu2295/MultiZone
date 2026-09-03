@@ -108,7 +108,7 @@ export default function InvoicesPanel() {
 
           <div className="flex flex-1 flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[14px] font-bold leading-[21px] text-[#24577A]">
+              <span className="text-[14px] font-heading font-bold leading-[21px] text-[#24577A]">
                 {invoice.invoiceNumber}
               </span>
               <span
