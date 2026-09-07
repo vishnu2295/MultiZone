@@ -11,7 +11,6 @@ import type { ApiClaim } from "@/content/claims";
 
 type ClaimInfoCardProps = {
   claimId: string;
-  claimReferenceNumber: string;
 };
 
 type ClaimIdentity = {
