@@ -13,7 +13,7 @@ import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 
 function CompanyInfoCardSkeleton() {
   return (
-    <aside className="w-full shrink-0 rounded-xl bg-white p-4 shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px]">
+    <aside className="w-full shrink-0 rounded-xl bg-white p-4 shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px] lg:sticky lg:top-24 lg:self-start">
       <Skeleton className="h-4 w-32" />
 
       <div className="relative mt-4 overflow-hidden rounded-lg bg-[var(--blues-gradient-100,#006DA6)] shadow-[0px_4px_28.9px_0px_#00000040] p-4">
@@ -101,7 +101,7 @@ export default function CompanyInfoCard() {
 
   if (!company) {
     return (
-      <aside className="w-full shrink-0 rounded-xl bg-white p-4 text-center text-[13.5px] font-normal text-[#64748B] shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px]">
+      <aside className="w-full shrink-0 rounded-xl bg-white p-4 text-center text-[13.5px] font-normal text-[#64748B] shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px] lg:sticky lg:top-24 lg:self-start">
         No company details found.
       </aside>
     );
@@ -110,7 +110,7 @@ export default function CompanyInfoCard() {
   const infoRows = buildInfoRows(company);
 
   return (
-    <aside className="w-full shrink-0 rounded-xl bg-white p-4 shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px]">
+    <aside className="w-full shrink-0 rounded-xl bg-white p-4 shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px] lg:sticky lg:top-24 lg:self-start">
       <h2 className="text-[16px] font-bold leading-[19px] text-[#24577A]">
         Company Details
       </h2>
@@ -141,11 +141,11 @@ export default function CompanyInfoCard() {
       <div className="mt-6 flex flex-col gap-4">
         {infoRows.map((row, index) => (
           <div key={row.label} className="flex flex-col gap-4">
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-[12px] font-normal leading-[15px] text-[#24577ACC]">
+            <div className="flex items-start justify-between gap-4">
+              <span className="shrink-0 text-[12px] font-normal leading-[15px] text-[#24577ACC]">
                 {row.label}
               </span>
-              <span className="text-right text-[12px] font-semibold leading-[15px] text-[#24577A]">
+              <span className="min-w-0 flex-1 break-words text-right text-[12px] font-semibold leading-[15px] text-[#24577A]">
                 {row.value}
               </span>
             </div>
