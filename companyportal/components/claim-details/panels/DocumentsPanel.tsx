@@ -25,8 +25,11 @@ export default function DocumentsPanel({ claimId }: { claimId: string }) {
     async function loadDocuments() {
       try {
         const response = await apiService.get<ApiClaimDocument[]>(
-          `/employer/documents/${claimId}`,
-          { token: token ?? undefined },
+          `/employer/documents`,
+          {
+            token: token ?? undefined,
+            params: { keyName: "claimId", keyValue: claimId },
+          },
         );
         if (!cancelled) setGroups(mapApiDocuments(response).documentGroups);
       } catch (error) {

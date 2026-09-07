@@ -11,6 +11,7 @@ import type { ApiClaim } from "@/content/claims";
 
 type ClaimInfoCardProps = {
   claimId: string;
+  claimReferenceNumber: string;
 };
 
 type ClaimIdentity = {
@@ -35,7 +36,6 @@ export default function ClaimInfoCard({ claimId }: ClaimInfoCardProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const ref = searchParams.get("ref");
-
   const [identity, setIdentity] = useState<ClaimIdentity | null>(null);
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function ClaimInfoCard({ claimId }: ClaimInfoCardProps) {
 
     async function loadClaim() {
       try {
-        const claim = await apiService.get<ApiClaim>(`/employer/claim/${claimId}`, {
+        const claim = await apiService.get<ApiClaim>(`/employer/claim/${ref}`, {
           token: token ?? undefined,
           params: { rolePlayerId },
         });
@@ -61,7 +61,12 @@ export default function ClaimInfoCard({ claimId }: ClaimInfoCardProps) {
       } catch (error) {
         console.error("Failed to load claim:", error);
         if (!cancelled) {
-          setIdentity({ claimantName: "", initials: "", status: "", claimRef: "" });
+          setIdentity({
+            claimantName: "",
+            initials: "",
+            status: "",
+            claimRef: "",
+          });
         }
       }
     }
@@ -75,7 +80,7 @@ export default function ClaimInfoCard({ claimId }: ClaimInfoCardProps) {
 
   const basePath = `/company/claims/${claimId}`;
   const isIndexActive = pathname === basePath;
-  const queryString = ref ? `?ref=${encodeURIComponent(ref)}` : "";
+  const queryString = ref ? `?ref=${ref}` : "";
 
   return (
     <aside className="w-full shrink-0 rounded-xl bg-white p-4 shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px]">

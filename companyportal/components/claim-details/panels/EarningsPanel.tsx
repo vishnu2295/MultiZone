@@ -36,8 +36,9 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
           apiService.get<ApiEarningsRecord[]>(`/employer/earnings/${claimId}`, {
             token: token ?? undefined,
           }),
-          apiService.get<ApiClaimDocument[]>(`/employer/documents/${claimId}`, {
+          apiService.get<ApiClaimDocument[]>(`/employer/documents`, {
             token: token ?? undefined,
+            params: { keyName: "claimId", keyValue: claimId },
           }),
         ]);
 

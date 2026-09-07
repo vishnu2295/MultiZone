@@ -48,8 +48,11 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
     async function loadDocuments() {
       try {
         const response = await apiService.get<ApiClaimDocument[]>(
-          `/employer/documents/${claimId}`,
-          { token: token ?? undefined },
+          `/employer/documents`,
+          {
+            token: token ?? undefined,
+            params: { keyName: "claimId", keyValue: claimId },
+          },
         );
         if (!cancelled) {
           setInvoiceDocuments(mapApiDocuments(response).invoiceDocuments);
@@ -78,10 +81,11 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
 
     async function loadAuthorizations() {
       try {
-        const response = await apiService.get<ApiPreAuthorizationDetailsResponse>(
-          `/employee/preAuthorizationDetailsByClaimNumber/${encodeURIComponent(ref as string)}`,
-          { token: token ?? undefined, params: { rolePlayerId } },
-        );
+        const response =
+          await apiService.get<ApiPreAuthorizationDetailsResponse>(
+            `/employee/preAuthorizationDetailsByClaimNumber/${ref as string}`,
+            { token: token ?? undefined, params: { rolePlayerId } },
+          );
         if (!cancelled) setAuthorizations(mapApiPreAuthorizations(response));
       } catch (error) {
         console.error("Failed to load pre-authorization details:", error);

@@ -12,16 +12,19 @@ import {
 } from "@/components/common/icons";
 import ChildExtensionModal from "@/components/pension/ChildExtensionModal";
 import {
+  mapApiPensionLedgers,
   mapCommutationValidation,
   pensionServiceCards,
   PENSIONER_API_BASE_URL,
+  type ApiCommutationDocument,
   type ApiCommutationValidation,
+  type ApiPensionLedgersResponse,
   type CommutationEligibility,
 } from "@/content/pensionServices";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
 import { getEmployeeCoidId } from "@/lib/auth/employeeClaims";
-import { downloadFile } from "@/lib/utils/downloadFile";
+import { downloadBase64File } from "@/lib/utils/downloadFile";
 
 const cardIcons = {
   monitor: MonitorIcon,
@@ -126,10 +129,27 @@ export default function PensionServiceCards() {
                     const { token, coidId } = await getEmployeeCoidId();
                     if (!coidId) return;
 
-                    await downloadFile(
-                      `${PENSIONER_API_BASE_URL}/pensioner/${coidId}/confirmationLetter`,
-                      "PensionConfirmationLetter.pdf",
-                      { token },
+                    const ledgers = await apiService.get<ApiPensionLedgersResponse>(
+                      `${PENSIONER_API_BASE_URL}/pensioner/${coidId}/ledgers`,
+                      { token, params: { page: 1, pageSize: 1, searchFilter: "" } },
+                    );
+                    const entry = mapApiPensionLedgers(ledgers)[0];
+                    if (!entry) return;
+
+                    const response = await apiService.post<ApiCommutationDocument>(
+                      "/individual/api/confirmationLetter",
+                      {
+                        pensionCaseId: entry.pensionCaseId,
+                        ledgerRecipientId: entry.ledgerRecipientId,
+                        recipientDisplayName: entry.recipientDisplayName,
+                      },
+                      { baseUrl: "", skipAuth: true, params: { rolePlayerId: coidId } },
+                    );
+
+                    downloadBase64File(
+                      response.fileName,
+                      response.contentType,
+                      response.base64Content,
                     );
                   } catch (error) {
                     console.error(

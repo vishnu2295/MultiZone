@@ -25,8 +25,11 @@ export default function RequirementsPanel({ claimId }: { claimId: string }) {
     async function loadRequirements() {
       try {
         const response = await apiService.get<ApiClaimDocument[]>(
-          `/employer/documents/${claimId}`,
-          { token: token ?? undefined },
+          `/employer/documents`,
+          {
+            token: token ?? undefined,
+            params: { keyName: "claimId", keyValue: claimId },
+          },
         );
         if (!cancelled) setRequirements(mapApiDocuments(response).requirements);
       } catch (error) {
