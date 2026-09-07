@@ -2,7 +2,7 @@ require("dotenv").config({ path: "./.env" });
 module.exports = {
   apps: [
     {
-      name: `app-${process.env.NEXT_PUBLIC_NODE_ENV}`,
+      name: `individualPortal-${process.env.NEXT_PUBLIC_NODE_ENV}`,
       script: "node",
       args: [
         "node_modules/next/dist/bin/next",
