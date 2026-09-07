@@ -9,6 +9,7 @@ import PaymentsPanel from "@/components/claim-details/panels/PaymentsPanel";
 import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import type { ApiPagedResponse } from "@/content/companyDetails";
 import {
   claimTabs,
   mapApiClaimPayments,
@@ -47,15 +48,14 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
 
     async function loadDocuments() {
       try {
-        const response = await apiService.get<ApiClaimDocument[]>(
-          `/employer/documents`,
-          {
-            token: token ?? undefined,
-            params: { keyName: "claimId", keyValue: claimId },
-          },
-        );
+        const response = await apiService.get<
+          ApiPagedResponse<ApiClaimDocument>
+        >(`/employer/documents`, {
+          token: token ?? undefined,
+          params: { keyName: "claimId", keyValue: claimId },
+        });
         if (!cancelled) {
-          setInvoiceDocuments(mapApiDocuments(response).invoiceDocuments);
+          setInvoiceDocuments(mapApiDocuments(response.data).invoiceDocuments);
         }
       } catch (error) {
         console.error("Failed to load claim documents:", error);
@@ -70,35 +70,35 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
     };
   }, [claimId, token]);
 
-  useEffect(() => {
-    if (!token || !rolePlayerId || !ref) {
-      setIsLoadingAuthorizations(false);
-      return;
-    }
+  // useEffect(() => {
+  //   if (!token || !rolePlayerId || !ref) {
+  //     setIsLoadingAuthorizations(false);
+  //     return;
+  //   }
 
-    let cancelled = false;
-    setIsLoadingAuthorizations(true);
+  //   let cancelled = false;
+  //   setIsLoadingAuthorizations(true);
 
-    async function loadAuthorizations() {
-      try {
-        const response =
-          await apiService.get<ApiPreAuthorizationDetailsResponse>(
-            `/employee/preAuthorizationDetailsByClaimNumber/${ref as string}`,
-            { token: token ?? undefined, params: { rolePlayerId } },
-          );
-        if (!cancelled) setAuthorizations(mapApiPreAuthorizations(response));
-      } catch (error) {
-        console.error("Failed to load pre-authorization details:", error);
-      } finally {
-        if (!cancelled) setIsLoadingAuthorizations(false);
-      }
-    }
+  //   async function loadAuthorizations() {
+  //     try {
+  //       const response =
+  //         await apiService.get<ApiPreAuthorizationDetailsResponse>(
+  //           `/employer/preAuthorizationDetailsByClaimNumber/${ref as string}`,
+  //           { token: token ?? undefined, params: { rolePlayerId } },
+  //         );
+  //       if (!cancelled) setAuthorizations(mapApiPreAuthorizations(response));
+  //     } catch (error) {
+  //       console.error("Failed to load pre-authorization details:", error);
+  //     } finally {
+  //       if (!cancelled) setIsLoadingAuthorizations(false);
+  //     }
+  //   }
 
-    loadAuthorizations();
-    return () => {
-      cancelled = true;
-    };
-  }, [ref, rolePlayerId, token]);
+  //   loadAuthorizations();
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, [ref, rolePlayerId, token]);
 
   useEffect(() => {
     if (!token || !rolePlayerId) {
@@ -167,12 +167,12 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
             </div>
           ))}
         {activeTab === "Medical Invoices" && <InvoicesPanel invoices={[]} />}
-        {activeTab === "Authorizations" &&
+        {/* {activeTab === "Authorizations" &&
           (isLoadingAuthorizations ? (
             <PanelSkeleton />
           ) : (
             <AuthorizationsPanel authorizations={authorizations} />
-          ))}
+          ))} */}
         {activeTab === "Payments" &&
           (isLoadingPayments ? (
             <PanelSkeleton />

@@ -23,7 +23,7 @@ export default function FieldGroupsPanel({ claimId }: { claimId: string }) {
 
     async function loadEmployment() {
       try {
-        const response = await apiService.get<ApiEmploymentDetails>(
+        const response = await apiService.get<ApiEmploymentDetails[]>(
           `/employer/employment/${claimId}`,
           { token: token ?? undefined },
         );

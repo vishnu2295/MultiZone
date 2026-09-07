@@ -151,10 +151,10 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
           {policy.title}
         </h3>
         {/* <pre>{JSON.stringify(policy, null, 2)}</pre> */}
-        {policy.productStatus && (
+        {policy.complianceStatus && (
           <span className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF5] px-2.5 py-1 text-[11px] font-bold leading-4 text-[#14B86A]">
             <CheckCircleIcon className="h-2.5 w-2.5" />
-            {policy.productStatus}
+            {policy.complianceStatus}
           </span>
         )}
       </div>
