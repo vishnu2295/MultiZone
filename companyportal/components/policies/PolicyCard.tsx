@@ -3,13 +3,17 @@
 import { useState } from "react";
 import { CheckCircleIcon, DownloadIcon } from "@/components/home/icons";
 import type {
+  ApiEmployerDocument,
+  ApiPagedResponse,
+} from "@/content/companyDetails";
+import type {
   ApiLetterOfGoodStanding,
   ApiRemittanceDocument,
   Policy,
 } from "@/content/policies";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
-import { downloadBase64File } from "@/lib/utils/downloadFile";
+import { downloadBase64File, downloadFileFromUrl } from "@/lib/utils/downloadFile";
 import DownloadRemittanceModal, {
   type RemittanceDownloadFilters,
 } from "@/components/policies/DownloadRemittanceModal";
@@ -105,9 +109,41 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
     }
   }
 
+  async function downloadPolicySchedule() {
+    if (!rolePlayerId) return;
+
+    setDownloadingAction("Policy Schedule");
+    try {
+      const response = await apiService.get<
+        ApiPagedResponse<ApiEmployerDocument>
+      >(`/employer/documents`, {
+        token: token ?? undefined,
+        params: {
+          keyName: "policyId",
+          keyValue: policy.policyId,
+          page: 1,
+          pageSize: 10,
+        },
+      });
+
+      const document = response.data?.[0];
+      if (!document?.documentUri) {
+        throw new Error(
+          `Unexpected policy schedule response: ${JSON.stringify(response)}`,
+        );
+      }
+      downloadFileFromUrl(document.documentUri, document.fileName);
+    } catch (error) {
+      console.error("Failed to download policy schedule:", error);
+    } finally {
+      setDownloadingAction(null);
+    }
+  }
+
   const actionHandlers: Record<string, () => void> = {
     Remittance: () => setIsRemittanceModalOpen(true),
     "Letter of Good Standing": handleLetterOfGoodStandingDownload,
+    "Policy Schedule": downloadPolicySchedule,
   };
 
   return (

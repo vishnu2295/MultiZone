@@ -121,7 +121,7 @@ export default function InvoicesPanel() {
               </span>
             </div>
             <p className="text-[11.5px] font-normal leading-[17px] text-[#58585B]">
-              Invoice Number : {invoice.invoiceNumberFull}
+              Policy Number : {invoice.invoiceNumberFull}
             </p>
             <p className="text-[11.5px] font-normal leading-[17px] text-[#58585B]">
               Collection Cycle : {invoice.collectionCycle}

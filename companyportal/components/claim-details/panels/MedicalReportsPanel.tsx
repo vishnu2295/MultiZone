@@ -211,8 +211,9 @@ export default function MedicalReportsPanel({ claimId }: { claimId: string }) {
     async function loadMedicalReports() {
       try {
         const [documentsResponse, medicalReportsResponse] = await Promise.all([
-          apiService.get<ApiClaimDocument[]>(`/employer/documents/${claimId}`, {
+          apiService.get<ApiClaimDocument[]>(`/employer/documents`, {
             token: token ?? undefined,
+            params: { keyName: "claimId", keyValue: claimId },
           }),
           apiService.get<ApiMedicalReportsResponse>(
             `/employer/medicalRecords/${claimId}`,

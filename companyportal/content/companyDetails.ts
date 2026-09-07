@@ -40,6 +40,7 @@ export type CompanyDocument = {
   documentType: string;
   date: string;
   documentId: string;
+  documentUri: string;
 };
 
 export interface CompanyInfo {
@@ -79,6 +80,7 @@ export interface ApiCompanyDetails {
   compensationFundStatus?: string;
   companyLevel?: string;
   natureOfBusiness?: string;
+  createdDate?: string;
 }
 
 export interface ApiAddressDetails {
@@ -138,16 +140,28 @@ export interface ApiPagedResponse<T> {
 
 export type ApiInvoicesResponse = ApiPagedResponse<ApiInvoice>;
 
-export interface ApiDocument {
-  documentId: string;
-  documentName: string;
-  uploadDate: string;
-  fileType: string;
-}
-
-export interface ApiDocumentSet {
-  setName: string;
-  documents: ApiDocument[];
+export interface ApiEmployerDocument {
+  documentId: number;
+  documentKeySet: string;
+  documentKey: string;
+  systemName: string;
+  documentSet: number;
+  documentTypeId: number;
+  required: boolean;
+  documentType: string;
+  fileName: string;
+  fileExtension: string;
+  documentDescription: string;
+  isMemberVisible: boolean;
+  documentStatus: number;
+  documentUri: string;
+  isDeleted: boolean;
+  createdBy: string;
+  uploadedDate: string;
+  createdDate: string;
+  modifiedBy: string;
+  modifiedDate: string;
+  fileContent: string;
 }
 
 const INVOICE_STATUS_LABEL: Record<number, string> = {
@@ -184,7 +198,7 @@ export function mapApiCompanyDetails(
     ),
     compensationFundStatus: checkValueExists(res.compensationFundStatus),
     natureOfBusiness: checkValueExists(res.natureOfBusiness),
-    createdDate: res.joinDate ? res.joinDate.slice(0, 10) : "-",
+    createdDate: res.createdDate ? res.createdDate.slice(0, 10) : "-",
   };
 }
 
@@ -231,19 +245,22 @@ export function mapApiInvoice(api: ApiInvoice): CompanyInvoice {
   };
 }
 
-export function mapApiDocumentSets(sets: ApiDocumentSet[]): CompanyDocument[] {
-  return sets.flatMap((set) =>
-    set.documents.map((doc) => ({
-      name: doc.documentName,
-      documentType: set.setName,
-      date: `${new Date(doc.uploadDate).toLocaleDateString("en-GB", {
+export function mapApiEmployerDocuments(
+  docs: ApiEmployerDocument[],
+): CompanyDocument[] {
+  return docs
+    .filter((doc) => !doc.isDeleted)
+    .map((doc) => ({
+      name: doc.fileName,
+      documentType: doc.documentType,
+      date: `${new Date(doc.uploadedDate).toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
         year: "numeric",
-      })} · ${doc.fileType}`,
-      documentId: doc.documentId,
-    })),
-  );
+      })} · ${doc.fileExtension.split("/").pop()?.toUpperCase() ?? doc.fileExtension}`,
+      documentId: String(doc.documentId),
+      documentUri: doc.documentUri,
+    }));
 }
 
 export function mapApiContact(api: ApiContactDetails): CompanyContact & {

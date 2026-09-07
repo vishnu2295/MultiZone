@@ -8,11 +8,10 @@ export default async function ClaimDetailsLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ claimId: string }>;
+  params: Promise<{ claimId: string; claimReferenceNumber: string }>;
 }) {
-  const { claimId } = await params;
+  const { claimId, claimReferenceNumber } = await params;
   const claimantId = String(claimId);
-
   return (
     <main className="min-h-screen bg-[#F3F7FA]">
       <div className="relative mx-auto w-full max-w-[1440px] px-4 pb-16 pt-[112px] sm:px-6 lg:px-14">
@@ -35,7 +34,10 @@ export default async function ClaimDetailsLayout({
         </Link>
 
         <div className="relative z-10 mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
-          <ClaimInfoCard claimId={claimantId} />
+          <ClaimInfoCard
+            claimId={claimantId}
+            claimReferenceNumber={claimReferenceNumber}
+          />
 
           <div className="flex-1">{children}</div>
         </div>
