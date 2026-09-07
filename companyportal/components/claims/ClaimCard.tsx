@@ -6,9 +6,7 @@ export default function ClaimCard({ claim }: { claim: Claim }) {
   const handleClick = () => {
     // ref carries the claimReferenceNumber through so the detail page can
     // look the claim up directly instead of scanning the paginated list.
-    router.push(
-      `/company/claims/${claim.id}`,
-    );
+    router.push(`/company/claims/${claim.id}?ref=${claim.reference}`);
   };
   return (
     <article className="cursor-pointer rounded-xl bg-white p-4 shadow-[0px_2px_16px_rgba(0,0,0,0.07)] sm:p-6">

@@ -35,13 +35,24 @@ function PensionLedgerCardSkeleton() {
   );
 }
 
-/** Fetches and renders the pensioner's ledger entries (page 1 of the paginated list). */
+/** Fetches and renders the pensioner's ledger entries (page 1 of the paginated list), filterable by search. */
 export default function PensionLedgerList() {
   const [entries, setEntries] = useState<PensionLedgerEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchFilter, setSearchFilter] = useState("");
+
+  useEffect(() => {
+    const timeout = setTimeout(
+      () => setSearchFilter(searchInput.trim()),
+      400,
+    );
+    return () => clearTimeout(timeout);
+  }, [searchInput]);
 
   useEffect(() => {
     let cancelled = false;
+    setIsLoading(true);
 
     async function loadLedgers() {
       try {
@@ -50,7 +61,10 @@ export default function PensionLedgerList() {
 
         const response = await apiService.get<ApiPensionLedgersResponse>(
           `${PENSIONER_API_BASE_URL}/pensioner/${coidId}/ledgers`,
-          { token, params: { page: 1, pageSize: PAGE_SIZE } },
+          {
+            token,
+            params: { page: 1, pageSize: PAGE_SIZE, searchFilter },
+          },
         );
 
         if (!cancelled) setEntries(mapApiPensionLedgers(response));
@@ -65,31 +79,42 @@ export default function PensionLedgerList() {
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="mt-6 flex flex-col gap-4">
-        {Array.from({ length: 2 }).map((_, index) => (
-          <PensionLedgerCardSkeleton key={index} />
-        ))}
-      </div>
-    );
-  }
-
-  if (entries.length === 0) {
-    return (
-      <div className="mt-6 rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#6B7F8C] shadow-[2.805px_2.805px_28.05px_0px_#122E4D0D]">
-        There are no pension ledgers to display.
-      </div>
-    );
-  }
+  }, [searchFilter]);
 
   return (
-    <div className="mt-6 flex flex-col gap-4">
-      {entries.map((entry) => (
-        <PensionLedgerCard key={entry.id} entry={entry} />
-      ))}
+    <div className="mt-6 flex flex-col">
+      <div className="mb-4 flex justify-end">
+        <div className="relative w-full sm:w-72">
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Search pension ledgers"
+            className="w-full rounded-xl border border-black/8 bg-white py-2.5 pl-4 pr-10 text-[13px] text-[#13537B] placeholder:text-[#94A3B8] shadow-[0px_2px_16px_0px_#00000012] focus:outline-none focus:ring-2 focus:ring-[#07C1E9]/30"
+          />
+          <img
+            src="/individual/icons/search.svg"
+            alt="Search"
+            className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#13537B]"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {isLoading ? (
+          Array.from({ length: 2 }).map((_, index) => (
+            <PensionLedgerCardSkeleton key={index} />
+          ))
+        ) : entries.length > 0 ? (
+          entries.map((entry) => (
+            <PensionLedgerCard key={entry.id} entry={entry} />
+          ))
+        ) : (
+          <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#6B7F8C] shadow-[2.805px_2.805px_28.05px_0px_#122E4D0D]">
+            There are no pension ledgers to display.
+          </div>
+        )}
+      </div>
     </div>
   );
 }

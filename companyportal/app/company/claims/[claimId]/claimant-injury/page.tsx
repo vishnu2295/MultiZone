@@ -6,6 +6,5 @@ export default async function ClaimantInjuryPage({
   params: Promise<{ claimId: string }>;
 }) {
   const { claimId } = await params;
-
   return <ClaimantInjuryPanel claimId={String(claimId)} />;
 }

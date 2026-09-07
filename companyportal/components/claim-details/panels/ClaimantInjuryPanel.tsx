@@ -32,6 +32,7 @@ import {
   type ClaimantDetails,
   type ClaimantTab,
 } from "@/content/claimDetails";
+import { useSearchParams } from "next/dist/client/components/navigation";
 
 function SectionCard({
   title,
@@ -44,7 +45,9 @@ function SectionCard({
     <section className="rounded-xl bg-white px-3 py-3.5 shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
       <div className="flex flex-col gap-5">
         {title && (
-          <h3 className="text-[16px] font-bold leading-[19px] text-[#24577A]">{title}</h3>
+          <h3 className="text-[16px] font-bold leading-[19px] text-[#24577A]">
+            {title}
+          </h3>
         )}
         {children}
       </div>
@@ -52,7 +55,11 @@ function SectionCard({
   );
 }
 
-function FieldGrid({ fields }: { fields: Array<{ label: string; value: string }> }) {
+function FieldGrid({
+  fields,
+}: {
+  fields: Array<{ label: string; value: string }>;
+}) {
   return (
     <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
       {fields.map((field) => (
@@ -77,7 +84,13 @@ function PrimaryPill() {
   );
 }
 
-function EditButton({ label, onClick }: { label: string; onClick: () => void }) {
+function EditButton({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
@@ -115,9 +128,15 @@ function ClaimantInjuryPanelContent({
     })),
   );
 
-  const [editingContactIndex, setEditingContactIndex] = useState<number | null>(null);
-  const [deletingContactIndex, setDeletingContactIndex] = useState<number | null>(null);
-  const [editingAddressIndex, setEditingAddressIndex] = useState<number | null>(null);
+  const [editingContactIndex, setEditingContactIndex] = useState<number | null>(
+    null,
+  );
+  const [deletingContactIndex, setDeletingContactIndex] = useState<
+    number | null
+  >(null);
+  const [editingAddressIndex, setEditingAddressIndex] = useState<number | null>(
+    null,
+  );
 
   const editingContact =
     editingContactIndex !== null ? contacts[editingContactIndex] : null;
@@ -145,7 +164,9 @@ function ClaimantInjuryPanelContent({
         ))}
       </div>
 
-      <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">{activeTab}</h2>
+      <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
+        {activeTab}
+      </h2>
 
       {activeTab === "Claimant Details" && (
         <div className="flex flex-col gap-6">
@@ -341,12 +362,16 @@ const EMPTY_CLAIMANT_DETAILS: ClaimantDetails = {
 
 export default function ClaimantInjuryPanel({ claimId }: { claimId: string }) {
   const { token } = useCompanyProfile();
-  const [details, setDetails] = useState<ClaimantDetails>(EMPTY_CLAIMANT_DETAILS);
+  const [details, setDetails] = useState<ClaimantDetails>(
+    EMPTY_CLAIMANT_DETAILS,
+  );
   const [injuryDetails, setInjuryDetails] = useState<
     Array<{ label: string; value: string }>
   >([]);
   const [icdCodes, setIcdCodes] = useState<ClaimIcdCode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const ref = searchParams.get("ref");
 
   useEffect(() => {
     if (!token) return;
@@ -359,7 +384,7 @@ export default function ClaimantInjuryPanel({ claimId }: { claimId: string }) {
         const [claimantResponse, injuryResponse, icdCodesResponse] =
           await Promise.all([
             apiService.get<ApiClaimantDetailsResponse>(
-              `/employer/claimant/${claimId}`,
+              `/employer/claimant/${ref}`,
               { token: token ?? undefined },
             ),
             apiService.get<ApiInjuryDetailsResponse>(
@@ -387,7 +412,7 @@ export default function ClaimantInjuryPanel({ claimId }: { claimId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [claimId, token]);
+  }, [claimId, ref, token]);
 
   if (isLoading) {
     return <PanelSkeleton />;

@@ -3,9 +3,10 @@ import { Auth0Client } from "@auth0/nextjs-auth0/server";
 import { apiService } from "./api/apiService";
 
 const RMA_ROLES_CLAIM = "https://rma.com/claims/rma_roles";
-
-const REGISTRATION_URL =
-  "https://3kndb36n95.execute-api.eu-west-2.amazonaws.com/default/api/mobileApp/public/registration/register";
+const PROFILE_STATUS_CLAIM = "https://rma.com/claims/profile_status";
+// Base domain of the registration API. See .env.example.
+const REGISTER_API_DOMAIN = process.env.REGISTER_API_DOMAIN ?? "";
+const REGISTRATION_URL = `${REGISTER_API_DOMAIN}/default/api/mobileApp/public/registration/register`;
 
 // The roles claim is issued on the access token (audience-scoped), not the ID
 // token, so session.user won't have it. We just received this token straight
@@ -42,7 +43,9 @@ export function canAccessZone(
 // Default zone to land a member on right after login or when they hit "/" -
 // used only to pick one starting point for someone with multiple roles, not
 // to gate access (see canAccessZone for that).
-export function getRoleHomePath(accessToken: string | undefined): string | null {
+export function getRoleHomePath(
+  accessToken: string | undefined,
+): string | null {
   const roles = getRoles(accessToken);
   if (roles.includes("Organization")) return "/company";
   if (roles.includes("Individual")) return "/individual";
@@ -68,8 +71,13 @@ export const auth0 = new Auth0Client({
 
     const accessToken = session?.tokenSet.accessToken;
     const refreshToken = session?.tokenSet.refreshToken;
+    const profileStatus = accessToken
+      ? (decodeAccessTokenClaims(accessToken)[PROFILE_STATUS_CLAIM] as
+          | string
+          | undefined)
+      : undefined;
 
-    if (accessToken && refreshToken) {
+    if (accessToken && refreshToken && profileStatus !== "Linked") {
       try {
         await apiService.post(
           REGISTRATION_URL,
@@ -84,7 +92,6 @@ export const auth0 = new Auth0Client({
         return NextResponse.redirect(`${baseUrl}/auth/login`);
       }
     }
-
     const returnTo = getRoleHomePath(accessToken) ?? ctx.returnTo ?? "/";
 
     return NextResponse.redirect(`${baseUrl}${returnTo}`);
