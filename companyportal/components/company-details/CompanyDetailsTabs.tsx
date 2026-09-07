@@ -24,7 +24,7 @@ export default function CompanyDetailsTabs() {
 
   return (
     <div className="flex-1">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 lg:sticky lg:top-24 lg:z-20 lg:bg-[#F3F7FA] lg:py-2">
         {companyDetailsContent.tabs.map((tab) => (
           <button
             key={tab}
