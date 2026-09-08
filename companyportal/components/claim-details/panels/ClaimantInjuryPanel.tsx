@@ -32,6 +32,7 @@ import {
   type ClaimantDetails,
   type ClaimantTab,
 } from "@/content/claimDetails";
+import type { ApiClaim } from "@/content/claims";
 import { useSearchParams } from "next/dist/client/components/navigation";
 
 function SectionCard({
@@ -361,7 +362,7 @@ const EMPTY_CLAIMANT_DETAILS: ClaimantDetails = {
 };
 
 export default function ClaimantInjuryPanel({ claimId }: { claimId: string }) {
-  const { token } = useCompanyProfile();
+  const { token, rolePlayerId } = useCompanyProfile();
   const [details, setDetails] = useState<ClaimantDetails>(
     EMPTY_CLAIMANT_DETAILS,
   );
@@ -374,17 +375,22 @@ export default function ClaimantInjuryPanel({ claimId }: { claimId: string }) {
   const ref = searchParams.get("ref");
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !rolePlayerId || !ref) return;
 
     let cancelled = false;
     setIsLoading(true);
 
     async function loadClaimantInjury() {
       try {
+        const claim = await apiService.get<ApiClaim>(`/employer/claim/${ref}`, {
+          token: token ?? undefined,
+          params: { rolePlayerId },
+        });
+
         const [claimantResponse, injuryResponse, icdCodesResponse] =
           await Promise.all([
             apiService.get<ApiClaimantDetailsResponse>(
-              `/employer/claimant/${ref}`,
+              `/employer/claimant/${claim.claimantId}`,
               { token: token ?? undefined },
             ),
             apiService.get<ApiInjuryDetailsResponse>(
@@ -412,7 +418,7 @@ export default function ClaimantInjuryPanel({ claimId }: { claimId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [claimId, ref, token]);
+  }, [claimId, ref, rolePlayerId, token]);
 
   if (isLoading) {
     return <PanelSkeleton />;

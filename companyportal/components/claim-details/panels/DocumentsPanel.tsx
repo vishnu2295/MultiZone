@@ -5,6 +5,7 @@ import DocumentRow from "@/components/claim-details/panels/DocumentRow";
 import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import type { ApiPagedResponse } from "@/content/companyDetails";
 import {
   mapApiDocuments,
   type ApiClaimDocument,
@@ -24,14 +25,14 @@ export default function DocumentsPanel({ claimId }: { claimId: string }) {
 
     async function loadDocuments() {
       try {
-        const response = await apiService.get<ApiClaimDocument[]>(
-          `/employer/documents`,
-          {
-            token: token ?? undefined,
-            params: { keyName: "claimId", keyValue: claimId },
-          },
-        );
-        if (!cancelled) setGroups(mapApiDocuments(response).documentGroups);
+        const response = await apiService.get<
+          ApiPagedResponse<ApiClaimDocument>
+        >(`/employer/documents`, {
+          token: token ?? undefined,
+          params: { keyName: "claimId", keyValue: claimId },
+        });
+        if (!cancelled)
+          setGroups(mapApiDocuments(response.data).documentGroups);
       } catch (error) {
         console.error("Failed to load documents:", error);
       } finally {

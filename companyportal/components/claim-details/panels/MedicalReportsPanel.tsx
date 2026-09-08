@@ -8,6 +8,7 @@ import IcdCodeCard from "@/components/claim-details/panels/IcdCodeCard";
 import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import type { ApiPagedResponse } from "@/content/companyDetails";
 import {
   mapApiDocuments,
   mapApiMedicalReportDetail,
@@ -211,10 +212,13 @@ export default function MedicalReportsPanel({ claimId }: { claimId: string }) {
     async function loadMedicalReports() {
       try {
         const [documentsResponse, medicalReportsResponse] = await Promise.all([
-          apiService.get<ApiClaimDocument[]>(`/employer/documents`, {
-            token: token ?? undefined,
-            params: { keyName: "claimId", keyValue: claimId },
-          }),
+          apiService.get<ApiPagedResponse<ApiClaimDocument>>(
+            `/employer/documents`,
+            {
+              token: token ?? undefined,
+              params: { keyName: "claimId", keyValue: claimId },
+            },
+          ),
           apiService.get<ApiMedicalReportsResponse>(
             `/employer/medicalRecords/${claimId}`,
             { token: token ?? undefined },
@@ -222,7 +226,9 @@ export default function MedicalReportsPanel({ claimId }: { claimId: string }) {
         ]);
 
         if (!cancelled) {
-          setDocuments(mapApiDocuments(documentsResponse).medicalReportDocuments);
+          setDocuments(
+            mapApiDocuments(documentsResponse.data).medicalReportDocuments,
+          );
           setReports(mapApiMedicalReports(medicalReportsResponse));
         }
       } catch (error) {

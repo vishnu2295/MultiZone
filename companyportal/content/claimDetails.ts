@@ -1,3 +1,10 @@
+import {
+  ClaimRequirementsDocumentsEnum,
+  DocumentStatusEnum,
+  DocumentSystemNameEnum,
+  EmployeeEarningDocumentsEnum,
+} from "@/lib/constants";
+
 export type ClaimSection =
   | "Claimant & Injury Details"
   | "Employment"
@@ -249,7 +256,9 @@ function formatMedicalReportDate(value: string): string {
   });
 }
 
-function mapMedicalReportSummary(report: ApiMedicalReportListItem): ClaimMedicalReport {
+function mapMedicalReportSummary(
+  report: ApiMedicalReportListItem,
+): ClaimMedicalReport {
   return {
     healthcareProviderName: report.healthcareProviderName,
     practiceNumber: report.practiceNumber,
@@ -382,7 +391,9 @@ function toClaimMedicalDocument(doc: ApiClaimDocument): ClaimMedicalDocument {
   };
 }
 
-export function mapApiLetters(response: ApiClaimDocument[]): ClaimMedicalDocument[] {
+export function mapApiLetters(
+  response: ApiClaimDocument[],
+): ClaimMedicalDocument[] {
   return response.map(toClaimMedicalDocument);
 }
 
@@ -406,7 +417,9 @@ export type MappedClaimDocuments = {
  * Documents section, "Invoices" -> the Invoices tab, "Medical Reports" ->
  * the Medical Reports section. Any other keySet is currently unhandled.
  */
-export function mapApiDocuments(response: ApiClaimDocument[]): MappedClaimDocuments {
+export function mapApiDocuments(
+  response: ApiClaimDocument[],
+): MappedClaimDocuments {
   const requirements: ClaimUploadDocument[] = [];
   const claimDocuments: ClaimMedicalDocument[] = [];
   const invoiceDocuments: ClaimMedicalDocument[] = [];
@@ -448,23 +461,33 @@ export function mapApiDocuments(response: ApiClaimDocument[]): MappedClaimDocume
   };
 }
 
+/** Display label for each Employee Earnings Documents upload slot. */
+const EARNINGS_DOCUMENT_LABELS: Record<EmployeeEarningDocumentsEnum, string> = {
+  [EmployeeEarningDocumentsEnum.StatementOfEarnings]: "Statement Of Earnings",
+  [EmployeeEarningDocumentsEnum.CurrentEarnings]: "Current Earnings",
+  [EmployeeEarningDocumentsEnum.Section51]: "Section51",
+  [EmployeeEarningDocumentsEnum.Section51ConfirmationLetter]:
+    "Section51 Confirmation Letter",
+  [EmployeeEarningDocumentsEnum.RMAFormulaSheet]: "RMA Formula Sheet",
+  [EmployeeEarningDocumentsEnum.Payslips]: "Payslips",
+  [EmployeeEarningDocumentsEnum.ContractOfEmployment]: "Contract Of Employment",
+  [EmployeeEarningDocumentsEnum.TPE]: "TPE",
+};
+
 /** Fixed set of upload slots always shown on the Employee Earnings Documents tab. */
-const EARNINGS_DOCUMENT_NAMES = [
-  "Statement Of Earnings",
-  "Current Earnings",
-  "Section51",
-  "Section51 Confirmation Letter",
-  "RMA Formula Sheet",
-  "Payslips",
-  "Contract Of Employment",
-  "TPE",
-] as const;
+const EARNINGS_DOCUMENT_NAMES = Object.values(EmployeeEarningDocumentsEnum)
+  .filter(
+    (value): value is EmployeeEarningDocumentsEnum => typeof value === "number",
+  )
+  .map((value) => EARNINGS_DOCUMENT_LABELS[value]);
 
 /**
  * Builds the Employee Earnings Documents slots: always the fixed names
  * above, with already-uploaded files (matched by formatted label) filled in.
  */
-export function mapEarningsDocuments(response: ApiClaimDocument[]): ClaimUploadDocument[] {
+export function mapEarningsDocuments(
+  response: ApiClaimDocument[],
+): ClaimUploadDocument[] {
   const uploaded = new Map(
     response
       .filter((doc) => doc.documentKeySet === EARNINGS_DOCUMENT_KEY_SET)
@@ -483,6 +506,74 @@ export function mapEarningsDocuments(response: ApiClaimDocument[]): ClaimUploadD
       : { name };
   });
 }
+
+/** Display label for each Claim Requirements upload slot. */
+const REQUIREMENTS_DOCUMENT_LABELS: Record<
+  ClaimRequirementsDocumentsEnum,
+  string
+> = {
+  [ClaimRequirementsDocumentsEnum.EmployeeBankingDetails]:
+    "Employee Banking Details",
+  [ClaimRequirementsDocumentsEnum.BankingDetails]: "Banking Details",
+};
+
+function invertLabels<T extends number>(
+  labels: Record<T, string>,
+): Record<string, T> {
+  return Object.fromEntries(
+    Object.entries(labels).map(([id, label]) => [label, Number(id) as T]),
+  );
+}
+
+const EARNINGS_DOC_TYPE_ID_BY_NAME = invertLabels(EARNINGS_DOCUMENT_LABELS);
+const REQUIREMENTS_DOC_TYPE_ID_BY_NAME = invertLabels(
+  REQUIREMENTS_DOCUMENT_LABELS,
+);
+
+/**
+ * Resolves the docTypeId to send to /employer/{rolePlayerId}/saveDocuments
+ * for a given DocumentUploadList slot, based on its panel title and the
+ * document name selected in the upload modal.
+ */
+export function getUploadDocTypeId(
+  title: string,
+  documentName: string,
+): number | undefined {
+  if (title === "Employee Earnings Documents") {
+    return EARNINGS_DOC_TYPE_ID_BY_NAME[documentName];
+  }
+  if (title === "Claim Requirements") {
+    return REQUIREMENTS_DOC_TYPE_ID_BY_NAME[documentName];
+  }
+  return undefined;
+}
+
+export type ApiSaveDocumentRequest = {
+  id?: number;
+  uuid?: string;
+  docTypeId: number;
+  systemName: string;
+  documentUri?: string;
+  verifiedBy?: string;
+  verifiedByDate?: string | null;
+  fileHash?: string;
+  fileName?: string;
+  fileExtension: string;
+  documentStatus: string;
+  fileAsBase64: string;
+  keys: Record<string, string>;
+  documentTypeName: string;
+  documentSet: string;
+  createdBy?: string;
+  createdDate?: string | null;
+  mimeType: string;
+  documentExist: boolean;
+  required: boolean;
+  documentDescription: string;
+  isMemberVisible: boolean;
+};
+
+export type ApiSavedDocument = ApiSaveDocumentRequest;
 
 export type ClaimBeneficiary = {
   name: string;
@@ -704,13 +795,14 @@ export type ApiInjuryDetails = {
 };
 
 export type ApiInjuryDetailsResponse = {
-  injuryDetails: ApiInjuryDetails;
+  injuryDetails: ApiInjuryDetails[];
 };
 
 export function mapApiInjuryDetails(
   response: ApiInjuryDetailsResponse,
 ): Array<{ label: string; value: string }> {
-  const { injuryDetails } = response;
+  const injuryDetails = response.injuryDetails?.[0];
+  if (!injuryDetails) return [];
 
   return [
     { label: "Insurance Type", value: injuryDetails.insuranceType },
@@ -831,32 +923,35 @@ export type ApiEmploymentDetails = {
 };
 
 export function mapApiEmploymentDetails(
-  response: ApiEmploymentDetails,
+  response: ApiEmploymentDetails[],
 ): ClaimFieldGroup[] {
+  const employment = response[0];
+  if (!employment) return [];
+
   return [
     {
       title: "Person Employment",
       fields: [
         {
           label: "Skilled / Unskilled",
-          value: response.isSkilled ? "Skilled" : "Unskilled",
+          value: employment.isSkilled ? "Skilled" : "Unskilled",
         },
         {
           label: "Trainee/Learner/Apprentice?",
-          value: response.isTrainee ? "Yes" : "No",
+          value: employment.isTrainee ? "Yes" : "No",
         },
-        { label: "Start Date with Employer", value: response.startDate },
-        { label: "Paterson Grading", value: response.patersonGrading },
+        { label: "Start Date with Employer", value: employment.startDate },
+        { label: "Paterson Grading", value: employment.patersonGrading },
         {
           label: "RMA Employee Ref Number",
-          value: response.rmaEmployeeRefNumber,
+          value: employment.rmaEmployeeRefNumber,
         },
-        { label: "Employee Number", value: response.employeeNumber },
+        { label: "Employee Number", value: employment.employeeNumber },
         {
           label: "Employee Industry Number",
-          value: response.employeeIndustryNumber,
+          value: employment.employeeIndustryNumber,
         },
-        { label: "Occupation", value: response.occupation },
+        { label: "Occupation", value: employment.occupation },
       ],
     },
   ];
@@ -901,7 +996,7 @@ export const claimantTabs: readonly ClaimantTab[] = [
 export const claimTabs: readonly ClaimTab[] = [
   "Invoices",
   "Medical Invoices",
-  "Authorizations",
+  // "Authorizations",
   "Payments",
 ] as const;
 

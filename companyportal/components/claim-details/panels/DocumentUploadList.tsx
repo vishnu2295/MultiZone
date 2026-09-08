@@ -5,11 +5,31 @@ import DocumentRow from "@/components/claim-details/panels/DocumentRow";
 import DocumentUploadModal from "@/components/claim-details/DocumentUploadModal";
 import {
   formatDocumentTimestamp,
-  type ApiClaimDocument,
+  getUploadDocTypeId,
+  type ApiSaveDocumentRequest,
+  type ApiSavedDocument,
   type ClaimUploadDocument,
 } from "@/content/claimDetails";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import {
+  DocumentSetEnum,
+  DocumentStatusEnum,
+  DocumentSystemNameEnum,
+} from "@/lib/constants";
+
+/** Reads a File as a base64 string (no `data:...;base64,` prefix). */
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result.slice(result.indexOf(",") + 1));
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
 
 /**
  * A list of document slots with a single "Upload Documents" action: the modal
@@ -24,21 +44,40 @@ export default function DocumentUploadList({
   documents: ClaimUploadDocument[];
   claimId: string;
 }) {
-  const { token } = useCompanyProfile();
+  const { token, rolePlayerId } = useCompanyProfile();
   const [rows, setRows] = useState<ClaimUploadDocument[]>(documents);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   async function handleUpload(file: File, documentName: string) {
-    const formData = new FormData();
-    // ASP.NET model-binds a multipart array of complex objects via
-    // indexed keys, so a single-item array is `documents[0].<field>`.
-    formData.append("documents[0].documentKeySet", documentName);
-    formData.append("documents[0].documentType", title);
-    formData.append("documents[0].file", file, file.name);
+    const fileAsBase64 = await fileToBase64(file);
 
-    const [uploaded] = await apiService.post<ApiClaimDocument[]>(
-      `/employer/documents/${claimId}`,
-      formData,
+    const payload: ApiSaveDocumentRequest = {
+      docTypeId: getUploadDocTypeId(title, documentName) ?? 0,
+      systemName: DocumentSystemNameEnum[DocumentSystemNameEnum.ClaimManager],
+      verifiedBy: "",
+      verifiedByDate: null,
+      fileHash: "",
+      fileName: file.name,
+      fileExtension: file.name.split(".").pop() ?? "",
+      documentStatus: DocumentStatusEnum[DocumentStatusEnum.Uploaded],
+      fileAsBase64,
+      keys: {
+        claimId: claimId,
+      },
+      documentTypeName: documentName,
+      documentSet: DocumentSetEnum[DocumentSetEnum.EmployeeEarningsDocuments],
+      createdBy: "",
+      createdDate: null,
+      mimeType: file.type,
+      documentExist: true,
+      required: true,
+      documentDescription: "",
+      isMemberVisible: true,
+    };
+    console.log("DocumentUploadList: handleUpload payload", payload);
+    const uploaded = await apiService.post<ApiSavedDocument>(
+      `/employer/${rolePlayerId}/saveDocuments`,
+      payload,
       { token: token ?? undefined },
     );
 
@@ -47,9 +86,11 @@ export default function DocumentUploadList({
         row.name === documentName
           ? {
               ...row,
-              documentId: uploaded.documentId,
+              documentId: uploaded.id,
               fileName: uploaded.fileName,
-              uploadedAt: formatDocumentTimestamp(uploaded.uploadedDate),
+              uploadedAt: uploaded.createdDate
+                ? formatDocumentTimestamp(uploaded.createdDate)
+                : row.uploadedAt,
             }
           : row,
       ),
@@ -59,7 +100,9 @@ export default function DocumentUploadList({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">{title}</h2>
+        <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
+          {title}
+        </h2>
 
         <button
           type="button"

@@ -5,9 +5,10 @@ import DocumentUploadList from "@/components/claim-details/panels/DocumentUpload
 import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import type { ApiPagedResponse } from "@/content/companyDetails";
 import {
-  mapApiDocuments,
   mapApiEarnings,
+  mapEarningsDocuments,
   type ApiClaimDocument,
   type ApiEarningsRecord,
   type ClaimEarningsRecord,
@@ -36,15 +37,18 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
           apiService.get<ApiEarningsRecord[]>(`/employer/earnings/${claimId}`, {
             token: token ?? undefined,
           }),
-          apiService.get<ApiClaimDocument[]>(`/employer/documents`, {
-            token: token ?? undefined,
-            params: { keyName: "claimId", keyValue: claimId },
-          }),
+          apiService.get<ApiPagedResponse<ApiClaimDocument>>(
+            `/employer/documents`,
+            {
+              token: token ?? undefined,
+              params: { keyName: "claimId", keyValue: claimId },
+            },
+          ),
         ]);
 
         if (!cancelled) {
           setEarnings(mapApiEarnings(earningsResponse));
-          setDocuments(mapApiDocuments(documentsResponse).earningDocuments ?? []);
+          setDocuments(mapEarningsDocuments(documentsResponse.data));
         }
       } catch (error) {
         console.error("Failed to load earnings:", error);

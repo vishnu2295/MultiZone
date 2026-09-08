@@ -5,6 +5,7 @@ import DocumentUploadList from "@/components/claim-details/panels/DocumentUpload
 import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import type { ApiPagedResponse } from "@/content/companyDetails";
 import {
   mapApiDocuments,
   type ApiClaimDocument,
@@ -24,14 +25,14 @@ export default function RequirementsPanel({ claimId }: { claimId: string }) {
 
     async function loadRequirements() {
       try {
-        const response = await apiService.get<ApiClaimDocument[]>(
-          `/employer/documents`,
-          {
-            token: token ?? undefined,
-            params: { keyName: "claimId", keyValue: claimId },
-          },
-        );
-        if (!cancelled) setRequirements(mapApiDocuments(response).requirements);
+        const response = await apiService.get<
+          ApiPagedResponse<ApiClaimDocument>
+        >(`/employer/documents`, {
+          token: token ?? undefined,
+          params: { keyName: "claimId", keyValue: claimId },
+        });
+        if (!cancelled)
+          setRequirements(mapApiDocuments(response.data).requirements);
       } catch (error) {
         console.error("Failed to load claim requirements:", error);
       } finally {

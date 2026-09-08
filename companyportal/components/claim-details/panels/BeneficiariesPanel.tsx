@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { CloseIcon, MailIcon, PhoneIcon, PinIcon } from "@/components/home/icons";
 import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
 import apiService from "@/lib/api/apiService";
@@ -10,6 +11,7 @@ import {
   type ApiBeneficiary,
   type ClaimBeneficiary,
 } from "@/content/claimDetails";
+import type { ApiClaim } from "@/content/claims";
 
 function FieldGrid({ fields }: { fields: Array<{ label: string; value: string }> }) {
   return (
@@ -106,22 +108,29 @@ function BeneficiaryDetailsModal({
 }
 
 export default function BeneficiariesPanel({ claimId }: { claimId: string }) {
-  const { token } = useCompanyProfile();
+  const { token, rolePlayerId } = useCompanyProfile();
+  const searchParams = useSearchParams();
+  const ref = searchParams.get("ref");
   const [beneficiaries, setBeneficiaries] = useState<ClaimBeneficiary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [viewingIndex, setViewingIndex] = useState<number | null>(null);
   const viewing = viewingIndex !== null ? beneficiaries[viewingIndex] : null;
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !rolePlayerId || !ref) return;
 
     let cancelled = false;
     setIsLoading(true);
 
     async function loadBeneficiaries() {
       try {
+        const claim = await apiService.get<ApiClaim>(`/employer/claim/${ref}`, {
+          token: token ?? undefined,
+          params: { rolePlayerId },
+        });
+
         const response = await apiService.get<ApiBeneficiary[]>(
-          `/employer/beneficiaries/${claimId}`,
+          `/employer/beneficiaries/${claim.claimantId}`,
           { token: token ?? undefined },
         );
         if (!cancelled) setBeneficiaries(mapApiBeneficiaries(response));
@@ -136,7 +145,7 @@ export default function BeneficiariesPanel({ claimId }: { claimId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [claimId, token]);
+  }, [claimId, ref, rolePlayerId, token]);
 
   if (isLoading) {
     return <PanelSkeleton />;
