@@ -27,13 +27,13 @@ export default async function ClaimDetailsLayout({
 
         <Link
           href="/company/claims"
-          className="relative z-10 inline-flex items-center gap-2 text-[14px] font-bold leading-[28px] text-[#13537B]"
+          className="relative inline-flex items-center gap-2 text-[14px] font-bold leading-[28px] text-[#13537B]"
         >
           <BackArrowIcon className="h-5 w-5" />
           Back
         </Link>
 
-        <div className="relative z-10 mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
+        <div className="relative mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
           <ClaimInfoCard claimId={claimantId} />
 
           <div className="flex-1">{children}</div>

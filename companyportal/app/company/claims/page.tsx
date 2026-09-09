@@ -20,17 +20,17 @@ export default function MyClaimsPage() {
 
         <Link
           href="/company"
-          className="relative z-10 inline-flex items-center gap-2 text-[14px] font-bold leading-[28px] text-[#13537B]"
+          className="relative inline-flex items-center gap-2 text-[14px] font-bold leading-[28px] text-[#13537B]"
         >
           <BackArrowIcon className="h-5 w-5" />
           Back
         </Link>
 
-        <h1 className="relative z-10 mt-6 text-[20px] font-bold leading-6 text-[#13537B]">
+        <h1 className="relative mt-6 text-[20px] font-bold leading-6 text-[#13537B]">
           {claimsContent.heading}
         </h1>
 
-        <div className="relative z-10 mt-5">
+        <div className="relative mt-5">
           <ClaimsList />
         </div>
       </div>

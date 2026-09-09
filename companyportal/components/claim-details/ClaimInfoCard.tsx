@@ -82,7 +82,7 @@ export default function ClaimInfoCard({ claimId }: ClaimInfoCardProps) {
   const queryString = ref ? `?ref=${ref}` : "";
 
   return (
-    <aside className="w-full shrink-0 rounded-xl bg-white p-4 shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px]">
+    <aside className="w-full shrink-0 rounded-xl bg-white p-4 shadow-[0px_4px_29.5px_rgba(0,0,0,0.05)] lg:w-[327px] lg:sticky lg:top-24 lg:self-start">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex h-11 w-[47px] items-center justify-center rounded-lg bg-[#ECB143]">
