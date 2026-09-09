@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { CheckCircleIcon, DownloadIcon } from "@/components/home/icons";
 import type {
   ApiEmployerDocument,
@@ -30,7 +31,7 @@ const infoColumns = (
   policy: Policy,
 ): Array<{ label: string; value: string }> => [
   { label: "Product Option", value: policy.productOption },
-  { label: "Annual Premium", value: policy.annualPremium },
+  { label: "Current Annual Premium", value: policy.annualPremium },
   { label: "Premium", value: policy.premium },
   { label: "Inception Date", value: policy.inceptionDate },
   { label: "Expiry Date", value: policy.expiryDate },
@@ -147,9 +148,12 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
   return (
     <article className="w-full rounded-2xl bg-white p-4 shadow-[0px_2px_16px_rgba(0,0,0,0.07)] sm:p-6">
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="font-sans text-[16px] font-extrabold leading-[24px] text-[#24577A] sm:text-[18px] sm:leading-[27px]">
+        <Link
+          href={`/company/policies/${policy.policyId}`}
+          className="font-sans text-[16px] font-extrabold leading-[24px] text-[#24577A] hover:underline sm:text-[18px] sm:leading-[27px]"
+        >
           {policy.title}
-        </h3>
+        </Link>
         {/* <pre>{JSON.stringify(policy, null, 2)}</pre> */}
         {policy.complianceStatus && (
           <span className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF5] px-2.5 py-1 text-[11px] font-bold leading-4 text-[#14B86A]">
