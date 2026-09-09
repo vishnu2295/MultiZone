@@ -7,10 +7,13 @@ import {
   childExtensionModalContent as content,
   childExtensionStatusFallbackStyle,
   childExtensionStatusStyle,
+  mapApiPensionLedgers,
   mapChildPensionExtensionDetails,
   PENSIONER_API_BASE_URL,
-  type ApiChildPensionExtensionDetails,
+  type ApiLedgerExtensionsResponse,
+  type ApiPensionLedgersResponse,
   type ChildExtensionField,
+  type PensionLedgerEntry,
 } from "@/content/pensionServices";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
@@ -19,6 +22,14 @@ import { getEmployeeCoidId } from "@/lib/auth/employeeClaims";
 export interface ChildExtensionModalProps {
   open: boolean;
   onClose: () => void;
+  /**
+   * Ledger the extension request belongs to - its fields (pension case,
+   * child/guardian name, monthly pension) fill the dialog alongside the
+   * ledgerExtensions call. When omitted (the generic "Child Pension
+   * Extension" service card, which isn't scoped to one ledger), the
+   * member's first ledger is looked up instead.
+   */
+  pensionLedgerEntry?: PensionLedgerEntry;
 }
 
 /**
@@ -29,6 +40,7 @@ export interface ChildExtensionModalProps {
 export default function ChildExtensionModal({
   open,
   onClose,
+  pensionLedgerEntry,
 }: ChildExtensionModalProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,13 +78,32 @@ export default function ChildExtensionModal({
         const { token, coidId } = await getEmployeeCoidId();
         if (!coidId) return;
 
-        const details = await apiService.get<ApiChildPensionExtensionDetails>(
-          `${PENSIONER_API_BASE_URL}/pensioner/${coidId}/childPensionExtensionDetails`,
-          { token },
-        );
+        let ledger = pensionLedgerEntry;
+        if (!ledger) {
+          const ledgers = await apiService.get<ApiPensionLedgersResponse>(
+            `${PENSIONER_API_BASE_URL}/pensioner/${coidId}/ledgers`,
+            { token, params: { page: 1, pageSize: 1, searchFilter: "" } },
+          );
+          ledger = mapApiPensionLedgers(ledgers)[0];
+        }
+
+        if (!ledger) {
+          if (!cancelled) {
+            setStatus("N/A");
+            setGroups([]);
+          }
+          return;
+        }
+
+        const details = await apiService.get<
+          ApiLedgerExtensionsResponse | undefined
+        >(`${PENSIONER_API_BASE_URL}/pensioner/ledgerExtensions/${ledger.id}`, {
+          token,
+          params: { rolePlayerId: coidId, page: 1, pageSize: 10 },
+        });
 
         if (!cancelled) {
-          const mapped = mapChildPensionExtensionDetails(details);
+          const mapped = mapChildPensionExtensionDetails(ledger, details);
           setStatus(mapped.status);
           setGroups(mapped.groups);
         }
@@ -91,7 +122,7 @@ export default function ChildExtensionModal({
     return () => {
       cancelled = true;
     };
-  }, [open]);
+  }, [open, pensionLedgerEntry]);
 
   if (!open) return null;
 

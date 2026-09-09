@@ -7,9 +7,12 @@ import {
   childExtensionStatusFallbackStyle,
   childExtensionStatusStyle,
   commutationStatusModalContent as content,
+  mapApiPensionLedgers,
   mapCommutationValidationDetails,
   PENSIONER_API_BASE_URL,
   type ApiCommutationValidation,
+  type ApiPensionLedgersResponse,
+  type PensionLedgerEntry,
 } from "@/content/pensionServices";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
@@ -18,6 +21,12 @@ import { getEmployeeCoidId } from "@/lib/auth/employeeClaims";
 export interface CommutationStatusModalProps {
   open: boolean;
   onClose: () => void;
+  /**
+   * Ledger to check commutation eligibility for. When omitted (the generic
+   * "Commutation Status" service card, which isn't scoped to one ledger),
+   * the member's first ledger is looked up instead.
+   */
+  pensionLedgerEntry?: PensionLedgerEntry;
 }
 
 /**
@@ -28,6 +37,7 @@ export interface CommutationStatusModalProps {
 export default function CommutationStatusModal({
   open,
   onClose,
+  pensionLedgerEntry,
 }: CommutationStatusModalProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,9 +76,26 @@ export default function CommutationStatusModal({
         const { token, coidId } = await getEmployeeCoidId();
         if (!coidId) return;
 
+        let ledger = pensionLedgerEntry;
+        if (!ledger) {
+          const ledgers = await apiService.get<ApiPensionLedgersResponse>(
+            `${PENSIONER_API_BASE_URL}/pensioner/${coidId}/ledgers`,
+            { token, params: { page: 1, pageSize: 1, searchFilter: "" } },
+          );
+          ledger = mapApiPensionLedgers(ledgers)[0];
+        }
+
+        if (!ledger) {
+          if (!cancelled) {
+            setStatus("N/A");
+            setFields([]);
+          }
+          return;
+        }
+
         const validation = await apiService.get<ApiCommutationValidation>(
-          `${PENSIONER_API_BASE_URL}/pensioner/${coidId}/commutation/validate`,
-          { token },
+          `${PENSIONER_API_BASE_URL}/pensioner/commutation/validate/${ledger.id}`,
+          { token, params: { rolePlayerId: coidId } },
         );
 
         if (!cancelled) {
@@ -91,7 +118,7 @@ export default function CommutationStatusModal({
     return () => {
       cancelled = true;
     };
-  }, [open]);
+  }, [open, pensionLedgerEntry]);
 
   if (!open) return null;
 

@@ -117,7 +117,7 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
       >(`/employer/documents`, {
         token: token ?? undefined,
         params: {
-          keyName: "policyId",
+          keyName: "PolicyId",
           keyValue: policy.policyId,
           page: 1,
           pageSize: 10,

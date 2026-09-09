@@ -4,6 +4,10 @@ export function downloadBase64File(
   contentType: string,
   base64Content: string,
 ) {
+  if (!base64Content) {
+    throw new Error(`No file content returned for ${fileName}`);
+  }
+
   const byteChars = atob(base64Content);
   const byteNumbers = new Uint8Array(byteChars.length);
   for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);

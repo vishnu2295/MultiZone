@@ -15,7 +15,7 @@ import {
 } from "@/content/pensionServices";
 import apiService from "@/lib/api/apiService";
 import { getEmployeeCoidId } from "@/lib/auth/employeeClaims";
-import { downloadBase64File } from "@/lib/utils/downloadFile";
+import { downloadBase64File, downloadFile } from "@/lib/utils/downloadFile";
 
 type DownloadAction = "confirmationLetter" | "commutationForms";
 
@@ -64,23 +64,23 @@ export default function PensionLedgerCard({
   async function handleConfirmationLetterDownload() {
     setDownloadingAction("confirmationLetter");
     try {
-      const { coidId } = await getEmployeeCoidId();
+      const { token, coidId } = await getEmployeeCoidId();
       if (!coidId) return;
 
-      const response = await apiService.post<ApiCommutationDocument>(
-        "/individual/api/confirmationLetter",
+      // Returns the raw PDF bytes directly (no JSON/base64 wrapper), unlike
+      // the other document downloads.
+      await downloadFile(
+        `${PENSIONER_API_BASE_URL}/pensioner/confirmationLetter?rolePlayerId=${coidId}`,
+        "Pension-Confirmation-Letter.pdf",
         {
-          pensionCaseId: entry.pensionCaseId,
-          ledgerRecipientId: entry.ledgerRecipientId,
-          recipientDisplayName: entry.recipientDisplayName,
+          token,
+          method: "POST",
+          body: {
+            pensionCaseId: entry.pensionCaseId,
+            ledgerRecipientId: entry.ledgerRecipientId,
+            recipientDisplayName: entry.recipientDisplayName,
+          },
         },
-        { baseUrl: "", skipAuth: true, params: { rolePlayerId: coidId } },
-      );
-
-      downloadBase64File(
-        response.fileName,
-        response.contentType,
-        response.base64Content,
       );
     } catch (error) {
       console.error("Failed to download confirmation letter:", error);
@@ -209,10 +209,12 @@ export default function PensionLedgerCard({
       <CommutationStatusModal
         open={isCommutationModalOpen}
         onClose={() => setIsCommutationModalOpen(false)}
+        pensionLedgerEntry={entry}
       />
       <ChildExtensionModal
         open={isChildModalOpen}
         onClose={() => setIsChildModalOpen(false)}
+        pensionLedgerEntry={entry}
       />
     </div>
   );
