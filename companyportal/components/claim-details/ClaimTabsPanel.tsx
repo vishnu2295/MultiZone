@@ -130,17 +130,16 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 lg:sticky lg:top-18 lg:z-20 lg:bg-[#F3F7FA] lg:py-2">
         {claimTabs.map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className={`rounded-md px-4 py-1.5 text-[12px] font-semibold leading-[18px] transition cursor-pointer ${
-              activeTab === tab
+            className={`rounded-md px-4 py-1.5 text-[12px] font-semibold leading-[18px] transition cursor-pointer ${activeTab === tab
                 ? "bg-[#F59E0B] text-white shadow-[0px_4px_12px_rgba(10,102,255,0.25)]"
                 : "border border-black/8 bg-white text-[#64748B] hover:text-[#13537B]"
-            }`}
+              }`}
           >
             {tab}
           </button>

@@ -148,7 +148,7 @@ function ClaimantInjuryPanelContent({
 
   return (
     <div className="flex flex-col gap-6 py-2.5">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 lg:sticky lg:top-18 lg:z-20 lg:bg-[#F3F7FA] lg:py-2">
         {claimantTabs.map((tab) => (
           <button
             key={tab}

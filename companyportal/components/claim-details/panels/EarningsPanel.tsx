@@ -69,7 +69,7 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 lg:sticky lg:top-18 lg:z-20 lg:bg-[#F3F7FA] lg:py-2">
         {tabs.map((tab) => (
           <button
             key={tab}

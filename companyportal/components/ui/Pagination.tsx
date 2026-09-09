@@ -7,11 +7,16 @@ interface PaginationProps {
 export default function Pagination({ page, pageCount, onPageChange }: PaginationProps) {
   if (pageCount <= 1) return null;
 
+  function goToPage(nextPage: number) {
+    onPageChange(nextPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   return (
     <div className="mt-6 flex items-center justify-center gap-4">
       <button
         type="button"
-        onClick={() => onPageChange(Math.max(1, page - 1))}
+        onClick={() => goToPage(Math.max(1, page - 1))}
         disabled={page <= 1}
         className="rounded-md cursor-pointer border border-black/8 bg-white px-4 py-1.5 text-[12px] font-semibold leading-[18px] text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-40"
       >
@@ -22,7 +27,7 @@ export default function Pagination({ page, pageCount, onPageChange }: Pagination
       </span>
       <button
         type="button"
-        onClick={() => onPageChange(Math.min(pageCount, page + 1))}
+        onClick={() => goToPage(Math.min(pageCount, page + 1))}
         disabled={page >= pageCount}
         className="rounded-md cursor-pointer border border-black/8 bg-white px-4 py-1.5 text-[12px] font-semibold leading-[18px] text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-40"
       >
