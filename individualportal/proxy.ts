@@ -12,7 +12,14 @@ export async function proxy(request: NextRequest) {
   // memberportal's rewrite is the normal way into this zone and already
   // gates on the Individual role, but this app is reachable on its own
   // origin too - guard /individual here as well so that path isn't a bypass.
-  if (pathname.startsWith("/auth/") || !pathname.startsWith("/individual")) {
+  // API routes are excluded: redirecting a fetch() to "/" (a page this app
+  // doesn't have) surfaces as a bare 404 to the caller instead of a usable
+  // error, and each route already enforces auth via auth0.getAccessToken().
+  if (
+    pathname.startsWith("/auth/") ||
+    pathname.startsWith("/individual/api/") ||
+    !pathname.startsWith("/individual")
+  ) {
     return authResponse;
   }
 

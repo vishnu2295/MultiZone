@@ -25,8 +25,8 @@ export const pensionServicesContent = {
   title: "Pension Ledgers",
 };
 
-// commutationDetails/confirmationLetter/childPensionExtensionDetails live
-// under /pensioner, not /coid like the rest of the mobileApp API.
+// commutationDetails/confirmationLetter/ledgerExtensions live under
+// /pensioner, not /coid like the rest of the mobileApp API.
 export const PENSIONER_API_BASE_URL = API_ROOT_BASE_URL;
 
 const checkValueExists = (value: string | undefined | null): string =>
@@ -135,16 +135,25 @@ export const childExtensionModalContent = {
   sectionTitle: "Demographics",
 };
 
-export interface ApiChildPensionExtensionDetails {
-  pensionCaseNumber: string;
-  childName: string;
-  dateOfBirth: string;
-  guardianName: string;
-  relationship: string;
-  pensionStatus: string;
+/** One record from GET /pensioner/ledgerExtensions/{pensionLedgerId}. */
+export interface ApiLedgerExtension {
+  extensionId: number;
+  ledgerId: number;
+  requestedBy: number;
+  dateRequested: string;
   effectiveDate: string;
-  monthlyPensionAmount: number;
-  paymentFrequency: string;
+  endDate: string;
+  extensionStatus: string;
+  extensionRejectReason: string;
+  notes: string;
+}
+
+export interface ApiLedgerExtensionsResponse {
+  data: ApiLedgerExtension[];
+  rowCount: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
 }
 
 function formatShortDate(value: string): string {
@@ -158,45 +167,44 @@ function formatShortDate(value: string): string {
 }
 
 /**
- * Maps the childPensionExtensionDetails response to the status pill plus the
- * field groups shown in the dialog. Fields are grouped so the dialog can
- * render a rule between the demographics block and the payment block, as in
- * the design.
+ * Maps the Child Extension Request Status dialog's status pill plus field
+ * groups. The ledgerExtensions response only carries the extension's own
+ * fields (status, effective date, ...) - the child/guardian/pension details
+ * come from the ledger entry itself, so both are combined here. Only the
+ * first extension record is shown (the dialog is scoped to one ledger).
  */
 export function mapChildPensionExtensionDetails(
-  details: ApiChildPensionExtensionDetails,
+  ledger: PensionLedgerEntry | undefined,
+  extensionsResponse: ApiLedgerExtensionsResponse | undefined,
 ): { status: string; groups: ChildExtensionField[][] } {
+  const extension = extensionsResponse?.data?.[0];
+  if (!ledger && !extension) return { status: "N/A", groups: [] };
+
   return {
-    status: checkValueExists(details.pensionStatus),
+    status: checkValueExists(extension?.extensionStatus),
     groups: [
       [
         {
           label: "Reference No",
-          value: checkValueExists(details.pensionCaseNumber),
+          value: checkValueExists(ledger?.pensionCase),
         },
-        { label: "Child Name", value: checkValueExists(details.childName) },
-        { label: "Date of Birth", value: formatShortDate(details.dateOfBirth) },
+        {
+          label: "Child Name",
+          value: checkValueExists(ledger?.beneficiaryDisplayName),
+        },
         {
           label: "Guardian Name",
-          value: checkValueExists(details.guardianName),
-        },
-        {
-          label: "Relationship",
-          value: checkValueExists(details.relationship),
+          value: checkValueExists(ledger?.recipientDisplayName),
         },
         {
           label: "Effective Date",
-          value: formatShortDate(details.effectiveDate),
+          value: extension ? formatShortDate(extension.effectiveDate) : "N/A",
         },
       ],
       [
         {
           label: "Monthly Pension Amount",
-          value: `R ${details.monthlyPensionAmount.toFixed(2)}`,
-        },
-        {
-          label: "Payment Frequency",
-          value: checkValueExists(details.paymentFrequency),
+          value: `R ${(ledger?.normalMonthlyPension ?? 0).toFixed(2)}`,
         },
       ],
     ],
@@ -234,6 +242,9 @@ export interface PensionLedgerEntry {
   pensionCaseId: number;
   ledgerRecipientId: number;
   recipientDisplayName: string;
+  /** Raw fields needed by the Child Extension Request Status dialog. */
+  beneficiaryDisplayName: string | null;
+  normalMonthlyPension: number;
 }
 
 /** Static copy for the pension ledger card. */
@@ -325,6 +336,8 @@ function mapApiPensionLedgerEntry(
     pensionCaseId: entry.pensionCaseId,
     ledgerRecipientId: entry.ledgerRecipientId,
     recipientDisplayName: entry.recipientDisplayName,
+    beneficiaryDisplayName: entry.beneficiaryDisplayName,
+    normalMonthlyPension: entry.normalMonthlyPension,
   };
 }
 
