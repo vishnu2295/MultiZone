@@ -56,7 +56,7 @@ export default function DocumentUploadList({
       fileExtension: file.name.split(".").pop() ?? "",
       fileName: file.name,
       keys: {
-        PersonEventId: claimId,
+        RolePlayerId: "46",
       },
       documentStatus: DocumentStatusEnum.Received,
       documentSet: DocumentSetEnum[DocumentSetEnum.EmployeeEarningsDocuments],

@@ -193,8 +193,16 @@ export function mapChildPensionExtensionDetails(
           value: checkValueExists(ledger?.beneficiaryDisplayName),
         },
         {
+          label: "Date of Birth",
+          value: ledger ? formatShortDate(ledger.beneficiaryDateOfBirth) : "N/A",
+        },
+        {
           label: "Guardian Name",
           value: checkValueExists(ledger?.recipientDisplayName),
+        },
+        {
+          label: "Relationship",
+          value: checkValueExists(ledger?.beneficiaryRelationship),
         },
         {
           label: "Effective Date",
@@ -245,6 +253,8 @@ export interface PensionLedgerEntry {
   /** Raw fields needed by the Child Extension Request Status dialog. */
   beneficiaryDisplayName: string | null;
   normalMonthlyPension: number;
+  beneficiaryDateOfBirth: string;
+  beneficiaryRelationship: string;
 }
 
 /** Static copy for the pension ledger card. */
@@ -286,6 +296,8 @@ export interface ApiPensionLedgerEntry {
   dateOfStabilisation: string;
   statusReason: string | null;
   beneficiaryDisplayName: string | null;
+  beneficiaryDateOfBirth: string;
+  beneficiaryRelationship: string;
 }
 
 export interface ApiPensionLedgersResponse {
@@ -338,6 +350,8 @@ function mapApiPensionLedgerEntry(
     recipientDisplayName: entry.recipientDisplayName,
     beneficiaryDisplayName: entry.beneficiaryDisplayName,
     normalMonthlyPension: entry.normalMonthlyPension,
+    beneficiaryDateOfBirth: entry.beneficiaryDateOfBirth,
+    beneficiaryRelationship: entry.beneficiaryRelationship,
   };
 }
 
