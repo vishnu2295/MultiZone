@@ -5,15 +5,15 @@ import { policyDetailsTabs, type PolicyDetailsTab } from "@/content/policyDetail
 import PolicyDocumentsPanel from "@/components/policies/panels/PolicyDocumentsPanel";
 import PolicyCollectionsPanel from "@/components/policies/panels/PolicyCollectionsPanel";
 
-const panels: Record<PolicyDetailsTab, () => React.JSX.Element> = {
-  Documents: PolicyDocumentsPanel,
-  Collections: PolicyCollectionsPanel,
-};
-
-export default function PolicyDetailsTabs() {
+export default function PolicyDetailsTabs({ policyId }: { policyId: string }) {
   const [activeTab, setActiveTab] = useState<PolicyDetailsTab>(
     policyDetailsTabs[0],
   );
+
+  const panels: Record<PolicyDetailsTab, () => React.JSX.Element> = {
+    Documents: () => <PolicyDocumentsPanel policyId={policyId} />,
+    Collections: () => <PolicyCollectionsPanel policyId={policyId} />,
+  };
   const ActivePanel = panels[activeTab];
 
   return (
