@@ -34,7 +34,7 @@ export default async function PolicyDetailsPage({
 
         <div className="relative mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
           <PolicyInfoCard policyId={String(policyId)} />
-          <PolicyDetailsTabs />
+          <PolicyDetailsTabs policyId={String(policyId)} />
         </div>
       </div>
     </main>
