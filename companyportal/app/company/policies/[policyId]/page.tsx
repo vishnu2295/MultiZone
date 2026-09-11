@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import PolicyInfoCard from "@/components/policies/PolicyInfoCard";
 import PolicyDetailsTabs from "@/components/policies/PolicyDetailsTabs";
@@ -14,16 +13,6 @@ export default async function PolicyDetailsPage({
   return (
     <main className="min-h-screen bg-[#F3F7FA]">
       <div className="relative mx-auto w-full max-w-[1440px] px-4 pb-16 pt-[112px] sm:px-6 lg:px-14">
-        <div className="pointer-events-none absolute right-0 top-[2px] h-[clamp(220px,29vw,414px)] w-[65%]">
-          <Image
-            src="/company/icons/pages_wave.png"
-            alt=""
-            fill
-            quality={100}
-            className="object-contain object-top"
-          />
-        </div>
-
         <Link
           href="/company/policies"
           className="relative inline-flex items-center gap-2 text-[14px] font-bold leading-[28px] text-[#13537B]"

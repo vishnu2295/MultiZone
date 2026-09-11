@@ -88,23 +88,9 @@ export default function DocumentsPanel() {
     };
   }, [page, reloadToken, rolePlayerId, token]);
 
-  async function handleDownload(document: CompanyDocument) {
-    const response = await apiService.get<ApiPagedResponse<ApiEmployerDocument>>(
-      "/employer/documents",
-      {
-        token: token ?? undefined,
-        params: {
-          keyName: "DocumentId",
-          keyValue: document.documentId,
-          page: 1,
-          pageSize: 10,
-        },
-      },
-    );
-
-    const downloaded = response.data[0];
-    if (!downloaded?.documentUri) return;
-    downloadFileFromUrl(downloaded.documentUri, downloaded.fileName);
+  function handleDownload(document: CompanyDocument) {
+    if (!document.documentUri) return;
+    downloadFileFromUrl(document.documentUri, document.name);
   }
 
   const fetchDocumentTypes = useCallback(

@@ -144,7 +144,7 @@ export default function Sidebar() {
         }}
       >
         <Image
-          src="/brokerPortal/rma-logo.png"
+          src="/brokerPortal/Rma-light.png"
           alt="RMA Logo"
           width={150}
           height={36}

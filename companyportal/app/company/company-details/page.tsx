@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import CompanyInfoCard from "@/components/company-details/CompanyInfoCard";
 import CompanyDetailsTabs from "@/components/company-details/CompanyDetailsTabs";
 import { BackArrowIcon } from "@/components/home/icons";
@@ -8,16 +7,6 @@ export default function CompanyDetailsPage() {
   return (
     <main className="min-h-screen bg-[#F3F7FA]">
       <div className="relative mx-auto w-full max-w-[1440px] px-4 pb-16 pt-[112px] sm:px-6 lg:px-14">
-        <div className="pointer-events-none absolute right-0 top-[2px]  h-[clamp(220px,29vw,414px)] w-[65%]">
-          <Image
-            src="/company/icons/pages_wave.png"
-            alt=""
-            fill
-            quality={100}
-            className="object-contain object-top"
-          />
-        </div>
-
         <Link
           href="/company"
           className="relative inline-flex items-center gap-2 text-[14px] font-bold leading-[28px] text-[#13537B]"
