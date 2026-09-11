@@ -34,7 +34,7 @@ export default function DocumentsPanel({ claimId }: { claimId: string }) {
             keyName: "claimId",
             keyValue: claimId,
             page: 1,
-            pageSize: 1000,
+            pageSize: 10,
           },
         });
         if (!cancelled)
