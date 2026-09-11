@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-
 import { homeContent, mapProfile } from "@/content/site";
 import { BuildingIcon } from "@/components/common/icons";
 import { useProfile } from "@/lib/profile/ProfileContext";
@@ -12,29 +10,6 @@ export default function Greeting() {
 
   return (
     <section className="relative overflow-x-clip pt-[72px]">
-      {/* Decorative wave - mirrors Figma node 2831:1730 */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-[63.05%] top-[69px] z-0 -translate-x-1/2 -translate-y-1/2"
-      >
-        <div className="w-[100.06vw] max-w-none rotate-[10.78deg]">
-          <div
-            className="relative aspect-[2250/647] w-full
-                       [mask-image:linear-gradient(to_right,transparent_0%,black_6%)]
-                       [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_6%)]"
-          >
-            <Image
-              src="/individual/background-wave.png"
-              alt=""
-              fill
-              quality={100}
-              sizes="100vw"
-              className="object-cover"
-            />
-          </div>
-        </div>
-      </div>
-
       <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 pb-16 pt-[74px] sm:px-6 lg:px-[100px]">
         <p className="text-[15.8px] font-normal leading-[19px] text-[#13537B]">
           {homeContent.greeting}

@@ -75,7 +75,7 @@ export default function HomeNavbar() {
           className="flex shrink-0 items-center gap-[19px]"
         >
           <Image
-            src="/company/brand/rma-logo.svg"
+            src="/company/brand/Rma-light.png"
             alt="RMA"
             width={95}
             height={29}

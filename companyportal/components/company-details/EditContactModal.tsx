@@ -12,7 +12,11 @@ const DESIGNATIONS = [
   "Finance Contact",
   "Operations Contact",
 ];
-const CONTRACT_CONTEXTS = ["Primary Contact", "Secondary Contact", "Billing Contact"];
+const CONTACT_CONTEXTS = [
+  "Primary Contact",
+  "Secondary Contact",
+  "Billing Contact",
+];
 
 export type EditableContact = CompanyContact & {
   title?: string;
@@ -21,7 +25,7 @@ export type EditableContact = CompanyContact & {
   communicationType?: string;
   contactNo?: string;
   designation?: string;
-  contractContext?: string;
+  contactContext?: string;
 };
 
 export interface ApiContactUpdateRequest {
@@ -35,7 +39,9 @@ export interface ApiContactUpdateRequest {
   contactContext: string | null;
 }
 
-export function toApiContactUpdateRequest(contact: EditableContact): ApiContactUpdateRequest {
+export function toApiContactUpdateRequest(
+  contact: EditableContact,
+): ApiContactUpdateRequest {
   return {
     title: contact.title ?? null,
     firstname: contact.firstName ?? null,
@@ -44,7 +50,7 @@ export function toApiContactUpdateRequest(contact: EditableContact): ApiContactU
     contactNumber: contact.contactNo ?? null,
     emailAddress: contact.email || null,
     contactDesignation: contact.designation ?? null,
-    contactContext: contact.contractContext ?? null,
+    contactContext: contact.contactContext ?? null,
   };
 }
 
@@ -66,7 +72,7 @@ const emptyForm: EditableContact = {
   communicationType: COMMUNICATION_TYPES[0],
   contactNo: "",
   designation: DESIGNATIONS[0],
-  contractContext: CONTRACT_CONTEXTS[0],
+  contactContext: CONTACT_CONTEXTS[0],
 };
 
 /**
@@ -79,7 +85,8 @@ function parseContactName(name: string) {
   if (!match) return { title: TITLES[0], firstName: name, surname: "" };
 
   const [, rawTitle, rest] = match;
-  const title = TITLES.find((t) => t.toLowerCase() === rawTitle.toLowerCase()) ?? TITLES[0];
+  const title =
+    TITLES.find((t) => t.toLowerCase() === rawTitle.toLowerCase()) ?? TITLES[0];
   const [firstName, ...surnameParts] = rest.split(" ");
   return { title, firstName, surname: surnameParts.join(" ") };
 }
@@ -100,19 +107,28 @@ export default function EditContactModal({
       ...emptyForm,
       ...parsed,
       contactNo: contact.phone,
-      designation: DESIGNATIONS.find((d) => d.startsWith(contact.badge)) ?? DESIGNATIONS[0],
+      designation:
+        DESIGNATIONS.find((d) => d.startsWith(contact.badge)) ??
+        DESIGNATIONS[0],
       ...contact,
     };
   });
 
   if (!open) return null;
 
-  const update = <K extends keyof EditableContact>(key: K, value: EditableContact[K]) => {
+  const update = <K extends keyof EditableContact>(
+    key: K,
+    value: EditableContact[K],
+  ) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = () => {
-    const name = [form.title ? `${form.title}.` : "", form.firstName, form.surname]
+    const name = [
+      form.title ? `${form.title}.` : "",
+      form.firstName,
+      form.surname,
+    ]
       .filter(Boolean)
       .join(" ");
     const badge = (form.designation ?? "").split(" ")[0] || form.badge;
@@ -214,11 +230,11 @@ export default function EditContactModal({
             </Field>
           </div>
 
-          <Field label="Contract Context">
+          <Field label="Contact Context">
             <Select
-              value={form.contractContext ?? CONTRACT_CONTEXTS[0]}
-              onChange={(value) => update("contractContext", value)}
-              options={CONTRACT_CONTEXTS}
+              value={form.contactContext ?? CONTACT_CONTEXTS[0]}
+              onChange={(value) => update("contactContext", value)}
+              options={CONTACT_CONTEXTS}
             />
           </Field>
         </div>

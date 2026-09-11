@@ -169,6 +169,7 @@ export type ClaimMedicalDocument = {
   documentType?: string;
   uploadedAt?: string;
   documentId?: number;
+  documentSet?: number;
 };
 
 export type ClaimDocumentGroup = {
@@ -356,6 +357,7 @@ export type ApiClaimDocument = {
   fileName: string;
   uploadedDate: string;
   fileContent?: string;
+  documentSet: number;
 };
 
 function formatDocumentLabel(documentType: string): string {
@@ -388,6 +390,7 @@ function toClaimMedicalDocument(doc: ApiClaimDocument): ClaimMedicalDocument {
     documentType: doc.fileName,
     uploadedAt: formatDocumentTimestamp(doc.uploadedDate),
     documentId: doc.documentId,
+    documentSet: doc.documentSet,
   };
 }
 

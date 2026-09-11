@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   mapApiInvoice,
+  type ApiInvoiceAttachment,
   type ApiInvoicesResponse,
   type CompanyInvoice,
 } from "@/content/companyDetails";
@@ -77,6 +78,20 @@ export default function InvoicesPanel() {
     };
   }, [page, rolePlayerId, token]);
 
+  async function handleDownload(invoice: CompanyInvoice) {
+    const response = await apiService.get<{ attachments: ApiInvoiceAttachment }>(
+      `/employer/invoice/${invoice.invoiceNumber}`,
+      {
+        token: token ?? undefined,
+        params: { rolePlayerId },
+      },
+    );
+
+    const attachment = response.attachments;
+    if (!attachment) return;
+    downloadBase64File(attachment.fileName, attachment.fileType, attachment.content);
+  }
+
   if (isLoading) {
     return (
       <div className="flex flex-col gap-3">
@@ -135,15 +150,7 @@ export default function InvoicesPanel() {
             <button
               type="button"
               aria-label="Download invoice"
-              disabled={!invoice.attachment}
-              onClick={() =>
-                invoice.attachment &&
-                downloadBase64File(
-                  invoice.attachment.fileName,
-                  invoice.attachment.fileType,
-                  invoice.attachment.content,
-                )
-              }
+              onClick={() => handleDownload(invoice)}
               className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <DownloadIcon className="h-[15px] w-[15px] text-[#24577A]" />

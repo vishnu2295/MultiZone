@@ -45,7 +45,7 @@ export default function Navbar({
   navItems = homeContent.navLinks,
   profileLabel = homeContent.profileLabel,
   onProfileClick,
-  logoSrc = "/individual/brand/rma-logo.svg",
+  logoSrc = "/individual/brand/Rma-light.png",
   fixed = true,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -61,7 +61,9 @@ export default function Navbar({
   // Both portals are separate apps mounted at /company and /individual, so
   // the logo should return to whichever zone the user is currently in
   // rather than a shared "/" that neither app actually serves.
-  const logoHref = pathname?.startsWith("/company") ? "/company" : "/individual";
+  const logoHref = pathname?.startsWith("/company")
+    ? "/company"
+    : "/individual";
 
   // Close the desktop dropdown on outside click or Escape.
   useEffect(() => {

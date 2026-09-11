@@ -41,6 +41,7 @@ export type CompanyDocument = {
   date: string;
   documentId: string;
   documentUri: string;
+  documentSet: number;
 };
 
 export interface CompanyInfo {
@@ -140,6 +141,38 @@ export interface ApiPagedResponse<T> {
 
 export type ApiInvoicesResponse = ApiPagedResponse<ApiInvoice>;
 
+export interface ApiDocumentSetDocumentType {
+  id: number;
+  docTypeId: number;
+  documentSet: number;
+  required: boolean;
+  statusEnabled: boolean;
+  templateAvailable: boolean;
+  isDeleted: boolean;
+  createdBy: string;
+  createdDate: string | null;
+  modifiedBy: string;
+  modifiedDate: string | null;
+  documentTypeName: string | null;
+}
+
+/**
+ * One selectable document type returned by `/employer/documentTypes/{documentSet}`.
+ * `id` is the docTypeId to submit with the upload; `name` is its display label
+ * (`documentSetDocumentTypes[].documentTypeName` is unreliable/null).
+ */
+export interface ApiDocumentSet {
+  id: number;
+  name: string;
+  validDays: string | null;
+  createdBy: string;
+  createdDate: string | null;
+  modifiedBy: string;
+  modifiedDate: string | null;
+  manager: string;
+  documentSetDocumentTypes: ApiDocumentSetDocumentType[];
+}
+
 export interface ApiEmployerDocument {
   documentId: number;
   documentKeySet: string;
@@ -177,6 +210,7 @@ function initialsFromName(name: string): string {
   return name
     .split(/\s+/)
     .filter(Boolean)
+    .slice(0, 2)
     .map((word) => word[0].toUpperCase())
     .join("");
 }
@@ -260,6 +294,7 @@ export function mapApiEmployerDocuments(
       })} · ${doc.fileExtension.split("/").pop()?.toUpperCase() ?? doc.fileExtension}`,
       documentId: String(doc.documentId),
       documentUri: doc.documentUri,
+      documentSet: doc.documentSet,
     }));
 }
 
@@ -270,7 +305,7 @@ export function mapApiContact(api: ApiContactDetails): CompanyContact & {
   communicationType?: string;
   contactNo?: string;
   designation?: string;
-  contractContext?: string;
+  contactContext?: string;
 } {
   const name = [api.title ? `${api.title}.` : "", api.firstname, api.surname]
     .filter(Boolean)
@@ -287,7 +322,7 @@ export function mapApiContact(api: ApiContactDetails): CompanyContact & {
     communicationType: api.communicationType ?? "",
     contactNo: api.contactNumber ?? "",
     designation: api.contactDesignation ?? "",
-    contractContext: api.contactContext ?? "",
+    contactContext: api.contactContext ?? "",
   };
 }
 

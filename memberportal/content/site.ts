@@ -16,8 +16,8 @@ export const siteContent = {
   // The rest go through the Auth0 login flow mounted at /auth/login.
   loginOptions: [
     { label: "Broker", href: "/broker" },
-    { label: "Employee", href: "/auth/login" },
-    { label: "Employer", href: "/auth/login" },
+    { label: "Employee", href: "/auth/login?ext-persona=Employee" },
+    { label: "Employer", href: "/auth/login?ext-persona=Employer" },
   ],
 };
 
