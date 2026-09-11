@@ -1,49 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import DocumentRow from "@/components/claim-details/panels/DocumentRow";
-import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
+import DocumentRow, {
+  type ApiDocumentDownload,
+} from "@/components/claim-details/panels/DocumentRow";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
-import {
-  mapApiLetters,
-  type ApiClaimDocument,
-  type ClaimMedicalDocument,
-} from "@/content/claimDetails";
+import { ClaimLettersAndTemplates } from "@/lib/constants";
+import { downloadBase64File } from "@/lib/utils/downloadFile";
 
 export default function LettersPanel({ claimId }: { claimId: string }) {
   const { token } = useCompanyProfile();
-  const [letters, setLetters] = useState<ClaimMedicalDocument[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!token) return;
+  async function handleDownload(letter: (typeof ClaimLettersAndTemplates)[number]) {
+    const response = await apiService.get<ApiDocumentDownload>(
+      `/employer/GetLettersAndTemplates/${claimId}`,
+      {
+        token: token ?? undefined,
+        params: { letterKey: letter.value },
+      },
+    );
 
-    let cancelled = false;
-    setIsLoading(true);
-
-    async function loadLetters() {
-      try {
-        const response = await apiService.get<ApiClaimDocument[]>(
-          `/employer/lettersAndTemplates/${claimId}`,
-          { token: token ?? undefined },
-        );
-        if (!cancelled) setLetters(mapApiLetters(response));
-      } catch (error) {
-        console.error("Failed to load letters:", error);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
-
-    loadLetters();
-    return () => {
-      cancelled = true;
-    };
-  }, [claimId, token]);
-
-  if (isLoading) {
-    return <PanelSkeleton />;
+    downloadBase64File(response.fileName, response.fileType, response.content);
   }
 
   return (
@@ -51,13 +28,13 @@ export default function LettersPanel({ claimId }: { claimId: string }) {
       <h2 className="text-[16px] font-bold leading-[19px] text-[#13537B]">
         Letters and Templates
       </h2>
-      {letters.length === 0 ? (
-        <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
-          No records found.
-        </div>
-      ) : (
-        letters.map((letter) => <DocumentRow key={letter.name} document={letter} />)
-      )}
+      {ClaimLettersAndTemplates.map((letter) => (
+        <DocumentRow
+          key={letter.key}
+          document={{ name: letter.key }}
+          onDownload={() => handleDownload(letter)}
+        />
+      ))}
     </div>
   );
 }

@@ -647,3 +647,55 @@ export enum DocumentSetEnum {
   GPAPolicyDocument = 150,
   GPAPolicySchedule = 151,
 }
+
+/** `DocumentSetEnum` entries as select options, for pickers that let the user choose a document set. */
+export const documentSetOptions: Array<{ label: string; value: DocumentSetEnum }> =
+  Object.entries(DocumentSetEnum)
+    .filter((entry): entry is [string, number] => Number.isNaN(Number(entry[0])))
+    .map(([key, value]) => ({
+      label: key.replace(/([a-z0-9])([A-Z])/g, "$1 $2"),
+      value: value as DocumentSetEnum,
+    }));
+
+export const ClaimLettersAndTemplates = [
+  // {
+  //   key: "Section 91 Notice of Objection",
+  //   value: "RMA.Reports.ClaimCare/RMASection91NoticeOfObjection",
+  //   paramKey: "PersonEventId",
+  // },
+  // {
+  //   key: "Section 90 Review Notice",
+  //   value: "RMA.Reports.ClaimCare/RMASection90ReviewNotice",
+  //   paramKey: "PersonEventId",
+  // },
+  {
+    key: "RMA Claim Form",
+    value: "RMA.Reports.ClaimCare/RMD01/RMD01ClaimForm",
+    paramKey: "PersonEventId",
+  },
+  // {
+  //   key: "Acknowledgement Letter",
+  //   value: "RMA.Reports.ClaimCare/AcknowledgementLetter",
+  //   paramKey: "personEventId",
+  // },
+  // {
+  //   key: "Liability Acceptance Letter",
+  //   value: "RMA.Reports.ClaimCare/LiabilityAcceptanceLetter",
+  //   paramKey: "personEventId",
+  // },
+  // {
+  //   key: "PD Letter",
+  //   value: "RMA.Reports.ClaimCare/PDLetter",
+  //   paramKey: "personEventId",
+  // },
+  // {
+  //   key: "Nil PD Letter",
+  //   value: "RMA.Reports.ClaimCare/NilPDLetter",
+  //   paramKey: "personEventId",
+  // },
+  // {
+  //   key: "Section 40 Letter",
+  //   value: "RMA.Reports.ClaimCare/ClosingOnFollowUp",
+  //   paramKey: "personEventId",
+  // },
+];

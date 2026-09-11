@@ -41,6 +41,7 @@ export type CompanyDocument = {
   date: string;
   documentId: string;
   documentUri: string;
+  documentSet: number;
 };
 
 export interface CompanyInfo {
@@ -139,6 +140,38 @@ export interface ApiPagedResponse<T> {
 }
 
 export type ApiInvoicesResponse = ApiPagedResponse<ApiInvoice>;
+
+export interface ApiDocumentSetDocumentType {
+  id: number;
+  docTypeId: number;
+  documentSet: number;
+  required: boolean;
+  statusEnabled: boolean;
+  templateAvailable: boolean;
+  isDeleted: boolean;
+  createdBy: string;
+  createdDate: string | null;
+  modifiedBy: string;
+  modifiedDate: string | null;
+  documentTypeName: string | null;
+}
+
+/**
+ * One selectable document type returned by `/employer/documentTypes/{documentSet}`.
+ * `id` is the docTypeId to submit with the upload; `name` is its display label
+ * (`documentSetDocumentTypes[].documentTypeName` is unreliable/null).
+ */
+export interface ApiDocumentSet {
+  id: number;
+  name: string;
+  validDays: string | null;
+  createdBy: string;
+  createdDate: string | null;
+  modifiedBy: string;
+  modifiedDate: string | null;
+  manager: string;
+  documentSetDocumentTypes: ApiDocumentSetDocumentType[];
+}
 
 export interface ApiEmployerDocument {
   documentId: number;
@@ -260,6 +293,7 @@ export function mapApiEmployerDocuments(
       })} · ${doc.fileExtension.split("/").pop()?.toUpperCase() ?? doc.fileExtension}`,
       documentId: String(doc.documentId),
       documentUri: doc.documentUri,
+      documentSet: doc.documentSet,
     }));
 }
 

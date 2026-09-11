@@ -1,37 +1,77 @@
 "use client";
 
-import { useRef, useState, type DragEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent } from "react";
 import {
   ChevronDownIcon,
   CloseIcon,
   DocumentIcon,
   UploadIcon,
 } from "@/components/home/icons";
+import type { DocumentSetEnum } from "@/lib/constants";
+import type { ApiDocumentSet } from "@/content/companyDetails";
 
 type UploadDocumentModalProps = {
   open: boolean;
-  documentTypes: readonly string[];
+  documentSetOptions: readonly { label: string; value: DocumentSetEnum }[];
+  fetchDocumentTypes: (documentSet: DocumentSetEnum) => Promise<ApiDocumentSet[]>;
   onClose: () => void;
-  onSave: (file: File, documentType: string) => Promise<void>;
+  onSave: (
+    file: File,
+    documentSet: DocumentSetEnum,
+    documentType: ApiDocumentSet,
+  ) => Promise<void>;
 };
 
 export default function UploadDocumentModal({
   open,
-  documentTypes,
+  documentSetOptions,
+  fetchDocumentTypes,
   onClose,
   onSave,
 }: UploadDocumentModalProps) {
-  const [documentType, setDocumentType] = useState(documentTypes[0]);
+  const [documentSet, setDocumentSet] = useState(documentSetOptions[0]?.value);
+  const [documentTypes, setDocumentTypes] = useState<ApiDocumentSet[]>([]);
+  const [documentTypeId, setDocumentTypeId] = useState<number | undefined>();
+  const [isLoadingTypes, setIsLoadingTypes] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (!open || documentSet === undefined) return;
+    const selectedDocumentSet = documentSet;
+
+    let cancelled = false;
+
+    async function loadDocumentTypes() {
+      setIsLoadingTypes(true);
+      setDocumentTypeId(undefined);
+
+      try {
+        const types = await fetchDocumentTypes(selectedDocumentSet);
+        if (cancelled) return;
+        setDocumentTypes(types);
+        setDocumentTypeId(types[0]?.id);
+      } catch (error) {
+        console.error("Failed to load document types:", error);
+        if (!cancelled) setDocumentTypes([]);
+      } finally {
+        if (!cancelled) setIsLoadingTypes(false);
+      }
+    }
+
+    loadDocumentTypes();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, documentSet, fetchDocumentTypes]);
+
   if (!open) return null;
 
   const reset = () => {
     setSelectedFile(null);
-    setDocumentType(documentTypes[0]);
+    setDocumentSet(documentSetOptions[0]?.value);
     setIsDragging(false);
     setIsSaving(false);
   };
@@ -49,10 +89,11 @@ export default function UploadDocumentModal({
   };
 
   const handleSave = async () => {
-    if (!selectedFile) return;
+    const documentType = documentTypes.find((type) => type.id === documentTypeId);
+    if (!selectedFile || documentSet === undefined || !documentType) return;
     setIsSaving(true);
     try {
-      await onSave(selectedFile, documentType);
+      await onSave(selectedFile, documentSet, documentType);
       reset();
     } finally {
       setIsSaving(false);
@@ -84,19 +125,46 @@ export default function UploadDocumentModal({
 
         <div className="flex flex-col gap-2 px-6 py-5">
           <label className="text-[13px] font-semibold text-[#13537B]">
+            Document Set <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <select
+              value={documentSet ?? ""}
+              onChange={(event) => setDocumentSet(Number(event.target.value))}
+              className="w-full cursor-pointer appearance-none rounded-lg border border-black/10 px-4 py-2.5 text-[13.5px] font-medium text-[#13537B] outline-none focus:border-[#07C1E9]"
+            >
+              {documentSetOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDownIcon className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#13537B]" />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2 px-6 pb-5">
+          <label className="text-[13px] font-semibold text-[#13537B]">
             Document Type <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <select
-              value={documentType}
-              onChange={(event) => setDocumentType(event.target.value)}
-              className="w-full cursor-pointer appearance-none rounded-lg border border-black/10 px-4 py-2.5 text-[13.5px] font-medium text-[#13537B] outline-none focus:border-[#07C1E9]"
+              value={documentTypeId ?? ""}
+              onChange={(event) => setDocumentTypeId(Number(event.target.value))}
+              disabled={isLoadingTypes || documentTypes.length === 0}
+              className="w-full cursor-pointer appearance-none rounded-lg border border-black/10 px-4 py-2.5 text-[13.5px] font-medium text-[#13537B] outline-none focus:border-[#07C1E9] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {documentTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
+              {documentTypes.length === 0 ? (
+                <option value="">
+                  {isLoadingTypes ? "Loading document types..." : "No document types available"}
                 </option>
-              ))}
+              ) : (
+                documentTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))
+              )}
             </select>
             <ChevronDownIcon className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#13537B]" />
           </div>
@@ -186,7 +254,7 @@ export default function UploadDocumentModal({
           <button
             type="button"
             onClick={handleSave}
-            disabled={!selectedFile || isSaving}
+            disabled={!selectedFile || documentTypeId === undefined || isSaving}
             className="rounded-md cursor-pointer bg-[#07C1E9] px-6 py-2.5 text-[13px] font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSaving ? "Uploading..." : "Save Changes"}

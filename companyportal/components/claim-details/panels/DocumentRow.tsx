@@ -7,7 +7,7 @@ import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import { downloadBase64File } from "@/lib/utils/downloadFile";
 
-interface ApiDocumentDownload {
+export interface ApiDocumentDownload {
   fileName: string;
   fileType: string;
   content: string;
@@ -15,12 +15,26 @@ interface ApiDocumentDownload {
 
 export default function DocumentRow({
   document,
+  onDownload,
 }: {
   document: ClaimMedicalDocument;
+  onDownload?: () => Promise<void>;
 }) {
   const { token, rolePlayerId } = useCompanyProfile();
   const [isDownloading, setIsDownloading] = useState(false);
   async function handleDownload() {
+    if (onDownload) {
+      setIsDownloading(true);
+      try {
+        await onDownload();
+      } catch (error) {
+        console.error("Failed to download document:", error);
+      } finally {
+        setIsDownloading(false);
+      }
+      return;
+    }
+
     if (!document.documentId || !rolePlayerId) return;
 
     setIsDownloading(true);
@@ -72,7 +86,7 @@ export default function DocumentRow({
       <button
         type="button"
         aria-label={`Download ${document.name}`}
-        disabled={!document.documentId || isDownloading}
+        disabled={(!onDownload && !document.documentId) || isDownloading}
         onClick={handleDownload}
         className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-50"
       >
