@@ -40,6 +40,7 @@ export type CompanyDocument = {
   documentType: string;
   date: string;
   documentId: string;
+  uuid: string;
   documentUri: string;
   documentSet: number;
 };
@@ -175,6 +176,7 @@ export interface ApiDocumentSet {
 
 export interface ApiEmployerDocument {
   documentId: number;
+  uuid: string;
   documentKeySet: string;
   documentKey: string;
   systemName: string;
@@ -293,6 +295,7 @@ export function mapApiEmployerDocuments(
         year: "numeric",
       })} · ${doc.fileExtension.split("/").pop()?.toUpperCase() ?? doc.fileExtension}`,
       documentId: String(doc.documentId),
+      uuid: doc.uuid,
       documentUri: doc.documentUri,
       documentSet: doc.documentSet,
     }));

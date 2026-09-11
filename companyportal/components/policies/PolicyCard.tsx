@@ -14,7 +14,7 @@ import type {
 } from "@/content/policies";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
-import { downloadBase64File, downloadFileFromUrl } from "@/lib/utils/downloadFile";
+import { downloadBase64File } from "@/lib/utils/downloadFile";
 import DownloadRemittanceModal, {
   type RemittanceDownloadFilters,
 } from "@/components/policies/DownloadRemittanceModal";
@@ -126,12 +126,17 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
       });
 
       const document = response.data?.[0];
-      if (!document?.documentUri) {
-        throw new Error(
-          `Unexpected policy schedule response: ${JSON.stringify(response)}`,
-        );
-      }
-      downloadFileFromUrl(document.documentUri, document.fileName);
+      if (!document?.documentId) return;
+
+      const downloaded = await apiService.get<ApiRemittanceDocument>(
+        `/employer/${rolePlayerId}/documents/${document.uuid}/download`,
+        { token: token ?? undefined },
+      );
+      downloadBase64File(
+        downloaded.fileName,
+        downloaded.contentType,
+        downloaded.base64Content,
+      );
     } catch (error) {
       console.error("Failed to download policy schedule:", error);
     } finally {

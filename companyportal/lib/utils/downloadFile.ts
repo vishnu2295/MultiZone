@@ -54,13 +54,16 @@ export function downloadBase64File(fileName: string, contentType: string, base64
 }
 
 /**
- * Downloads a file from a remote URL (e.g. blob storage) in the current tab
- * instead of via window.open, which pops a new tab/window.
+ * Downloads a file from a remote URL (e.g. blob storage). The `download`
+ * attribute is ignored by browsers for cross-origin URLs, so without a
+ * new tab this would navigate the current page away to the file instead of
+ * downloading it — opening in a new tab keeps the app in place either way.
  */
 export function downloadFileFromUrl(url: string, fileName?: string) {
   const link = document.createElement("a");
   link.href = url;
   if (fileName) link.download = fileName;
+  link.target = "_blank";
   link.rel = "noopener";
   link.click();
 }

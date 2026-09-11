@@ -9,6 +9,7 @@ import {
   type CompanyDocument,
 } from "@/content/companyDetails";
 import type { ApiSaveDocumentRequest, ApiSavedDocument } from "@/content/claimDetails";
+import type { ApiDocumentDownload } from "@/components/claim-details/panels/DocumentRow";
 import { DocumentIcon, DownloadIcon } from "@/components/home/icons";
 import UploadDocumentModal from "@/components/company-details/UploadDocumentModal";
 import Pagination from "@/components/ui/Pagination";
@@ -21,7 +22,7 @@ import {
   DocumentSystemNameEnum,
   documentSetOptions,
 } from "@/lib/constants";
-import { downloadFileFromUrl } from "@/lib/utils/downloadFile";
+import { downloadBase64File } from "@/lib/utils/downloadFile";
 import { fileToBase64 } from "@/lib/utils/file";
 import { computePageCount } from "@/lib/utils/pagination";
 
@@ -88,9 +89,13 @@ export default function DocumentsPanel() {
     };
   }, [page, reloadToken, rolePlayerId, token]);
 
-  function handleDownload(document: CompanyDocument) {
-    if (!document.documentUri) return;
-    downloadFileFromUrl(document.documentUri, document.name);
+  async function handleDownload(document: CompanyDocument) {
+    const response = await apiService.get<ApiDocumentDownload>(
+      `/employer/${rolePlayerId}/documents/${document.uuid}/download`,
+      { token: token ?? undefined },
+    );
+
+    downloadBase64File(response.fileName, response.fileType, response.content);
   }
 
   const fetchDocumentTypes = useCallback(
@@ -173,7 +178,7 @@ export default function DocumentsPanel() {
                   <button
                     type="button"
                     aria-label="Download document"
-                    disabled={!document.documentUri}
+                    disabled={!document.documentId}
                     onClick={() => handleDownload(document)}
                     className="flex h-10 w-10 cursor-pointer shrink-0 items-center justify-center rounded-lg border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-50"
                   >
