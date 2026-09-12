@@ -6,7 +6,7 @@ const RMA_ROLES_CLAIM = "https://rma.com/claims/rma_roles";
 const PROFILE_STATUS_CLAIM = "https://rma.com/claims/profile_status";
 // Base domain of the registration API. See .env.example.
 const REGISTER_API_DOMAIN = process.env.REGISTER_API_DOMAIN ?? "";
-const REGISTRATION_URL = `${REGISTER_API_DOMAIN}/default/api/mobileApp/public/registration/register`;
+const REGISTRATION_URL = `${REGISTER_API_DOMAIN}/api/mobileApp/public/registration/register`;
 
 // The roles claim is issued on the access token (audience-scoped), not the ID
 // token, so session.user won't have it. We just received this token straight
@@ -64,26 +64,44 @@ export const auth0 = new Auth0Client({
   },
   async onCallback(error, ctx, session) {
     const baseUrl = ctx.appBaseUrl ?? process.env.APP_BASE_URL ?? "";
-
+    const token = session?.tokenSet.accessToken;
+    console.log(token);
     if (error) {
+      console.log("Auth0 callback error", error);
       return NextResponse.redirect(`${baseUrl}/auth/login`);
     }
 
-    const accessToken = session?.tokenSet.accessToken;
+    let accessToken = session?.tokenSet.accessToken;
     const refreshToken = session?.tokenSet.refreshToken;
     const profileStatus = accessToken
       ? (decodeAccessTokenClaims(accessToken)[PROFILE_STATUS_CLAIM] as
           | string
           | undefined)
       : undefined;
-
-    if (accessToken && refreshToken && profileStatus !== "Linked") {
+    console.log("Profile Status:", profileStatus);
+    // Missing claim (undefined) is treated the same as "not linked yet" -
+    // register whenever profileStatus isn't explicitly "Linked".
+    const needsRegistration = !profileStatus || profileStatus !== "Linked";
+    if (accessToken && refreshToken && needsRegistration) {
+      console.log("Calling registration API:", REGISTRATION_URL);
       try {
-        await apiService.post(
+        const registrationResponse = await apiService.post<{
+          access_token: string;
+        }>(
           REGISTRATION_URL,
           { accessToken, refreshToken, SourceChannel: "ClientPortal" },
           { skipAuth: true },
         );
+        console.log("Registration API response:", registrationResponse);
+
+        // The registration API issues its own access token - use it for all
+        // further API calls in place of Auth0's, by overwriting it on the
+        // session before it's persisted. auth0.getAccessToken() and
+        // serverApiService read from this session going forward.
+        if (registrationResponse.access_token && session) {
+          session.tokenSet.accessToken = registrationResponse.access_token;
+          accessToken = registrationResponse.access_token;
+        }
       } catch (registrationError) {
         console.error(
           "Registration API call failed during login callback",
@@ -91,6 +109,12 @@ export const auth0 = new Auth0Client({
         );
         return NextResponse.redirect(`${baseUrl}/auth/login`);
       }
+    } else {
+      console.log("Registration API not called. Conditions:", {
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken,
+        needsRegistration,
+      });
     }
     const returnTo = getRoleHomePath(accessToken) ?? ctx.returnTo ?? "/";
 
