@@ -28,7 +28,7 @@ export interface ApiInvoiceAttachment {
 
 export type CompanyInvoice = {
   invoiceNumber: string;
-  invoiceNumberFull: string;
+  policyNumber: string;
   collectionCycle: string;
   amount: string;
   status: string;
@@ -170,6 +170,7 @@ export interface ApiBankDetails {
 export interface ApiInvoice {
   invoiceId: number;
   invoiceNumber: string;
+  policyNumber: string;
   invoiceDate: string;
   dateSubmitted: string;
   invoiceStatus: number;
@@ -328,7 +329,7 @@ export function mapApiAddress(api: ApiAddressDetails): CompanyAddress & {
 export function mapApiInvoice(api: ApiInvoice): CompanyInvoice {
   return {
     invoiceNumber: api.invoiceNumber,
-    invoiceNumberFull: api.claimReferenceNumber,
+    policyNumber: checkValueExists(api.policyNumber),
     collectionCycle: new Date(api.invoiceDate).toLocaleDateString("en-GB"),
     amount: `R ${api.invoiceAmount.toLocaleString("en-ZA", {
       minimumFractionDigits: 2,

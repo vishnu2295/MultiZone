@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import {
   mapEmployerProfiles,
   type ApiOrganizationProfileResponse,
@@ -46,6 +47,7 @@ function writeCookie(name: string, value: string) {
  * rolePlayerId from here (via useCompanyProfile), not re-decode the token.
  */
 export function CompanyProfileProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -92,10 +94,16 @@ export function CompanyProfileProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const selectProfile = useCallback((rolePlayerId: number) => {
-    setSelectedRolePlayerId(rolePlayerId);
-    writeCookie(SELECTED_ROLE_PLAYER_COOKIE, String(rolePlayerId));
-  }, []);
+  const selectProfile = useCallback(
+    (rolePlayerId: number) => {
+      setSelectedRolePlayerId(rolePlayerId);
+      writeCookie(SELECTED_ROLE_PLAYER_COOKIE, String(rolePlayerId));
+      // The newly selected employer's claim/policy IDs won't match whatever
+      // detail page the admin might be on, so land back on the dashboard.
+      router.push("/company");
+    },
+    [router],
+  );
 
   const selectedEmployer =
     employerProfiles.find((employer) => employer.rolePlayerId === selectedRolePlayerId) ??
