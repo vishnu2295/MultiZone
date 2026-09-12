@@ -2,9 +2,17 @@
 
 import { useState } from "react";
 import { ChevronDownIcon, CloseIcon } from "@/components/home/icons";
-import type { CompanyAddress } from "@/content/companyDetails";
+import type {
+  ApiAddressDetails,
+  CompanyAddress,
+} from "@/content/companyDetails";
+import { countryOptions } from "@/lib/constants";
 
-const ADDRESS_TYPES: CompanyAddress["type"][] = ["Postal", "Physical", "Delivery"];
+const ADDRESS_TYPES: CompanyAddress["type"][] = [
+  "Postal",
+  "Physical",
+  "Delivery",
+];
 
 const PROVINCES = [
   "Gauteng",
@@ -18,39 +26,60 @@ const PROVINCES = [
   "Northern Cape",
 ];
 
-const COUNTRIES = ["South Africa"];
-
 export type EditableAddress = CompanyAddress & {
+  /**
+   * The original API record this address was loaded from, if any. Carried
+   * through so a save can spread it back and override only the fields this
+   * form edits, instead of rebuilding the payload field-by-field and
+   * silently dropping anything the UI doesn't know about (audit fields,
+   * ids, backend-only flags, etc).
+   */
+  raw?: ApiAddressDetails;
+  rolePlayerAddressId?: number;
+  rolePlayerId?: number;
   effectiveFrom?: string;
   addressLine1?: string;
   addressLine2?: string;
   city?: string;
   stateProvince?: string;
   postalCode?: string;
+  /** `countryOptions` value, e.g. "SouthAfrica" (the name with spaces stripped). */
   country?: string;
+  isDeleted?: boolean;
 };
 
-export interface ApiAddressUpdateRequest {
-  type: string | null;
-  effectiveFrom: string | null;
-  addressLine1: string | null;
-  addressLine2: string | null;
-  province: string | null;
-  city: string | null;
-  postalCode: string | null;
-  country: string | null;
-}
+export function toApiAddressDetails(
+  address: EditableAddress,
+): ApiAddressDetails {
+  // `effectiveFrom` only ever holds a date (from <input type="date">), while
+  // the backend's `effectiveDate` carries a full timestamp. Only overwrite it
+  // when the user actually changed the date — otherwise keep the original
+  // timestamp (with its time-of-day) from `raw` instead of truncating it.
+  const rawEffectiveDate =
+    typeof address.raw?.effectiveDate === "string"
+      ? address.raw.effectiveDate
+      : null;
+  const effectiveDateChanged =
+    !!address.effectiveFrom &&
+    address.effectiveFrom !== rawEffectiveDate?.slice(0, 10);
 
-export function toApiAddressUpdateRequest(address: EditableAddress): ApiAddressUpdateRequest {
   return {
-    type: address.type ?? null,
-    effectiveFrom: address.effectiveFrom || null,
+    // Preserve every field the backend sent (rolePlayerId, audit fields,
+    // anything else) and override only what this form actually edits.
+    ...address.raw,
+    rolePlayerAddressId: address.rolePlayerAddressId,
+    rolePlayerId: address.rolePlayerId,
+    addressType: address.type ?? null,
+    effectiveDate: effectiveDateChanged
+      ? address.effectiveFrom
+      : (rawEffectiveDate ?? address.effectiveFrom ?? null),
     addressLine1: address.addressLine1 || null,
     addressLine2: address.addressLine2 || null,
     province: address.stateProvince || null,
     city: address.city || null,
     postalCode: address.postalCode || null,
     country: address.country || null,
+    isDeleted: address.isDeleted ?? false,
   };
 }
 
@@ -58,7 +87,7 @@ type EditAddressModalProps = {
   open: boolean;
   address: EditableAddress | null;
   onClose: () => void;
-  onSave: (address: EditableAddress) => void;
+  onSave: (address: EditableAddress) => void | Promise<void>;
 };
 
 const emptyForm: EditableAddress = {
@@ -70,7 +99,7 @@ const emptyForm: EditableAddress = {
   city: "",
   stateProvince: PROVINCES[0],
   postalCode: "",
-  country: COUNTRIES[0],
+  country: countryOptions[0].value,
 };
 
 /**
@@ -92,13 +121,16 @@ function parseAddressLine(line: string) {
   let stateProvince = "";
   if (
     segments.length &&
-    PROVINCES.some((province) => province.toLowerCase() === segments[segments.length - 1].toLowerCase())
+    PROVINCES.some(
+      (province) =>
+        province.toLowerCase() === segments[segments.length - 1].toLowerCase(),
+    )
   ) {
     stateProvince = segments.pop() ?? "";
   }
 
   const city = segments.pop() ?? "";
-  const addressLine2 = segments.length > 1 ? segments.pop() ?? "" : "";
+  const addressLine2 = segments.length > 1 ? (segments.pop() ?? "") : "";
   const addressLine1 = segments.join(", ");
 
   return { addressLine1, addressLine2, city, stateProvince, postalCode };
@@ -110,6 +142,7 @@ export default function EditAddressModal({
   onClose,
   onSave,
 }: EditAddressModalProps) {
+  const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<EditableAddress>(() => {
     if (!address) return emptyForm;
 
@@ -123,11 +156,14 @@ export default function EditAddressModal({
 
   if (!open) return null;
 
-  const update = <K extends keyof EditableAddress>(key: K, value: EditableAddress[K]) => {
+  const update = <K extends keyof EditableAddress>(
+    key: K,
+    value: EditableAddress[K],
+  ) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const line = [
       form.addressLine1,
       form.addressLine2,
@@ -138,7 +174,12 @@ export default function EditAddressModal({
       .filter(Boolean)
       .join(", ");
 
-    onSave({ ...form, line: line || form.line });
+    setIsSaving(true);
+    try {
+      await onSave({ ...form, line: line || form.line });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -158,7 +199,8 @@ export default function EditAddressModal({
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-[#13537B] transition hover:bg-[#F3F7FA]"
+            disabled={isSaving}
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <CloseIcon className="h-4 w-4" />
           </button>
@@ -168,7 +210,9 @@ export default function EditAddressModal({
           <Field label="Type" required>
             <Select
               value={form.type}
-              onChange={(value) => update("type", value as CompanyAddress["type"])}
+              onChange={(value) =>
+                update("type", value as CompanyAddress["type"])
+              }
               options={ADDRESS_TYPES}
             />
           </Field>
@@ -227,10 +271,10 @@ export default function EditAddressModal({
           </Field>
 
           <Field label="Country" className="sm:col-span-2">
-            <Select
-              value={form.country ?? COUNTRIES[0]}
+            <LabeledSelect
+              value={form.country ?? countryOptions[0].value}
               onChange={(value) => update("country", value)}
-              options={COUNTRIES}
+              options={countryOptions}
             />
           </Field>
         </div>
@@ -239,16 +283,19 @@ export default function EditAddressModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-black/10 bg-white px-6 py-2.5 text-[13px] font-semibold text-[#13537B] transition hover:bg-[#F3F7FA]"
+            disabled={isSaving}
+            className="rounded-md cursor-pointer border border-black/10 bg-white px-6 py-2.5 text-[13px] font-semibold text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="rounded-md bg-[#07C1E9] px-6 py-2.5 text-[13px] font-semibold text-white transition hover:brightness-95"
+            disabled={isSaving}
+            className="flex cursor-pointer items-center justify-center gap-2 rounded-md bg-[#07C1E9] px-6 py-2.5 text-[13px] font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Save Changes
+            {isSaving && <SpinnerIcon className="h-3.5 w-3.5" />}
+            {isSaving ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>
@@ -301,5 +348,45 @@ function Select({
       </select>
       <ChevronDownIcon className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#13537B]" />
     </div>
+  );
+}
+
+function LabeledSelect({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: readonly { label: string; value: string }[];
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="w-full appearance-none rounded-lg border border-black/10 px-4 py-2.5 text-[13.5px] font-medium text-[#13537B] outline-none focus:border-[#07C1E9]"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDownIcon className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#13537B]" />
+    </div>
+  );
+}
+
+function SpinnerIcon({ className }: { className?: string }) {
+  return (
+    <svg className={`animate-spin ${className ?? ""}`} viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+      />
+    </svg>
   );
 }

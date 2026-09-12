@@ -14,7 +14,7 @@ import {
   TrashIcon,
 } from "@/components/home/icons";
 import EditContactModal, {
-  toApiContactUpdateRequest,
+  toApiContactDetails,
   type EditableContact,
 } from "@/components/company-details/EditContactModal";
 import DeleteConfirmModal from "@/components/company-details/DeleteConfirmModal";
@@ -65,13 +65,17 @@ export default function ContactsPanel() {
 
     async function loadContactDetails() {
       try {
-        const response = await apiService.get<ApiPagedResponse<ApiContactDetails>>(
-          `/employer/${rolePlayerId}/contactDetails`,
-          { token: token ?? undefined, params: { page, pageSize: PAGE_SIZE } },
-        );
+        const response = await apiService.get<
+          ApiPagedResponse<ApiContactDetails>
+        >(`/employer/${rolePlayerId}/contactDetails`, {
+          token: token ?? undefined,
+          params: { page, pageSize: PAGE_SIZE },
+        });
 
         if (!cancelled) {
-          setContacts(response.data.map(mapApiContact));
+          setContacts(
+            response.data.map(mapApiContact).filter((item) => !item.isDeleted),
+          );
           setPageCount(computePageCount(response.rowCount, PAGE_SIZE));
         }
       } catch (error) {
@@ -166,12 +170,12 @@ export default function ContactsPanel() {
         contact={editingContact}
         onClose={() => setEditingIndex(null)}
         onSave={async (updated) => {
-          if (editingIndex === null) return;
+          if (editingIndex === null || !rolePlayerId) return;
           try {
             await apiService.put(
-              "/company/api/contacts",
-              toApiContactUpdateRequest(updated),
-              { baseUrl: "", skipAuth: true },
+              `/employer/${rolePlayerId}/contactDetails`,
+              { contactDetails: toApiContactDetails(updated) },
+              { token: token ?? undefined },
             );
 
             setContacts((prev) =>
@@ -201,12 +205,23 @@ export default function ContactsPanel() {
           ) : null
         }
         onCancel={() => setDeletingIndex(null)}
-        onConfirm={() => {
-          if (deletingIndex === null) return;
-          setContacts((prev) =>
-            prev.filter((_, index) => index !== deletingIndex),
-          );
-          setDeletingIndex(null);
+        onConfirm={async () => {
+          if (deletingIndex === null || !rolePlayerId) return;
+          const deleted = { ...contacts[deletingIndex], isDeleted: true };
+          try {
+            await apiService.put(
+              `/employer/${rolePlayerId}/contactDetails`,
+              toApiContactDetails(deleted),
+              { token: token ?? undefined },
+            );
+
+            setContacts((prev) =>
+              prev.filter((_, index) => index !== deletingIndex),
+            );
+            setDeletingIndex(null);
+          } catch (error) {
+            console.error("Failed to delete contact:", error);
+          }
         }}
       />
     </div>

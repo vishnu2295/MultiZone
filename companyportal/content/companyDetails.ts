@@ -86,26 +86,74 @@ export interface ApiCompanyDetails {
 }
 
 export interface ApiAddressDetails {
-  type: string;
-  effectiveFrom?: string;
-  addressLine1?: string;
-  addressLine2?: string;
-  province?: string;
-  city?: string;
-  postalCode?: string;
-  country?: string;
+  rolePlayerAddressId?: number;
+  rolePlayerId?: number;
+  addressType?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  postalCode?: string | null;
+  city?: string | null;
+  province?: string | null;
+  country?: string | null;
   isPrimary?: boolean;
+  effectiveDate?: string | null;
+  isDeleted?: boolean;
+  modifiedBy?: string | null;
+  modifiedDate?: string | null;
+  createdBy?: string | null;
+  createdDate?: string | null;
+  /**
+   * Tolerate any field the backend sends that this app doesn't otherwise
+   * know about, so `mapApiAddress` → `toApiAddressDetails` round-trips it
+   * back unchanged on save instead of silently dropping it.
+   */
+  [key: string]: unknown;
+}
+
+/**
+ * One selected "contact context" (`ContactContextEnum` value) linked to a
+ * contact. The full set for a contact is round-tripped on every save: an
+ * entry is added when its context is selected, and flagged `isDeleted` (never
+ * removed outright once persisted) when deselected.
+ */
+export interface ApiRolePlayerContactInformation {
+  rolePlayerContactInformationId: number;
+  rolePlayerContactId: number;
+  /** `ContactContextEnum` key, e.g. "IntermediaryAssistant" — a string field, not numeric. */
+  contactInformationType: string | null;
+  isDeleted: boolean;
+  modifiedBy?: string | null;
+  modifiedDate?: string | null;
+  createdBy?: string | null;
+  createdDate?: string | null;
+  /** Tolerate any field the backend sends that this app doesn't otherwise know about. */
+  [key: string]: unknown;
 }
 
 export interface ApiContactDetails {
-  title?: string;
-  firstname?: string;
-  surname?: string;
-  communicationType?: string;
-  contactNumber?: string;
-  emailAddress?: string;
-  contactDesignation?: string;
-  contactContext?: string;
+  rolePlayerContactId?: number;
+  rolePlayerId?: number;
+  title?: string | null;
+  firstname?: string | null;
+  surname?: string | null;
+  emailAddress?: string | null;
+  telephoneNumber?: string | null;
+  contactNumber?: string | null;
+  communicationType?: string | null;
+  contactDesignationType?: string | null;
+  isConfirmed?: boolean;
+  isDeleted?: boolean;
+  rolePlayerContactInformations?: ApiRolePlayerContactInformation[];
+  modifiedBy?: string | null;
+  modifiedDate?: string | null;
+  createdBy?: string | null;
+  createdDate?: string | null;
+  /**
+   * Tolerate any field the backend sends that this app doesn't otherwise
+   * know about, so `mapApiContact` → `toApiContactDetails` round-trips it
+   * back unchanged on save instead of silently dropping it.
+   */
+  [key: string]: unknown;
 }
 
 export interface ApiBankDetails {
@@ -239,6 +287,9 @@ export function mapApiCompanyDetails(
 }
 
 export function mapApiAddress(api: ApiAddressDetails): CompanyAddress & {
+  raw: ApiAddressDetails;
+  rolePlayerAddressId?: number;
+  rolePlayerId?: number;
   effectiveFrom: string;
   addressLine1: string;
   addressLine2: string;
@@ -246,6 +297,7 @@ export function mapApiAddress(api: ApiAddressDetails): CompanyAddress & {
   stateProvince: string;
   postalCode: string;
   country: string;
+  isDeleted: boolean;
 } {
   const line =
     [api.addressLine1, api.addressLine2, api.city, api.province, api.postalCode]
@@ -253,17 +305,23 @@ export function mapApiAddress(api: ApiAddressDetails): CompanyAddress & {
       .join(", ") || "-";
 
   return {
+    raw: api,
+    rolePlayerAddressId: api.rolePlayerAddressId,
+    rolePlayerId: api.rolePlayerId,
     type:
-      api.type === "Physical" || api.type === "Delivery" ? api.type : "Postal",
+      api.addressType === "Physical" || api.addressType === "Delivery"
+        ? api.addressType
+        : "Postal",
     line,
     primary: api.isPrimary ?? false,
-    effectiveFrom: api.effectiveFrom ? api.effectiveFrom.slice(0, 10) : "-",
+    effectiveFrom: api.effectiveDate ? api.effectiveDate.slice(0, 10) : "-",
     addressLine1: api.addressLine1 ?? "",
     addressLine2: api.addressLine2 ?? "",
     city: api.city ?? "",
     stateProvince: api.province ?? "",
     postalCode: api.postalCode ?? "",
     country: api.country ?? "",
+    isDeleted: api.isDeleted ?? false,
   };
 }
 
@@ -301,31 +359,59 @@ export function mapApiEmployerDocuments(
     }));
 }
 
+/** "PrimaryContact" -> "Primary Contact", matching the space-separated designation options the UI presents. */
+function humanizeDesignation(value: string): string {
+  return value.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+}
+
 export function mapApiContact(api: ApiContactDetails): CompanyContact & {
+  raw: ApiContactDetails;
+  rolePlayerContactId?: number;
   title?: string;
   firstName?: string;
   surname?: string;
   communicationType?: string;
   contactNo?: string;
   designation?: string;
-  contactContext?: string;
+  contactContext: string[];
+  rolePlayerContactInformations: ApiRolePlayerContactInformation[];
+  isDeleted: boolean;
 } {
   const name = [api.title ? `${api.title}.` : "", api.firstname, api.surname]
     .filter(Boolean)
     .join(" ");
 
+  const rolePlayerContactInformations = api.rolePlayerContactInformations ?? [];
+  const contactContext = rolePlayerContactInformations
+    .filter((info) => !info.isDeleted && info.contactInformationType != null)
+    .map((info) => info.contactInformationType as string);
+
+  const designation = api.contactDesignationType
+    ? humanizeDesignation(api.contactDesignationType)
+    : "";
+  // `telephoneNumber` is the populated field in practice; `contactNumber` is
+  // kept around (and always round-tripped via `raw`) but falls back here.
+  const phone = api.telephoneNumber || api.contactNumber || "";
+
   return {
+    // The full original record, so a save can spread it and override only
+    // the fields this form actually edits — nothing the backend sends
+    // (audit fields, ids, flags this UI doesn't know about) gets dropped.
+    raw: api,
     name: name || "-",
-    badge: api.contactDesignation ? api.contactDesignation.split(" ")[0] : "-",
+    badge: designation ? designation.split(" ")[0] : "-",
     email: checkValueExists(api.emailAddress),
-    phone: checkValueExists(api.contactNumber),
+    phone: checkValueExists(phone),
+    rolePlayerContactId: api.rolePlayerContactId,
     title: api.title ?? "",
     firstName: api.firstname ?? "",
     surname: api.surname ?? "",
     communicationType: api.communicationType ?? "",
-    contactNo: api.contactNumber ?? "",
-    designation: api.contactDesignation ?? "",
-    contactContext: api.contactContext ?? "",
+    contactNo: phone,
+    designation,
+    contactContext,
+    rolePlayerContactInformations,
+    isDeleted: api.isDeleted ?? false,
   };
 }
 
