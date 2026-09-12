@@ -6,11 +6,12 @@ import {
   type ApiAddressDetails,
   type ApiPagedResponse,
 } from "@/content/companyDetails";
-import { EditIcon, PinIcon } from "@/components/home/icons";
+import { EditIcon, PinIcon, TrashIcon } from "@/components/home/icons";
 import EditAddressModal, {
-  toApiAddressUpdateRequest,
+  toApiAddressDetails,
   type EditableAddress,
 } from "@/components/company-details/EditAddressModal";
+import DeleteConfirmModal from "@/components/company-details/DeleteConfirmModal";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
@@ -35,6 +36,7 @@ export default function AddressPanel() {
   const [addresses, setAddresses] = useState<EditableAddress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (!rolePlayerId) return;
@@ -43,12 +45,17 @@ export default function AddressPanel() {
 
     async function loadAddress() {
       try {
-        const response = await apiService.get<ApiPagedResponse<ApiAddressDetails>>(
-          `/employer/${rolePlayerId}/addressDetails`,
-          { token: token ?? undefined }
-        );
+        const response = await apiService.get<
+          ApiPagedResponse<ApiAddressDetails>
+        >(`/employer/${rolePlayerId}/addressDetails`, {
+          token: token ?? undefined,
+        });
 
-        if (!cancelled) setAddresses(response.data.map(mapApiAddress));
+        if (!cancelled) {
+          setAddresses(
+            response.data.map(mapApiAddress).filter((item) => !item.isDeleted),
+          );
+        }
       } catch (error) {
         console.error("Failed to load address details:", error);
       } finally {
@@ -63,6 +70,8 @@ export default function AddressPanel() {
   }, [rolePlayerId, token]);
 
   const editingAddress = editingIndex !== null ? addresses[editingIndex] : null;
+  const deletingAddress =
+    deletingIndex !== null ? addresses[deletingIndex] : null;
 
   if (isLoading) {
     return (
@@ -107,6 +116,14 @@ export default function AddressPanel() {
               <EditIcon className="h-[13px] w-[13px]" />
               Edit
             </button>
+            <button
+              type="button"
+              onClick={() => setDeletingIndex(index)}
+              className="flex items-center cursor-pointer gap-1.5 rounded-md border border-[#E90707]/12 bg-[#FFF6F6] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#CB1334E5] transition hover:bg-[#E90707]/10"
+            >
+              <TrashIcon className="h-4 w-4 text-[#E77B7B]" />
+              Delete
+            </button>
           </div>
         </div>
       ))}
@@ -117,12 +134,12 @@ export default function AddressPanel() {
         address={editingAddress}
         onClose={() => setEditingIndex(null)}
         onSave={async (updated) => {
-          if (editingIndex === null) return;
+          if (editingIndex === null || !rolePlayerId) return;
           try {
             await apiService.put(
-              "/company/api/address",
-              toApiAddressUpdateRequest(updated),
-              { baseUrl: "", skipAuth: true },
+              `/employer/${rolePlayerId}/addressDetails`,
+              { addressDetails: toApiAddressDetails(updated) },
+              { token: token ?? undefined },
             );
 
             setAddresses((prev) =>
@@ -133,6 +150,41 @@ export default function AddressPanel() {
             setEditingIndex(null);
           } catch (error) {
             console.error("Failed to update address:", error);
+          }
+        }}
+      />
+
+      <DeleteConfirmModal
+        open={deletingIndex !== null}
+        title="Delete Address"
+        description={
+          deletingAddress ? (
+            <>
+              Are you sure you want to remove the{" "}
+              <span className="font-semibold text-[#13537B]">
+                {deletingAddress.type}
+              </span>{" "}
+              address? This action cannot be undone.
+            </>
+          ) : null
+        }
+        onCancel={() => setDeletingIndex(null)}
+        onConfirm={async () => {
+          if (deletingIndex === null || !rolePlayerId) return;
+          const deleted = { ...addresses[deletingIndex], isDeleted: true };
+          try {
+            await apiService.put(
+              `/employer/${rolePlayerId}/addressDetails`,
+              toApiAddressDetails(deleted),
+              { token: token ?? undefined },
+            );
+
+            setAddresses((prev) =>
+              prev.filter((_, index) => index !== deletingIndex),
+            );
+            setDeletingIndex(null);
+          } catch (error) {
+            console.error("Failed to delete address:", error);
           }
         }}
       />
