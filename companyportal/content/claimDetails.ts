@@ -154,6 +154,17 @@ export type ClaimContact = {
   email: string;
   phone: string;
   primary?: boolean;
+  badge?: string;
+  title?: string;
+  firstName?: string;
+  surname?: string;
+  communicationType?: string;
+  contactNo?: string;
+  designation?: string;
+  isContactConfirmed?: boolean;
+  rolePlayerId?: number;
+  rolePlayerContactId?: number;
+  raw?: ApiClaimantContact;
 };
 
 export type ClaimAddress = {
@@ -628,6 +639,8 @@ export type ApiClaimantContact = {
   isPrimary: boolean;
   rolePlayerId: number;
   rolePlayerContactId: number;
+  isDeleted?: boolean;
+  [key: string]: unknown;
 };
 
 export type ApiClaimantAddress = {
@@ -650,6 +663,76 @@ export type ApiClaimantDetailsResponse = {
   addressDetails: ApiClaimantAddress[];
 };
 
+/** "PrimaryContact" -> "Primary Contact", matching the designation select's display labels. */
+function humanizeContactDesignation(value: string): string {
+  return value.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+}
+
+export function mapApiClaimantContact(
+  contact: ApiClaimantContact,
+): ClaimContact {
+  return {
+    name: [contact.title, contact.firstname, contact.surname]
+      .filter(Boolean)
+      .join(" "),
+    email: contact.emailAddress,
+    phone: contact.contactNumber,
+    primary: contact.isPrimary,
+    badge: contact.isPrimary ? "Primary" : "Secondary",
+    title: contact.title,
+    firstName: contact.firstname,
+    surname: contact.surname,
+    communicationType: contact.communicationType,
+    contactNo: contact.contactNumber,
+    designation: contact.contactDesignation
+      ? humanizeContactDesignation(contact.contactDesignation)
+      : "",
+    isContactConfirmed: contact.isContactConfirmed,
+    rolePlayerId: contact.rolePlayerId,
+    rolePlayerContactId: contact.rolePlayerContactId,
+    raw: contact,
+  };
+}
+
+/** Builds the PUT payload for saving a claimant contact, round-tripping unknown fields via `raw`. */
+export function toApiClaimantContact(contact: {
+  raw?: ApiClaimantContact;
+  rolePlayerId?: number;
+  rolePlayerContactId?: number;
+  title?: string;
+  firstName?: string;
+  surname?: string;
+  communicationType?: string;
+  contactNo?: string;
+  phone?: string;
+  email?: string;
+  designation?: string;
+  isContactConfirmed?: boolean;
+  primary?: boolean;
+  isDeleted?: boolean;
+}): ApiClaimantContact {
+  return {
+    ...contact.raw,
+    rolePlayerId: contact.rolePlayerId ?? contact.raw?.rolePlayerId ?? 0,
+    rolePlayerContactId:
+      contact.rolePlayerContactId ?? contact.raw?.rolePlayerContactId ?? 0,
+    title: contact.title ?? "",
+    firstname: contact.firstName ?? "",
+    surname: contact.surname ?? "",
+    communicationType: contact.communicationType ?? "",
+    contactNumber: contact.contactNo || contact.phone || "",
+    emailAddress: contact.email || "",
+    contactDesignation: contact.designation
+      ? contact.designation.replace(/\s+/g, "")
+      : (contact.raw?.contactDesignation ?? ""),
+    contactContext: contact.raw?.contactContext ?? "",
+    isContactConfirmed:
+      contact.isContactConfirmed ?? contact.raw?.isContactConfirmed ?? false,
+    isPrimary: contact.primary ?? contact.raw?.isPrimary ?? false,
+    isDeleted: contact.isDeleted ?? false,
+  };
+}
+
 export function mapApiClaimantDetails(
   response: ApiClaimantDetailsResponse,
 ): ClaimantDetails {
@@ -665,14 +748,7 @@ export function mapApiClaimantDetails(
       { label: "Nationality", value: personalDetails.nationality },
       { label: "Country", value: personalDetails.country },
     ],
-    contacts: contacts.map((contact) => ({
-      name: [contact.title, contact.firstname, contact.surname]
-        .filter(Boolean)
-        .join(" "),
-      email: contact.emailAddress,
-      phone: contact.contactNumber,
-      primary: contact.isPrimary,
-    })),
+    contacts: contacts.map(mapApiClaimantContact),
     addresses: addressDetails.map((address) => ({
       type: address.type,
       line: [

@@ -25,6 +25,8 @@ import {
   mapApiClaimantDetails,
   mapApiIcdCodes,
   mapApiInjuryDetails,
+  toApiClaimantContact,
+  type ApiClaimantContact,
   type ApiClaimantDetailsResponse,
   type ApiIcdCode,
   type ApiInjuryDetailsResponse,
@@ -105,17 +107,24 @@ function EditButton({
   );
 }
 
-type ContactRow = EditableContact & { primary?: boolean };
+type ContactRow = Omit<EditableContact, "raw"> & {
+  primary?: boolean;
+  rolePlayerId?: number;
+  isContactConfirmed?: boolean;
+  raw?: ApiClaimantContact;
+};
 type AddressRow = EditableAddress & { primary?: boolean };
 
 function ClaimantInjuryPanelContent({
   details,
   injuryDetails,
   icdCodes,
+  token,
 }: {
   details: ClaimantDetails;
   injuryDetails: Array<{ label: string; value: string }>;
   icdCodes: ClaimIcdCode[];
+  token: string | null | undefined;
 }) {
   const [activeTab, setActiveTab] = useState<ClaimantTab>(claimantTabs[0]);
 
@@ -275,16 +284,36 @@ function ClaimantInjuryPanelContent({
             open={editingContactIndex !== null}
             contact={editingContact}
             onClose={() => setEditingContactIndex(null)}
-            onSave={(updated) => {
-              if (editingContactIndex === null) return;
-              setContacts((prev) =>
-                prev.map((item, index) =>
-                  index === editingContactIndex
-                    ? { ...updated, primary: item.primary }
-                    : item,
-                ),
-              );
-              setEditingContactIndex(null);
+            onSave={async (updated) => {
+              if (editingContactIndex === null || !editingContact) return;
+              const rolePlayerId = editingContact.rolePlayerId;
+              if (!rolePlayerId) return;
+
+              try {
+                await apiService.put(
+                  `/employer/${rolePlayerId}/contactDetails`,
+                  {
+                    contactDetails: toApiClaimantContact({
+                      ...updated,
+                      rolePlayerId: editingContact.rolePlayerId,
+                      isContactConfirmed: editingContact.isContactConfirmed,
+                      raw: editingContact.raw,
+                    }),
+                  },
+                  { token: token ?? undefined },
+                );
+
+                setContacts((prev) =>
+                  prev.map((item, index) =>
+                    index === editingContactIndex
+                      ? { ...item, ...updated, raw: item.raw, primary: item.primary }
+                      : item,
+                  ),
+                );
+                setEditingContactIndex(null);
+              } catch (error) {
+                console.error("Failed to update claimant contact:", error);
+              }
             }}
           />
 
@@ -303,8 +332,27 @@ function ClaimantInjuryPanelContent({
               ) : null
             }
             onCancel={() => setDeletingContactIndex(null)}
-            onConfirm={() => {
-              if (deletingContactIndex === null) return;
+            onConfirm={async () => {
+              if (deletingContactIndex === null || !deletingContact) return;
+              const rolePlayerId = deletingContact.rolePlayerId;
+              if (!rolePlayerId) return;
+
+              try {
+                await apiService.put(
+                  `/employer/${rolePlayerId}/contactDetails`,
+                  {
+                    contactDetails: toApiClaimantContact({
+                      ...deletingContact,
+                      isDeleted: true,
+                    }),
+                  },
+                  { token: token ?? undefined },
+                );
+              } catch (error) {
+                console.error("Failed to delete claimant contact:", error);
+                return;
+              }
+
               setContacts((prev) =>
                 prev.filter((_, index) => index !== deletingContactIndex),
               );
@@ -428,6 +476,7 @@ export default function ClaimantInjuryPanel({ claimId }: { claimId: string }) {
     <ClaimantInjuryPanelContent
       details={details}
       injuryDetails={injuryDetails}
+      token={token}
       icdCodes={icdCodes}
     />
   );
