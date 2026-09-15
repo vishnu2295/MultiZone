@@ -99,10 +99,10 @@ function EditButton({
       type="button"
       aria-label={`Edit ${label}`}
       onClick={onClick}
-      className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded border-[0.625px] border-[rgba(7,193,233,0.12)] bg-[#F0FAFE] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#E4F5FC]"
+      className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded border-[0.625px] border-[rgba(7,193,233,0.12)] bg-[#F0FAFE] px-2.5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#E4F5FC] sm:px-5"
     >
       <EditIcon className="h-[13px] w-[13px]" />
-      Edit
+      <span className="hidden sm:inline">Edit</span>
     </button>
   );
 }
@@ -157,13 +157,13 @@ function ClaimantInjuryPanelContent({
 
   return (
     <div className="flex flex-col gap-6 py-2.5">
-      <div className="flex flex-wrap items-center gap-2 lg:sticky lg:top-18 lg:z-20 lg:bg-[#F3F7FA] lg:py-2">
+      <div className="-mx-4 flex scrollbar-none items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 lg:sticky lg:top-18 lg:z-20 lg:bg-[#F3F7FA] lg:py-2">
         {claimantTabs.map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className={`rounded-md px-4 py-1.5 text-[12px] font-semibold leading-[18px] transition cursor-pointer ${
+            className={`shrink-0 whitespace-nowrap rounded-md px-4 py-1.5 text-[12px] font-semibold leading-[18px] transition cursor-pointer ${
               activeTab === tab
                 ? "bg-[#F59E0B] text-white shadow-[0px_4px_12px_rgba(10,102,255,0.25)]"
                 : "border-[0.625px] border-black/8 bg-white text-[#64748B] hover:text-[#13537B]"
@@ -228,10 +228,10 @@ function ClaimantInjuryPanelContent({
                         type="button"
                         aria-label={`Delete ${contact.name}`}
                         onClick={() => setDeletingContactIndex(index)}
-                        className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded border-[0.625px] border-[rgba(233,7,7,0.12)] bg-[#FFF6F6] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#FFECEC]"
+                        className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded border-[0.625px] border-[rgba(233,7,7,0.12)] bg-[#FFF6F6] px-2.5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#FFECEC] sm:px-5"
                       >
                         <TrashIcon className="h-4 w-4 text-[#E77B7B]" />
-                        Delete
+                        <span className="hidden sm:inline">Delete</span>
                       </button>
                     </div>
                   </div>

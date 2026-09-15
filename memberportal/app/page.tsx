@@ -1,6 +1,5 @@
 "use-client";
 
-import { redirect } from "next/navigation";
 import Dashboard from "@/components/landing/Dashboard";
 import Navbar from "@/components/landing/Navbar";
 import { auth0, getRoleHomePath } from "@/lib/auth0";

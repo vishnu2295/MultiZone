@@ -33,7 +33,7 @@ export default function Navbar() {
       <div className="mx-auto flex h-[54px] w-full max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-[56px]">
         <Link href="/" aria-label="RMA home" className="shrink-0">
           <Image
-            src="/company/brand/Rma-light.png"
+            src="/rma_blue_icon.png"
             alt="RMA"
             width={96}
             height={30}

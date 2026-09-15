@@ -3,6 +3,7 @@
 import { useState } from "react";
 import DocumentRow from "@/components/claim-details/panels/DocumentRow";
 import DocumentUploadModal from "@/components/claim-details/DocumentUploadModal";
+import { UploadIcon } from "@/components/home/icons";
 import {
   formatDocumentTimestamp,
   getUploadDocTypeId,
@@ -95,9 +96,11 @@ export default function DocumentUploadList({
         <button
           type="button"
           onClick={() => setIsUploadOpen(true)}
-          className="cursor-pointer rounded-lg bg-[#07C1E9] px-5 py-2.5 text-[13px] font-bold text-white shadow-[0px_4px_16px_rgba(7,193,233,0.35)] transition hover:brightness-95"
+          aria-label="Upload Documents"
+          className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-[#07C1E9] px-2.5 py-2.5 text-[13px] font-bold text-white shadow-[0px_4px_16px_rgba(7,193,233,0.35)] transition hover:brightness-95 sm:px-5"
         >
-          Upload Documents
+          <UploadIcon className="h-4 w-4 sm:hidden" />
+          <span className="hidden sm:inline">Upload Documents</span>
         </button>
       </div>
 
