@@ -111,18 +111,20 @@ export default function AddressPanel() {
             <button
               type="button"
               onClick={() => setEditingIndex(index)}
-              className="flex items-center cursor-pointer gap-1.5 rounded-md border border-[#07C1E9]/12 bg-[#F0FAFE] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#07C1E9]/10"
+              aria-label="Edit"
+              className="flex items-center cursor-pointer gap-1.5 rounded-md border border-[#07C1E9]/12 bg-[#F0FAFE] px-2.5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#07C1E9]/10 sm:px-5"
             >
               <EditIcon className="h-[13px] w-[13px]" />
-              Edit
+              <span className="hidden sm:inline">Edit</span>
             </button>
             <button
               type="button"
               onClick={() => setDeletingIndex(index)}
-              className="flex items-center cursor-pointer gap-1.5 rounded-md border border-[#E90707]/12 bg-[#FFF6F6] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#CB1334E5] transition hover:bg-[#E90707]/10"
+              aria-label="Delete"
+              className="flex items-center cursor-pointer gap-1.5 rounded-md border border-[#E90707]/12 bg-[#FFF6F6] px-2.5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#CB1334E5] transition hover:bg-[#E90707]/10 sm:px-5"
             >
               <TrashIcon className="h-4 w-4 text-[#E77B7B]" />
-              Delete
+              <span className="hidden sm:inline">Delete</span>
             </button>
           </div>
         </div>

@@ -69,13 +69,13 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center gap-2 lg:sticky lg:top-18 lg:z-20 lg:bg-[#F3F7FA] lg:py-2">
+      <div className="-mx-4 flex scrollbar-none items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 lg:sticky lg:top-18 lg:z-20 lg:bg-[#F3F7FA] lg:py-2">
         {tabs.map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className={`rounded-md px-4 py-1.5 text-[12px] font-semibold leading-[18px] transition cursor-pointer ${
+            className={`shrink-0 whitespace-nowrap rounded-md px-4 py-1.5 text-[12px] font-semibold leading-[18px] transition cursor-pointer ${
               activeTab === tab
                 ? "bg-[#ECB143] text-white shadow-[0px_4px_12px_rgba(10,102,255,0.25)]"
                 : "border-[0.625px] border-black/8 bg-white text-[#58585B] hover:text-[#13537B]"

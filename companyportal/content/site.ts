@@ -121,7 +121,7 @@ export const homeContent = {
       description:
         "Access your company details such as addresses, back accounts, members etc.",
       href: "/company/company-details",
-      highlighted: true,
+      highlighted: false,
     },
     {
       icon: "document" as const,
