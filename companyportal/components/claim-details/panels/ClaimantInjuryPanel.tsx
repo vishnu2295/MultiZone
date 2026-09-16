@@ -1,21 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  EditIcon,
-  MailIcon,
-  PhoneIcon,
-  PinIcon,
-  TrashIcon,
-  UserIcon,
-} from "@/components/home/icons";
-import DeleteConfirmModal from "@/components/company-details/DeleteConfirmModal";
-import EditAddressModal, {
-  type EditableAddress,
-} from "@/components/company-details/EditAddressModal";
-import EditContactModal, {
-  type EditableContact,
-} from "@/components/company-details/EditContactModal";
+import { MailIcon, PhoneIcon, PinIcon, UserIcon } from "@/components/home/icons";
+import { type EditableAddress } from "@/components/company-details/EditAddressModal";
+import { type EditableContact } from "@/components/company-details/EditContactModal";
 import IcdCodeCard from "@/components/claim-details/panels/IcdCodeCard";
 import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
 import apiService from "@/lib/api/apiService";
@@ -25,7 +13,6 @@ import {
   mapApiClaimantDetails,
   mapApiIcdCodes,
   mapApiInjuryDetails,
-  toApiClaimantContact,
   type ApiClaimantContact,
   type ApiClaimantDetailsResponse,
   type ApiIcdCode,
@@ -87,26 +74,6 @@ function PrimaryPill() {
   );
 }
 
-function EditButton({
-  label,
-  onClick,
-}: {
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={`Edit ${label}`}
-      onClick={onClick}
-      className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded border-[0.625px] border-[rgba(7,193,233,0.12)] bg-[#F0FAFE] px-2.5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#E4F5FC] sm:px-5"
-    >
-      <EditIcon className="h-[13px] w-[13px]" />
-      <span className="hidden sm:inline">Edit</span>
-    </button>
-  );
-}
-
 type ContactRow = Omit<EditableContact, "raw"> & {
   primary?: boolean;
   rolePlayerId?: number;
@@ -119,41 +86,22 @@ function ClaimantInjuryPanelContent({
   details,
   injuryDetails,
   icdCodes,
-  token,
 }: {
   details: ClaimantDetails;
   injuryDetails: Array<{ label: string; value: string }>;
   icdCodes: ClaimIcdCode[];
-  token: string | null | undefined;
 }) {
   const [activeTab, setActiveTab] = useState<ClaimantTab>(claimantTabs[0]);
 
-  const [contacts, setContacts] = useState<ContactRow[]>(() =>
+  const [contacts] = useState<ContactRow[]>(() =>
     details.contacts.map((contact) => ({ ...contact, badge: "Primary" })),
   );
-  const [addresses, setAddresses] = useState<AddressRow[]>(() =>
+  const [addresses] = useState<AddressRow[]>(() =>
     details.addresses.map((address) => ({
       ...address,
       type: address.type as EditableAddress["type"],
     })),
   );
-
-  const [editingContactIndex, setEditingContactIndex] = useState<number | null>(
-    null,
-  );
-  const [deletingContactIndex, setDeletingContactIndex] = useState<
-    number | null
-  >(null);
-  const [editingAddressIndex, setEditingAddressIndex] = useState<number | null>(
-    null,
-  );
-
-  const editingContact =
-    editingContactIndex !== null ? contacts[editingContactIndex] : null;
-  const deletingContact =
-    deletingContactIndex !== null ? contacts[deletingContactIndex] : null;
-  const editingAddress =
-    editingAddressIndex !== null ? addresses[editingAddressIndex] : null;
 
   return (
     <div className="flex flex-col gap-6 py-2.5">
@@ -220,19 +168,6 @@ function ClaimantInjuryPanelContent({
 
                     <div className="flex shrink-0 items-center gap-2.5">
                       {contact.primary && <PrimaryPill />}
-                      <EditButton
-                        label={contact.name}
-                        onClick={() => setEditingContactIndex(index)}
-                      />
-                      <button
-                        type="button"
-                        aria-label={`Delete ${contact.name}`}
-                        onClick={() => setDeletingContactIndex(index)}
-                        className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded border-[0.625px] border-[rgba(233,7,7,0.12)] bg-[#FFF6F6] px-2.5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#FFECEC] sm:px-5"
-                      >
-                        <TrashIcon className="h-4 w-4 text-[#E77B7B]" />
-                        <span className="hidden sm:inline">Delete</span>
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -268,115 +203,12 @@ function ClaimantInjuryPanelContent({
 
                     <div className="flex shrink-0 items-center gap-2.5">
                       {address.primary && <PrimaryPill />}
-                      <EditButton
-                        label={`${address.type} address`}
-                        onClick={() => setEditingAddressIndex(index)}
-                      />
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           </SectionCard>
-
-          <EditContactModal
-            key={`contact-${editingContactIndex ?? "closed"}`}
-            open={editingContactIndex !== null}
-            contact={editingContact}
-            onClose={() => setEditingContactIndex(null)}
-            onSave={async (updated) => {
-              if (editingContactIndex === null || !editingContact) return;
-              const rolePlayerId = editingContact.rolePlayerId;
-              if (!rolePlayerId) return;
-
-              try {
-                await apiService.put(
-                  `/employer/${rolePlayerId}/contactDetails`,
-                  {
-                    contactDetails: toApiClaimantContact({
-                      ...updated,
-                      rolePlayerId: editingContact.rolePlayerId,
-                      isContactConfirmed: editingContact.isContactConfirmed,
-                      raw: editingContact.raw,
-                    }),
-                  },
-                  { token: token ?? undefined },
-                );
-
-                setContacts((prev) =>
-                  prev.map((item, index) =>
-                    index === editingContactIndex
-                      ? { ...item, ...updated, raw: item.raw, primary: item.primary }
-                      : item,
-                  ),
-                );
-                setEditingContactIndex(null);
-              } catch (error) {
-                console.error("Failed to update claimant contact:", error);
-              }
-            }}
-          />
-
-          <DeleteConfirmModal
-            open={deletingContactIndex !== null}
-            title="Delete Contact"
-            description={
-              deletingContact ? (
-                <>
-                  Are you sure you want to remove{" "}
-                  <span className="font-semibold text-[#13537B]">
-                    {deletingContact.name.replace(/^\w+\.?\s+/, "")}
-                  </span>
-                  ? This action cannot be undone.
-                </>
-              ) : null
-            }
-            onCancel={() => setDeletingContactIndex(null)}
-            onConfirm={async () => {
-              if (deletingContactIndex === null || !deletingContact) return;
-              const rolePlayerId = deletingContact.rolePlayerId;
-              if (!rolePlayerId) return;
-
-              try {
-                await apiService.put(
-                  `/employer/${rolePlayerId}/contactDetails`,
-                  {
-                    contactDetails: toApiClaimantContact({
-                      ...deletingContact,
-                      isDeleted: true,
-                    }),
-                  },
-                  { token: token ?? undefined },
-                );
-              } catch (error) {
-                console.error("Failed to delete claimant contact:", error);
-                return;
-              }
-
-              setContacts((prev) =>
-                prev.filter((_, index) => index !== deletingContactIndex),
-              );
-              setDeletingContactIndex(null);
-            }}
-          />
-
-          <EditAddressModal
-            key={`address-${editingAddressIndex ?? "closed"}`}
-            open={editingAddressIndex !== null}
-            address={editingAddress}
-            onClose={() => setEditingAddressIndex(null)}
-            onSave={(updated) => {
-              if (editingAddressIndex === null) return;
-              setAddresses((prev) =>
-                prev.map((item, index) =>
-                  index === editingAddressIndex
-                    ? { ...updated, primary: item.primary }
-                    : item,
-                ),
-              );
-              setEditingAddressIndex(null);
-            }}
-          />
         </div>
       )}
 
@@ -476,7 +308,6 @@ export default function ClaimantInjuryPanel({ claimId }: { claimId: string }) {
     <ClaimantInjuryPanelContent
       details={details}
       injuryDetails={injuryDetails}
-      token={token}
       icdCodes={icdCodes}
     />
   );

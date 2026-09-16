@@ -27,30 +27,34 @@ import { fileToBase64 } from "@/lib/utils/file";
 export default function DocumentUploadList({
   title,
   documents,
-  claimId,
+  personEventId,
+  showUploadButton = true,
 }: {
   title: string;
   documents: ClaimUploadDocument[];
-  claimId: string;
+  personEventId?: string;
+  showUploadButton?: boolean;
 }) {
   const { token, rolePlayerId } = useCompanyProfile();
   const [rows, setRows] = useState<ClaimUploadDocument[]>(documents);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-
   async function handleUpload(file: File, documentName: string) {
     const fileAsBase64 = await fileToBase64(file);
 
+    const docTypeId =
+      rows.find((row) => row.name === documentName)?.docTypeId ??
+      getUploadDocTypeId(title, documentName) ??
+      0;
+
     const payload: ApiSaveDocumentRequest = {
-      docTypeId: getUploadDocTypeId(title, documentName) ?? 0,
-      fileExtension: file.name.split(".").pop() ?? "",
+      docTypeId,
+      fileExtension: `application/${file.name.split(".").pop() ?? ""}`,
       fileName: file.name,
-      keys: {
-        RolePlayerId: "46",
-      },
+      keys: personEventId ? { PersonEventId: personEventId } : {},
       documentStatus: DocumentStatusEnum.Received,
-      documentSet: DocumentSetEnum[DocumentSetEnum.EmployeeEarningsDocuments],
+      documentSet: DocumentSetEnum.EmployeeEarningsDocuments,
       isMemberVisible: true,
-      documentDescription: "",
+      documentDescription: file.name,
       systemName: DocumentSystemNameEnum[DocumentSystemNameEnum.ClaimManager],
       fileAsBase64,
       // verifiedBy: "",
@@ -93,15 +97,17 @@ export default function DocumentUploadList({
           {title}
         </h2>
 
-        <button
-          type="button"
-          onClick={() => setIsUploadOpen(true)}
-          aria-label="Upload Documents"
+        {showUploadButton && (
+          <button
+            type="button"
+            onClick={() => setIsUploadOpen(true)}
+            aria-label="Upload Documents"
           className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-[#07C1E9] px-2.5 py-2.5 text-[13px] font-bold text-white shadow-[0px_4px_16px_rgba(7,193,233,0.35)] transition hover:brightness-95 sm:px-5"
-        >
-          <UploadIcon className="h-4 w-4 sm:hidden" />
+          >
+            <UploadIcon className="h-4 w-4 sm:hidden" />
           <span className="hidden sm:inline">Upload Documents</span>
-        </button>
+          </button>
+        )}
       </div>
 
       <div className="flex flex-col gap-4">

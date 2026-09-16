@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import DocumentUploadList from "@/components/claim-details/panels/DocumentUploadList";
 import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
-import type { ApiPagedResponse } from "@/content/companyDetails";
+import { DocumentSetEnum } from "@/lib/constants";
+import type { ApiDocumentSet, ApiPagedResponse } from "@/content/companyDetails";
+import type { ApiClaim } from "@/content/claims";
 import {
   mapApiEarnings,
   mapEarningsDocuments,
@@ -19,36 +22,79 @@ const tabs = ["Earnings", "Employee Earnings Documents"] as const;
 type EarningsTab = (typeof tabs)[number];
 
 export default function EarningsPanel({ claimId }: { claimId: string }) {
-  const { token } = useCompanyProfile();
+  const { token, rolePlayerId } = useCompanyProfile();
+  const searchParams = useSearchParams();
+  const ref = searchParams.get("ref");
   const [earnings, setEarnings] = useState<ClaimEarningsRecord[]>([]);
   const [documents, setDocuments] = useState<ClaimUploadDocument[]>([]);
+  const [personEventId, setPersonEventId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<EarningsTab>(tabs[0]);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !ref) return;
 
     let cancelled = false;
     setIsLoading(true);
 
     async function loadEarnings() {
       try {
-        const [earningsResponse, documentsResponse] = await Promise.all([
-          apiService.get<ApiEarningsRecord[]>(`/employer/earnings/${claimId}`, {
-            token: token ?? undefined,
-          }),
-          apiService.get<ApiPagedResponse<ApiClaimDocument>>(
-            `/employer/documents`,
-            {
-              token: token ?? undefined,
-              params: { keyName: "claimId", keyValue: claimId },
-            },
-          ),
-        ]);
+        const claim = await apiService.get<ApiClaim>(`/employer/claim/${ref}`, {
+          token: token ?? undefined,
+          params: { rolePlayerId },
+        });
+
+        const [earningsResult, documentsResult, documentTypesResult] =
+          await Promise.allSettled([
+            apiService.get<ApiEarningsRecord[]>(
+              `/employer/earnings/${claim.personEventId}`,
+              {
+                token: token ?? undefined,
+              },
+            ),
+            apiService.get<ApiPagedResponse<ApiClaimDocument>>(
+              `/employer/documents`,
+              {
+                token: token ?? undefined,
+                params: { keyName: "claimId", keyValue: claimId },
+              },
+            ),
+            apiService.get<ApiDocumentSet[]>(
+              `/employer/documentTypes/${DocumentSetEnum.EmployeeEarningsDocuments}`,
+              { token: token ?? undefined },
+            ),
+          ]);
+
+        if (earningsResult.status === "rejected") {
+          console.error("Failed to load earnings records:", earningsResult.reason);
+        }
+        if (documentsResult.status === "rejected") {
+          console.error("Failed to load earnings documents:", documentsResult.reason);
+        }
+        if (documentTypesResult.status === "rejected") {
+          console.error(
+            "Failed to load earnings document types:",
+            documentTypesResult.reason,
+          );
+        }
 
         if (!cancelled) {
-          setEarnings(mapApiEarnings(earningsResponse));
-          setDocuments(mapEarningsDocuments(documentsResponse.data));
+          setPersonEventId(claim.personEventId);
+          setEarnings(
+            earningsResult.status === "fulfilled"
+              ? mapApiEarnings(earningsResult.value)
+              : [],
+          );
+          setDocuments(
+            mapEarningsDocuments(
+              documentsResult.status === "fulfilled"
+                ? documentsResult.value.data
+                : [],
+              documentTypesResult.status === "fulfilled"
+                ? documentTypesResult.value
+                : [],
+            ),
+          );
         }
       } catch (error) {
         console.error("Failed to load earnings:", error);
@@ -61,7 +107,7 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [claimId, token]);
+  }, [claimId, ref, rolePlayerId, token]);
 
   if (isLoading) {
     return <PanelSkeleton />;
@@ -107,7 +153,10 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
                 {record.map((group, groupIndex) => (
                   <div key={group[0].label}>
                     {groupIndex > 0 && (
-                      <span className="my-3 block h-px w-full bg-black/5" aria-hidden />
+                      <span
+                        className="my-3 block h-px w-full bg-black/5"
+                        aria-hidden
+                      />
                     )}
 
                     <div className="flex flex-col gap-4">
@@ -132,7 +181,11 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
           </div>
         </div>
       ) : (
-        <DocumentUploadList title={activeTab} documents={documents} claimId={claimId} />
+        <DocumentUploadList
+          title={activeTab}
+          documents={documents}
+          personEventId={personEventId != null ? String(personEventId) : ""}
+        />
       )}
     </div>
   );

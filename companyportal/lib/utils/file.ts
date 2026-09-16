@@ -1,11 +1,8 @@
-/** Reads a File as a base64 string (no `data:...;base64,` prefix). */
+/** Reads a File as a base64 data URL (including the `data:...;base64,` prefix). */
 export function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result.slice(result.indexOf(",") + 1));
-    };
+    reader.onload = () => resolve(reader.result as string);
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });

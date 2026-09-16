@@ -1,14 +1,3 @@
-export enum EmployeeEarningDocumentsEnum {
-  StatementOfEarnings = 3604,
-  CurrentEarnings = 3681,
-  Section51 = 3682,
-  Section51ConfirmationLetter = 3683,
-  RMAFormulaSheet = 3684,
-  Payslips = 3685,
-  ContractOfEmployment = 3686,
-  TPE = 3687,
-}
-
 export enum ClaimMedicalReportsEnum {
   FirstMedicalReport = 154,
   ProgressMedicalReport = 157,

@@ -29,6 +29,7 @@ export interface ApiClaim {
   isTTDClaim: boolean;
   isPDClaim: boolean;
   disabilityPercentage: number;
+  personEventId: number;
 }
 
 export interface ApiClaimsResponse {
