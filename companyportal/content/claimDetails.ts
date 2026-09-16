@@ -2,8 +2,8 @@ import {
   ClaimRequirementsDocumentsEnum,
   DocumentStatusEnum,
   DocumentSystemNameEnum,
-  EmployeeEarningDocumentsEnum,
 } from "@/lib/constants";
+import type { ApiDocumentSet } from "@/content/companyDetails";
 
 export type ClaimSection =
   | "Claimant & Injury Details"
@@ -355,6 +355,7 @@ export function mapApiMedicalReportDetail(
 
 export type ClaimUploadDocument = {
   documentId?: number;
+  docTypeId?: number;
   name: string;
   fileName?: string;
   uploadedAt?: string;
@@ -475,32 +476,14 @@ export function mapApiDocuments(
   };
 }
 
-/** Display label for each Employee Earnings Documents upload slot. */
-const EARNINGS_DOCUMENT_LABELS: Record<EmployeeEarningDocumentsEnum, string> = {
-  [EmployeeEarningDocumentsEnum.StatementOfEarnings]: "Statement Of Earnings",
-  [EmployeeEarningDocumentsEnum.CurrentEarnings]: "Current Earnings",
-  [EmployeeEarningDocumentsEnum.Section51]: "Section51",
-  [EmployeeEarningDocumentsEnum.Section51ConfirmationLetter]:
-    "Section51 Confirmation Letter",
-  [EmployeeEarningDocumentsEnum.RMAFormulaSheet]: "RMA Formula Sheet",
-  [EmployeeEarningDocumentsEnum.Payslips]: "Payslips",
-  [EmployeeEarningDocumentsEnum.ContractOfEmployment]: "Contract Of Employment",
-  [EmployeeEarningDocumentsEnum.TPE]: "TPE",
-};
-
-/** Fixed set of upload slots always shown on the Employee Earnings Documents tab. */
-const EARNINGS_DOCUMENT_NAMES = Object.values(EmployeeEarningDocumentsEnum)
-  .filter(
-    (value): value is EmployeeEarningDocumentsEnum => typeof value === "number",
-  )
-  .map((value) => EARNINGS_DOCUMENT_LABELS[value]);
-
 /**
- * Builds the Employee Earnings Documents slots: always the fixed names
- * above, with already-uploaded files (matched by formatted label) filled in.
+ * Builds the Employee Earnings Documents slots from the document types
+ * returned by /employer/documentTypes/{EmployeeEarningsDocuments}, with
+ * already-uploaded files (matched by formatted label) filled in.
  */
 export function mapEarningsDocuments(
   response: ApiClaimDocument[],
+  documentTypes: ApiDocumentSet[],
 ): ClaimUploadDocument[] {
   const uploaded = new Map(
     response
@@ -508,16 +491,17 @@ export function mapEarningsDocuments(
       .map((doc) => [formatDocumentLabel(doc.documentType), doc] as const),
   );
 
-  return EARNINGS_DOCUMENT_NAMES.map((name) => {
-    const doc = uploaded.get(name);
+  return documentTypes.map((type) => {
+    const doc = uploaded.get(type.name);
     return doc
       ? {
-          name,
+          name: type.name,
+          docTypeId: type.id,
           documentId: doc.documentId,
           fileName: doc.fileName,
           uploadedAt: formatDocumentTimestamp(doc.uploadedDate),
         }
-      : { name };
+      : { name: type.name, docTypeId: type.id };
   });
 }
 
@@ -539,23 +523,21 @@ function invertLabels<T extends number>(
   );
 }
 
-const EARNINGS_DOC_TYPE_ID_BY_NAME = invertLabels(EARNINGS_DOCUMENT_LABELS);
 const REQUIREMENTS_DOC_TYPE_ID_BY_NAME = invertLabels(
   REQUIREMENTS_DOCUMENT_LABELS,
 );
 
 /**
  * Resolves the docTypeId to send to /employer/{rolePlayerId}/saveDocuments
- * for a given DocumentUploadList slot, based on its panel title and the
- * document name selected in the upload modal.
+ * for a Claim Requirements DocumentUploadList slot, based on the document
+ * name selected in the upload modal. Employee Earnings Documents slots carry
+ * their docTypeId directly (see mapEarningsDocuments) since it comes from
+ * /employer/documentTypes/{EmployeeEarningsDocuments}.
  */
 export function getUploadDocTypeId(
   title: string,
   documentName: string,
 ): number | undefined {
-  if (title === "Employee Earnings Documents") {
-    return EARNINGS_DOC_TYPE_ID_BY_NAME[documentName];
-  }
   if (title === "Claim Requirements") {
     return REQUIREMENTS_DOC_TYPE_ID_BY_NAME[documentName];
   }
@@ -577,7 +559,7 @@ export type ApiSaveDocumentRequest = {
   fileAsBase64: string;
   keys: Record<string, string>;
   documentTypeName?: string;
-  documentSet: string;
+  documentSet: number;
   createdBy?: string;
   createdDate?: string | null;
   mimeType?: string;

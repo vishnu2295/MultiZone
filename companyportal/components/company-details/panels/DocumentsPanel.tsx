@@ -206,15 +206,14 @@ export default function DocumentsPanel() {
           const fileAsBase64 = await fileToBase64(file);
           const payload: ApiSaveDocumentRequest = {
             docTypeId: documentType.id,
-            fileExtension: file.name.split(".").pop() ?? "",
+            fileExtension: `application/${file.name.split(".").pop() ?? ""}`,
             fileName: file.name,
             keys: { RolePlayerId: String(rolePlayerId) },
             documentStatus: DocumentStatusEnum.Received,
-            documentSet: DocumentSetEnum[documentSet],
+            documentSet,
             isMemberVisible: true,
-            documentDescription: "",
-            systemName:
-              DocumentSystemNameEnum[DocumentSystemNameEnum.RolePlayerDocuments],
+            documentDescription: file.name,
+            systemName: "MemberManager",
             fileAsBase64,
           };
 
