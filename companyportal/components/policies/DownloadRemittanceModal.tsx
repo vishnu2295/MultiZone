@@ -43,6 +43,23 @@ function addDays(date: Date, days: number): Date {
   return result;
 }
 
+// Local-calendar (no UTC conversion) parse/format for a "yyyy-mm-dd" <input
+// type="date"> value - toIsoDate() above goes through toISOString(), which
+// shifts the date across midnight in any timezone ahead of UTC (e.g. SAST).
+// That's fine for the preset math above (same-day precision doesn't matter
+// there), but the day-after-start-date comparison below needs to be exact.
+function parseIsoDateLocal(value: string): Date {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function formatIsoDateLocal(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 /** Computes the {fromDate, toDate} pair (yyyy-mm-dd) for a preset label. */
 function computeDateRange(preset: string): {
   fromDate: string;
@@ -148,8 +165,27 @@ export default function DownloadRemittanceModal({
     setToDate(range.toDate);
   };
 
+  // End Date must be strictly after Start Date - if moving Start Date
+  // forward leaves the current End Date no longer valid, clear it so an
+  // invalid pair can't linger.
+  const handleFromDateChange = (value: string) => {
+    setFromDate(value);
+    if (toDate && value && toDate <= value) {
+      setToDate("");
+    }
+  };
+
+  // "yyyy-mm-dd" strings compare correctly with plain string operators.
+  const minEndDate = fromDate
+    ? formatIsoDateLocal(addDays(parseIsoDateLocal(fromDate), 1))
+    : undefined;
+  const isDateRangeValid = !fromDate || !toDate || toDate > fromDate;
+
   const isFormValid =
-    Boolean(fromDate) && Boolean(toDate) && Boolean(paymentType);
+    Boolean(fromDate) &&
+    Boolean(toDate) &&
+    Boolean(paymentType) &&
+    isDateRangeValid;
 
   const handleDownloadClick = async () => {
     setIsDownloading(true);
@@ -207,7 +243,7 @@ export default function DownloadRemittanceModal({
               <input
                 type="date"
                 value={fromDate}
-                onChange={(event) => setFromDate(event.target.value)}
+                onChange={(event) => handleFromDateChange(event.target.value)}
                 required
                 className="w-full rounded-lg border border-black/10 px-4 py-2.5 text-[13.5px] font-medium text-[#13537B] outline-none focus:border-[#07C1E9] [color-scheme:light]"
               />
@@ -218,9 +254,15 @@ export default function DownloadRemittanceModal({
                 type="date"
                 value={toDate}
                 onChange={(event) => setToDate(event.target.value)}
+                min={minEndDate}
                 required
                 className="w-full rounded-lg border border-black/10 px-4 py-2.5 text-[13.5px] font-medium text-[#13537B] outline-none focus:border-[#07C1E9] [color-scheme:light]"
               />
+              {!isDateRangeValid && (
+                <p className="text-[11px] font-medium text-[#E77B7B]">
+                  End Date must be later than Start Date.
+                </p>
+              )}
             </Field>
           </div>
         </div>
