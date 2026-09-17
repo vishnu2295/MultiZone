@@ -20,6 +20,45 @@ function withAuthCookies(response: NextResponse, authResponse: NextResponse) {
   return response;
 }
 
+// Paths next.config.ts rewrites to ClientConnectFrontEnd (BROKER_DOMAIN). Its
+// auth handler builds redirect_uri/returnTo from x-forwarded-host and
+// x-forwarded-proto, so whatever we forward is where Auth0 sends the user
+// back to after login.
+const CCFE_PATHS = ["/broker", "/api"];
+
+function isCcfePath(pathname: string): boolean {
+  return CCFE_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
+}
+
+// Behind CloudFront -> ALB the Host header this server receives is the ALB's
+// DNS name and x-forwarded-proto is "http" (the ALB listener is plain http).
+// Next's external-rewrite proxy then forwards x-forwarded-host = that Host,
+// so CCFE bounced users to the ALB URL after login. Override both from
+// APP_BASE_URL - the one place that knows the public origin - before the
+// rewrite runs. Only applies to a pass-through (NextResponse.next) response;
+// anything else auth0.middleware returned is left untouched.
+function withPublicOrigin(request: NextRequest, authResponse: NextResponse) {
+  if (authResponse.headers.get("x-middleware-next") !== "1") {
+    return authResponse;
+  }
+  let publicUrl: URL;
+  try {
+    publicUrl = new URL(process.env.APP_BASE_URL ?? "");
+  } catch {
+    return authResponse;
+  }
+  const headers = new Headers(request.headers);
+  headers.set("host", publicUrl.host);
+  headers.set("x-forwarded-host", publicUrl.host);
+  headers.set("x-forwarded-proto", publicUrl.protocol.replace(/:$/, ""));
+  return withAuthCookies(
+    NextResponse.next({ request: { headers } }),
+    authResponse,
+  );
+}
+
 // Next.js 16 renamed `middleware` to `proxy`. This mounts the Auth0 routes
 // (/auth/login, /auth/logout, /auth/callback, /auth/profile, /auth/access-token)
 // and keeps the rolling session cookie fresh on every request.
@@ -33,7 +72,9 @@ export async function proxy(request: NextRequest) {
 
   const matchedZone = matchZone(pathname);
   if (pathname !== "/" && !matchedZone) {
-    return authResponse;
+    return isCcfePath(pathname)
+      ? withPublicOrigin(request, authResponse)
+      : authResponse;
   }
 
   const session = await auth0.getSession(request);
