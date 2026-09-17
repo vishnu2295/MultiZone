@@ -30,6 +30,7 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
   const [personEventId, setPersonEventId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<EarningsTab>(tabs[0]);
+  const [claimStatus, setClaimStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token || !ref) return;
@@ -80,6 +81,7 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
 
         if (!cancelled) {
           setPersonEventId(claim.personEventId);
+          setClaimStatus(claim.claimStatus);
           setEarnings(
             earningsResult.status === "fulfilled"
               ? mapApiEarnings(earningsResult.value)
@@ -185,6 +187,7 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
           title={activeTab}
           documents={documents}
           personEventId={personEventId != null ? String(personEventId) : ""}
+          showUploadButton={claimStatus !== "ClaimClosed"}
         />
       )}
     </div>
