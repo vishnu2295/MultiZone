@@ -73,49 +73,49 @@ export const auth0 = new Auth0Client({
 
     let accessToken = session?.tokenSet.accessToken;
     const refreshToken = session?.tokenSet.refreshToken;
-    const profileStatus = accessToken
-      ? (decodeAccessTokenClaims(accessToken)[PROFILE_STATUS_CLAIM] as
-          | string
-          | undefined)
-      : undefined;
-    console.log("Profile Status:", profileStatus);
+    // const profileStatus = accessToken
+    //   ? (decodeAccessTokenClaims(accessToken)[PROFILE_STATUS_CLAIM] as
+    //       | string
+    //       | undefined)
+    //   : undefined;
+    // console.log("Profile Status:", profileStatus);
     // Missing claim (undefined) is treated the same as "not linked yet" -
     // register whenever profileStatus isn't explicitly "Linked".
-    const needsRegistration = !profileStatus || profileStatus !== "Linked";
-    if (accessToken && refreshToken && needsRegistration) {
-      console.log("Calling registration API:", REGISTRATION_URL);
-      try {
-        const registrationResponse = await apiService.post<{
-          access_token: string;
-        }>(
-          REGISTRATION_URL,
-          { accessToken, refreshToken, SourceChannel: "ClientPortal" },
-          { skipAuth: true },
-        );
-        console.log("Registration API response:", registrationResponse);
+    // const needsRegistration = !profileStatus || profileStatus !== "Linked";
+    // if (accessToken && refreshToken && needsRegistration) {
+    //   console.log("Calling registration API:", REGISTRATION_URL);
+    //   try {
+    //     const registrationResponse = await apiService.post<{
+    //       access_token: string;
+    //     }>(
+    //       REGISTRATION_URL,
+    //       { accessToken, refreshToken, SourceChannel: "ClientPortal" },
+    //       { skipAuth: true },
+    //     );
+    //     console.log("Registration API response:", registrationResponse);
 
-        // The registration API issues its own access token - use it for all
-        // further API calls in place of Auth0's, by overwriting it on the
-        // session before it's persisted. auth0.getAccessToken() and
-        // serverApiService read from this session going forward.
-        if (registrationResponse.access_token && session) {
-          session.tokenSet.accessToken = registrationResponse.access_token;
-          accessToken = registrationResponse.access_token;
-        }
-      } catch (registrationError) {
-        console.error(
-          "Registration API call failed during login callback",
-          registrationError,
-        );
-        return NextResponse.redirect(`${baseUrl}/auth/login`);
-      }
-    } else {
-      console.log("Registration API not called. Conditions:", {
-        hasAccessToken: !!accessToken,
-        hasRefreshToken: !!refreshToken,
-        needsRegistration,
-      });
-    }
+    //     // The registration API issues its own access token - use it for all
+    //     // further API calls in place of Auth0's, by overwriting it on the
+    //     // session before it's persisted. auth0.getAccessToken() and
+    //     // serverApiService read from this session going forward.
+    //     if (registrationResponse.access_token && session) {
+    //       session.tokenSet.accessToken = registrationResponse.access_token;
+    //       accessToken = registrationResponse.access_token;
+    //     }
+    //   } catch (registrationError) {
+    //     console.error(
+    //       "Registration API call failed during login callback",
+    //       registrationError,
+    //     );
+    //     return NextResponse.redirect(`${baseUrl}/auth/login`);
+    //   }
+    // } else {
+    //   console.log("Registration API not called. Conditions:", {
+    //     hasAccessToken: !!accessToken,
+    //     hasRefreshToken: !!refreshToken,
+    //     needsRegistration,
+    //   });
+    // }
     const returnTo = getRoleHomePath(accessToken) ?? ctx.returnTo ?? "/";
 
     return NextResponse.redirect(`${baseUrl}${returnTo}`);
