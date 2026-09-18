@@ -11,14 +11,10 @@ export const siteContent = {
   heroTitleAccent: "Client Portal",
   heroDescription:
     "Everything you need to manage your insurance -claims, policies, documents, benefits, and more, all in one secure place.",
-  loginButton: "Login / Register",
   // Broker is rewritten to the external broker portal (see next.config.ts).
-  // The rest go through the Auth0 login flow mounted at /auth/login.
-  loginOptions: [
-    { label: "Broker", href: "/broker" },
-    { label: "Employee", href: "/auth/login?ext-persona=Employee" },
-    { label: "Employer", href: "/auth/login?ext-persona=Employer" },
-  ],
+  // Employee/Employer go through the custom Cognito login/registration flow,
+  // opened from the navbar's Login / Sign Up controls via AuthModal
+  // (see lib/personas.ts).
 };
 
 export const homeContent = {
