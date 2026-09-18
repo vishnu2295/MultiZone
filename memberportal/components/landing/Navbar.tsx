@@ -5,12 +5,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@auth0/nextjs-auth0";
 import Button from "@/components/ui/Button";
-import LoginMenu from "@/components/ui/LoginMenu";
+import AuthModal from "@/components/auth/AuthModal";
 import { siteContent } from "@/content/site";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
   const { user } = useUser();
+
+  function openAuth(mode: "login" | "signup") {
+    setAuthMode(mode);
+    setAuthOpen(true);
+  }
 
   const authControl = user ? (
     <Button
@@ -21,11 +28,22 @@ export default function Navbar() {
       Logout
     </Button>
   ) : (
-    <LoginMenu
-      label={siteContent.loginButton}
-      options={siteContent.loginOptions}
-      className="h-8 min-w-[100px] px-4 text-[12px] font-semibold"
-    />
+    <div className="flex items-center gap-4">
+      <button
+        type="button"
+        onClick={() => openAuth("login")}
+        className="text-[12px] cursor-pointer font-semibold text-[#13537B] underline underline-offset-2 hover:opacity-80"
+      >
+        Login
+      </button>
+      <Button
+        type="button"
+        onClick={() => openAuth("signup")}
+        className="h-8 min-w-32.5 px-4 cursor-pointer text-[12px] font-semibold"
+      >
+        New Here? Sign Up
+      </Button>
+    </div>
   );
 
   return (
@@ -137,6 +155,12 @@ export default function Navbar() {
           </aside>
         </>
       ) : null}
+
+      <AuthModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        initialMode={authMode}
+      />
     </header>
   );
 }
