@@ -111,7 +111,7 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
     async function loadPayments() {
       try {
         const response = await apiService.get<ApiClaimPayment[]>(
-          `/employer/paymentDetails/${claimId}`,
+          `/employer/${rolePlayerId}/paymentDetails/${claimId}`,
           { token: token ?? undefined },
         );
         if (!cancelled) setPayments(mapApiClaimPayments(response));

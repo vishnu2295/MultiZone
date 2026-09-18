@@ -11,7 +11,7 @@ import {
 } from "@/content/claimDetails";
 
 export default function FieldGroupsPanel({ claimId }: { claimId: string }) {
-  const { token } = useCompanyProfile();
+  const { token , rolePlayerId } = useCompanyProfile();
   const [groups, setGroups] = useState<ClaimFieldGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -24,7 +24,7 @@ export default function FieldGroupsPanel({ claimId }: { claimId: string }) {
     async function loadEmployment() {
       try {
         const response = await apiService.get<ApiEmploymentDetails[]>(
-          `/employer/employment/${claimId}`,
+          `/employer/${rolePlayerId}/employment/${claimId}`,
           { token: token ?? undefined },
         );
         if (!cancelled) setGroups(mapApiEmploymentDetails(response));

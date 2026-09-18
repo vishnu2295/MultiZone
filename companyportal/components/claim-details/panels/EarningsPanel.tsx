@@ -28,6 +28,7 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
   const [earnings, setEarnings] = useState<ClaimEarningsRecord[]>([]);
   const [documents, setDocuments] = useState<ClaimUploadDocument[]>([]);
   const [personEventId, setPersonEventId] = useState<number | null>(null);
+  const [claimStatus, setClaimStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<EarningsTab>(tabs[0]);
 
@@ -47,7 +48,7 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
         const [earningsResult, documentsResult, documentTypesResult] =
           await Promise.allSettled([
             apiService.get<ApiEarningsRecord[]>(
-              `/employer/earnings/${claim.personEventId}`,
+              `/employer/${rolePlayerId}/earnings/${claim.personEventId}`,
               {
                 token: token ?? undefined,
               },
@@ -80,6 +81,7 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
 
         if (!cancelled) {
           setPersonEventId(claim.personEventId);
+          setClaimStatus(claim.claimStatus);
           setEarnings(
             earningsResult.status === "fulfilled"
               ? mapApiEarnings(earningsResult.value)
@@ -185,6 +187,7 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
           title={activeTab}
           documents={documents}
           personEventId={personEventId != null ? String(personEventId) : ""}
+          showUploadButton={claimStatus !== "ClaimClosed"}
         />
       )}
     </div>

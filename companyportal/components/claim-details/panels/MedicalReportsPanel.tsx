@@ -198,7 +198,7 @@ function ReportDetailsDrawer({
 }
 
 export default function MedicalReportsPanel({ claimId }: { claimId: string }) {
-  const { token } = useCompanyProfile();
+  const { token, rolePlayerId ,} = useCompanyProfile();
   const [reports, setReports] = useState<ClaimMedicalReports>(EMPTY_MEDICAL_REPORTS);
   const [documents, setDocuments] = useState<ClaimMedicalDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -220,7 +220,7 @@ export default function MedicalReportsPanel({ claimId }: { claimId: string }) {
             },
           ),
           apiService.get<ApiMedicalReportsResponse>(
-            `/employer/medicalRecords/${claimId}`,
+            `/employer/${rolePlayerId}/medicalRecords/${claimId}`,
             { token: token ?? undefined },
           ),
         ]);
