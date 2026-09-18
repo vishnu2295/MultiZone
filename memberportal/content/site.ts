@@ -11,7 +11,6 @@ export const siteContent = {
   heroTitleAccent: "Client Portal",
   heroDescription:
     "Everything you need to manage your insurance -claims, policies, documents, benefits, and more, all in one secure place.",
-  loginButton: "Login / Register",
   // Broker is rewritten to the external broker portal (see next.config.ts).
   // The rest go through the Auth0 login flow mounted at /auth/login.
   loginOptions: [
