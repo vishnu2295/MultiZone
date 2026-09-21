@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { homeContent, profileMenu } from "@/content/site";
 import { ChevronDownIcon, LogoutIcon } from "@/components/home/icons";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
@@ -148,14 +147,19 @@ export default function ProfileMenuCard({
         aria-hidden
       />
 
-      <Link
+      {/* Plain <a>, not next/link: Link prefetches its href as soon as it
+          mounts in the viewport, which for an Auth0 route with side effects
+          (session teardown + IdP redirect) fires the logout as a background
+          fetch the instant this menu opens - see Button.tsx's `external`
+          prop in memberportal for the same fix applied there. */}
+      <a
         href={profileMenu.logoutHref}
         onClick={onLogout}
         className="flex items-center gap-3 rounded-lg px-1 py-1 text-[15px] font-medium text-[#D9534F] transition hover:opacity-80 sm:text-[17px]"
       >
         <LogoutIcon className="h-5 w-5 sm:h-6 sm:w-6" />
         {profileMenu.logoutLabel}
-      </Link>
+      </a>
     </div>
   );
 }
