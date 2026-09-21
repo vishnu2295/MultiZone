@@ -62,7 +62,7 @@ export default function DocumentsPanel() {
       try {
         const response = await apiService.get<
           ApiPagedResponse<ApiEmployerDocument>
-        >(`/employer/documents`, {
+        >(`/employer/${rolePlayerId}/documents`, {
           token: token ?? undefined,
           params: {
             keyName: "RolePlayerId",

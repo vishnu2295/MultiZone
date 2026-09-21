@@ -115,7 +115,7 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
     try {
       const response = await apiService.get<
         ApiPagedResponse<ApiEmployerDocument>
-      >(`/employer/documents`, {
+      >(`/employer/${rolePlayerId}/documents`, {
         token: token ?? undefined,
         params: {
           keyName: "PolicyId",

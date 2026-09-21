@@ -114,7 +114,7 @@ export default function ProfileMenuCard({
             {isSwitcherOpen && (
               <div
                 role="listbox"
-                className="absolute left-0 right-0 top-[calc(100%+6px)] z-10 overflow-hidden rounded-lg border border-black/8 bg-white shadow-[0_8px_24px_rgba(17,37,45,0.15)]"
+                className="absolute left-0 right-0 top-[calc(100%+6px)] z-10 max-h-60 overflow-y-auto rounded-lg border border-black/8 bg-white shadow-[0_8px_24px_rgba(17,37,45,0.15)]"
               >
                 {employerProfiles.map((employer) => {
                   const isSelected =

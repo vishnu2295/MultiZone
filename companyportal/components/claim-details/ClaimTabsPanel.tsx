@@ -50,7 +50,7 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
       try {
         const response = await apiService.get<
           ApiPagedResponse<ApiClaimDocument>
-        >(`/employer/documents`, {
+        >(`/employer/${rolePlayerId}/documents`, {
           token: token ?? undefined,
           params: { keyName: "claimId", keyValue: claimId },
         });

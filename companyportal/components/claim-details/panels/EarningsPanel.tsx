@@ -54,7 +54,7 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
               },
             ),
             apiService.get<ApiPagedResponse<ApiClaimDocument>>(
-              `/employer/documents`,
+              `/employer/${rolePlayerId}/documents`,
               {
                 token: token ?? undefined,
                 params: { keyName: "claimId", keyValue: claimId },

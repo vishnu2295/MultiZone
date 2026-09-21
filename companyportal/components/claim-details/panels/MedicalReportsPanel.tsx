@@ -213,7 +213,7 @@ export default function MedicalReportsPanel({ claimId }: { claimId: string }) {
       try {
         const [documentsResponse, medicalReportsResponse] = await Promise.all([
           apiService.get<ApiPagedResponse<ApiClaimDocument>>(
-            `/employer/documents`,
+            `/employer/${rolePlayerId}/documents`,
             {
               token: token ?? undefined,
               params: { keyName: "claimId", keyValue: claimId },
