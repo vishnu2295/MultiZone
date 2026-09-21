@@ -126,13 +126,17 @@ export default function HomeNavbar() {
               )}
             </div>
           ) : (
-            <Link
+            // Plain <a>, not next/link: when isAuthenticated this points at
+            // /auth/logout, an Auth0 route with side effects. A Link mounted
+            // in the viewport gets prefetched immediately, which fires the
+            // logout as a background fetch before the user clicks anything.
+            <a
               href={authHref}
               className="flex items-center gap-1 text-[14px] font-normal leading-[17px] text-[#F3F7FA] opacity-90 transition hover:opacity-100"
             >
               {authLabel}
               {!isAuthenticated && <ChevronDownIcon className="h-4 w-4" />}
-            </Link>
+            </a>
           )}
         </nav>
 
@@ -219,14 +223,15 @@ export default function HomeNavbar() {
               )}
             </div>
           ) : (
-            <Link
+            // Plain <a>, not next/link - see the desktop fallback above.
+            <a
               href={authHref}
               onClick={() => setIsMenuOpen(false)}
               className="flex items-center gap-1 text-[15px] font-normal text-white/90 transition hover:text-white"
             >
               {authLabel}
               {!isAuthenticated && <ChevronDownIcon className="h-4 w-4" />}
-            </Link>
+            </a>
           )}
         </nav>
       </aside>
