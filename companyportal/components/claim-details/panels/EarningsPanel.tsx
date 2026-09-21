@@ -31,7 +31,6 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<EarningsTab>(tabs[0]);
-  const [claimStatus, setClaimStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token || !ref) return;
