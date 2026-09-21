@@ -13,12 +13,12 @@ import {
 } from "@/content/claimDetails";
 
 export default function RequirementsPanel({ claimId }: { claimId: string }) {
-  const { token } = useCompanyProfile();
+  const { token, rolePlayerId } = useCompanyProfile();
   const [requirements, setRequirements] = useState<ClaimUploadDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !rolePlayerId) return;
 
     let cancelled = false;
     setIsLoading(true);
@@ -27,7 +27,7 @@ export default function RequirementsPanel({ claimId }: { claimId: string }) {
       try {
         const response = await apiService.get<
           ApiPagedResponse<ApiClaimDocument>
-        >(`/employer/documents`, {
+        >(`/employer/${rolePlayerId}/documents`, {
           token: token ?? undefined,
           params: { keyName: "claimId", keyValue: claimId },
         });

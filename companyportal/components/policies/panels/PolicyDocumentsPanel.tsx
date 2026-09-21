@@ -49,7 +49,7 @@ export default function PolicyDocumentsPanel({ policyId }: { policyId: string })
       try {
         const response = await apiService.get<
           ApiPagedResponse<ApiEmployerDocument>
-        >(`/employer/documents`, {
+        >(`/employer/${rolePlayerId}/documents`, {
           token: token ?? undefined,
           params: {
             keyName: "policyId",

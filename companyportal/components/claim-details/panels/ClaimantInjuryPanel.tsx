@@ -270,14 +270,14 @@ export default function ClaimantInjuryPanel({ claimId }: { claimId: string }) {
         const [claimantResponse, injuryResponse, icdCodesResponse] =
           await Promise.all([
             apiService.get<ApiClaimantDetailsResponse>(
-              `/employer/claimant/${claim.claimantId}`,
+              `/employer/${rolePlayerId}/claimant/${claim.claimantId}`,
               { token: token ?? undefined },
             ),
             apiService.get<ApiInjuryDetailsResponse>(
-              `/employer/injury/${claimId}`,
+              `/employer/${rolePlayerId}/injury/${claimId}`,
               { token: token ?? undefined },
             ),
-            apiService.get<ApiIcdCode[]>(`/employer/icd10codes/${claimId}`, {
+            apiService.get<ApiIcdCode[]>(`/employer/${rolePlayerId}/icd10codes/${claimId}`, {
               token: token ?? undefined,
             }),
           ]);

@@ -14,12 +14,12 @@ import {
 } from "@/content/claimDetails";
 
 export default function DocumentsPanel({ claimId }: { claimId: string }) {
-  const { token } = useCompanyProfile();
+  const { token, rolePlayerId } = useCompanyProfile();
   const [documents, setDocuments] = useState<ClaimMedicalDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !rolePlayerId) return;
 
     let cancelled = false;
     setIsLoading(true);
@@ -28,7 +28,7 @@ export default function DocumentsPanel({ claimId }: { claimId: string }) {
       try {
         const response = await apiService.get<
           ApiPagedResponse<ApiClaimDocument>
-        >(`/employer/documents`, {
+        >(`/employer/${rolePlayerId}/documents`, {
           token: token ?? undefined,
           params: {
             keyName: "claimId",
@@ -38,7 +38,9 @@ export default function DocumentsPanel({ claimId }: { claimId: string }) {
           },
         });
         if (!cancelled)
-          setDocuments(mapApiDocuments(response.data).documentGroups[0]?.documents ?? []);
+          setDocuments(
+            mapApiDocuments(response.data).documentGroups[0]?.documents ?? [],
+          );
       } catch (error) {
         console.error("Failed to load documents:", error);
       } finally {

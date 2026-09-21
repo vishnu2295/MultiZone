@@ -130,7 +130,7 @@ export default function BeneficiariesPanel({ claimId }: { claimId: string }) {
         });
 
         const response = await apiService.get<ApiBeneficiary[]>(
-          `/employer/beneficiaries/${claim.claimantId}`,
+          `/employer/${rolePlayerId}/beneficiaries/${claim.claimantId}`,
           { token: token ?? undefined },
         );
         if (!cancelled) setBeneficiaries(mapApiBeneficiaries(response));

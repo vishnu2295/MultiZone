@@ -50,7 +50,7 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
       try {
         const response = await apiService.get<
           ApiPagedResponse<ApiClaimDocument>
-        >(`/employer/documents`, {
+        >(`/employer/${rolePlayerId}/documents`, {
           token: token ?? undefined,
           params: { keyName: "claimId", keyValue: claimId },
         });
@@ -111,7 +111,7 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
     async function loadPayments() {
       try {
         const response = await apiService.get<ApiClaimPayment[]>(
-          `/employer/paymentDetails/${claimId}`,
+          `/employer/${rolePlayerId}/paymentDetails/${claimId}`,
           { token: token ?? undefined },
         );
         if (!cancelled) setPayments(mapApiClaimPayments(response));
