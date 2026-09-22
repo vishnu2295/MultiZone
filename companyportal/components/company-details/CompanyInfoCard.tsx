@@ -70,7 +70,7 @@ export default function CompanyInfoCard() {
 
     async function loadCompanyDetails() {
       try {
-        const [companyDetails, employerDetails] = await Promise.all([
+        const [companyDetailsResult, employerDetailsResult] = await Promise.allSettled([
           apiService.get<ApiCompanyDetails>(`/employer/${rolePlayerId}/companyDetails`, {
             token: token ?? undefined,
           }),
@@ -79,8 +79,32 @@ export default function CompanyInfoCard() {
           }),
         ]);
 
-        if (!cancelled) {
-          setCompany(mapApiCompanyDetails({ ...companyDetails, ...employerDetails }));
+        if (cancelled) return;
+
+        if (companyDetailsResult.status === "rejected") {
+          console.error("Failed to load company details:", companyDetailsResult.reason);
+        }
+        if (employerDetailsResult.status === "rejected") {
+          console.error("Failed to load employer details:", employerDetailsResult.reason);
+        }
+
+        // Merge whichever call(s) succeeded so the card can still render with
+        // partial data ("-" placeholders via checkValueExists) instead of
+        // disappearing entirely when only one of the two endpoints fails.
+        const companyDetails =
+          companyDetailsResult.status === "fulfilled" ? companyDetailsResult.value : {};
+        const employerDetails =
+          employerDetailsResult.status === "fulfilled" ? employerDetailsResult.value : {};
+
+        if (companyDetailsResult.status === "rejected" && employerDetailsResult.status === "rejected") {
+          setCompany(null);
+        } else {
+          setCompany(
+            mapApiCompanyDetails({
+              ...companyDetails,
+              ...employerDetails,
+            } as ApiCompanyDetails & ApiEmployerDetails),
+          );
         }
       } catch (error) {
         console.error("Failed to load company details:", error);

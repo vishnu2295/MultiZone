@@ -267,8 +267,8 @@ export default function ClaimantInjuryPanel({ claimId }: { claimId: string }) {
           params: { rolePlayerId },
         });
 
-        const [claimantResponse, injuryResponse, icdCodesResponse] =
-          await Promise.all([
+        const [claimantResult, injuryResult, icdCodesResult] =
+          await Promise.allSettled([
             apiService.get<ApiClaimantDetailsResponse>(
               `/employer/${rolePlayerId}/claimant/${claim.claimantId}`,
               { token: token ?? undefined },
@@ -282,13 +282,27 @@ export default function ClaimantInjuryPanel({ claimId }: { claimId: string }) {
             }),
           ]);
 
-        if (!cancelled) {
-          setDetails(mapApiClaimantDetails(claimantResponse));
-          setInjuryDetails(mapApiInjuryDetails(injuryResponse));
-          setIcdCodes(mapApiIcdCodes(icdCodesResponse));
+        if (cancelled) return;
+
+        if (claimantResult.status === "fulfilled") {
+          setDetails(mapApiClaimantDetails(claimantResult.value));
+        } else {
+          console.error("Failed to load claimant details:", claimantResult.reason);
+        }
+
+        if (injuryResult.status === "fulfilled") {
+          setInjuryDetails(mapApiInjuryDetails(injuryResult.value));
+        } else {
+          console.error("Failed to load injury details:", injuryResult.reason);
+        }
+
+        if (icdCodesResult.status === "fulfilled") {
+          setIcdCodes(mapApiIcdCodes(icdCodesResult.value));
+        } else {
+          console.error("Failed to load ICD 10 codes:", icdCodesResult.reason);
         }
       } catch (error) {
-        console.error("Failed to load claimant/injury details:", error);
+        console.error("Failed to load claim:", error);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
