@@ -2,6 +2,7 @@ import "@/lib/amplifyConfig";
 import {
   autoSignIn,
   confirmResetPassword,
+  confirmSignIn,
   confirmSignUp,
   fetchAuthSession,
   resetPassword,
@@ -211,6 +212,13 @@ export async function cognitoLogin(input: {
   const { isSignedIn, nextStep } = await signIn({
     username: input.identifier,
     password: input.password,
+  });
+  return { isSignedIn, nextStep };
+}
+
+export async function cognitoConfirmSignInWithSms(otp: string) {
+  const { isSignedIn, nextStep } = await confirmSignIn({
+    challengeResponse: otp,
   });
   return { isSignedIn, nextStep };
 }
