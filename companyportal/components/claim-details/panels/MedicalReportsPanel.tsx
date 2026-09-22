@@ -211,7 +211,7 @@ export default function MedicalReportsPanel({ claimId }: { claimId: string }) {
 
     async function loadMedicalReports() {
       try {
-        const [documentsResponse, medicalReportsResponse] = await Promise.all([
+        const [documentsResult, medicalReportsResult] = await Promise.allSettled([
           apiService.get<ApiPagedResponse<ApiClaimDocument>>(
             `/employer/${rolePlayerId}/documents`,
             {
@@ -225,14 +225,23 @@ export default function MedicalReportsPanel({ claimId }: { claimId: string }) {
           ),
         ]);
 
-        if (!cancelled) {
+        if (cancelled) return;
+
+        if (documentsResult.status === "fulfilled") {
           setDocuments(
-            mapApiDocuments(documentsResponse.data).medicalReportDocuments,
+            mapApiDocuments(documentsResult.value.data).medicalReportDocuments,
           );
-          setReports(mapApiMedicalReports(medicalReportsResponse));
+        } else {
+          console.error("Failed to load documents:", documentsResult.reason);
+        }
+
+        if (medicalReportsResult.status === "fulfilled") {
+          setReports(mapApiMedicalReports(medicalReportsResult.value));
+        } else {
+          console.error("Failed to load medical reports:", medicalReportsResult.reason);
         }
       } catch (error) {
-        console.error("Failed to load medical reports:", error);
+        console.error("Failed to load medical reports panel:", error);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
