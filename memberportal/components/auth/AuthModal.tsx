@@ -21,6 +21,7 @@ import type { PersonaConfig } from "@/lib/personas";
 import { maskEmail } from "@/lib/format";
 import {
   cognitoConfirmForgotPassword,
+  cognitoConfirmSignInWithSms,
   cognitoConfirmSignUp,
   cognitoForgotPassword,
   cognitoLogin,
@@ -39,6 +40,7 @@ type Step =
   | "identifier"
   | "password"
   | "otp"
+  | "sms-otp"
   | "forgot-email"
   | "forgot-otp"
   | "forgot-password";
@@ -60,6 +62,11 @@ export default function AuthModal({
   const [identifier, setIdentifier] = useState<IdentifierResult | null>(null);
   const [resetEmail, setResetEmail] = useState("");
   const [resetOtp, setResetOtp] = useState("");
+  const [pendingLoginCreds, setPendingLoginCreds] = useState<{
+    identifier: string;
+    password: string;
+  } | null>(null);
+  const [smsOtpDestination, setSmsOtpDestination] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loginSuccess, setLoginSuccess] = useState<string | null>(null);
@@ -88,6 +95,8 @@ export default function AuthModal({
       setIdentifier(null);
       setResetEmail("");
       setResetOtp("");
+      setPendingLoginCreds(null);
+      setSmsOtpDestination("");
       setSubmitting(false);
       setError(null);
       setLoginSuccess(null);
@@ -125,13 +134,18 @@ export default function AuthModal({
     setSubmitting(true);
     setError(null);
     try {
-      const { isSignedIn } = await cognitoLogin({
+      const { isSignedIn, nextStep } = await cognitoLogin({
         persona: persona.slug,
         identifier: loginIdentifier,
         password,
       });
       if (isSignedIn) {
         window.location.href = persona.destination;
+      } else if (nextStep.signInStep === "CONFIRM_SIGN_IN_WITH_SMS_CODE") {
+        setPendingLoginCreds({ identifier: loginIdentifier, password });
+        setSmsOtpDestination(nextStep.codeDeliveryDetails?.destination ?? "");
+        setStep("sms-otp");
+        setSubmitting(false);
       } else {
         setError("Additional verification is required to finish logging in.");
         setSubmitting(false);
@@ -144,6 +158,47 @@ export default function AuthModal({
         ),
       );
       setSubmitting(false);
+    }
+  }
+
+  async function handleSmsOtpSubmit(otp: string) {
+    if (!persona) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const { isSignedIn } = await cognitoConfirmSignInWithSms(otp);
+      if (isSignedIn) {
+        window.location.href = persona.destination;
+      } else {
+        setError("Additional verification is required to finish logging in.");
+        setSubmitting(false);
+      }
+    } catch (err) {
+      setError(
+        describeCognitoError(err, "That code didn't work. Please try again."),
+      );
+      setSubmitting(false);
+    }
+  }
+
+  async function handleResendSmsOtp() {
+    if (!persona || !pendingLoginCreds) return;
+    try {
+      const { nextStep } = await cognitoLogin({
+        persona: persona.slug,
+        identifier: pendingLoginCreds.identifier,
+        password: pendingLoginCreds.password,
+      });
+      if (nextStep.signInStep === "CONFIRM_SIGN_IN_WITH_SMS_CODE") {
+        setSmsOtpDestination(nextStep.codeDeliveryDetails?.destination ?? "");
+      }
+    } catch (err) {
+      setError(
+        describeCognitoError(
+          err,
+          "We couldn't resend the code. Please try again.",
+        ),
+      );
     }
   }
 
@@ -290,6 +345,9 @@ export default function AuthModal({
       setStep("identifier");
     } else if (step === "otp") {
       setStep("password");
+    } else if (step === "sms-otp") {
+      setPendingLoginCreds(null);
+      setStep("login");
     } else if (step === "forgot-email") {
       setLoginSuccess(null);
       setStep("login");
@@ -327,6 +385,14 @@ export default function AuthModal({
     otp: {
       title: "OTP Verification",
       subtitle: `Enter the OTP we sent to ${identifier?.email ?? "your email"}.`,
+      divider: true,
+    },
+    "sms-otp": {
+      title: "OTP Verification",
+      subtitle: smsOtpDestination
+        ? `Enter the OTP we sent to ${smsOtpDestination}.`
+        : "Enter the OTP we sent to your registered mobile number.",
+      backLabel: "Back to Login",
       divider: true,
     },
     "forgot-email": {
@@ -410,6 +476,14 @@ export default function AuthModal({
                 identifierValue={identifier?.email ?? ""}
                 submitting={submitting}
                 onSubmit={handleOtpSubmit}
+              />
+            ) : null}
+
+            {step === "sms-otp" ? (
+              <ResetOtpStep
+                submitting={submitting}
+                onSubmit={handleSmsOtpSubmit}
+                onResend={handleResendSmsOtp}
               />
             ) : null}
 
