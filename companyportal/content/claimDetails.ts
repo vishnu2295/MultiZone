@@ -18,7 +18,7 @@ export type ClaimSection =
 export type ClaimTab =
   | "Invoices"
   | "Medical Invoices"
-  | "Authorizations"
+  // | "Authorisations"
   | "Payments";
 
 export type ClaimInvoice = {
@@ -1055,9 +1055,9 @@ export const claimantTabs: readonly ClaimantTab[] = [
 ] as const;
 
 export const claimTabs: readonly ClaimTab[] = [
-  "Invoices",
+  // "Invoices",
   "Medical Invoices",
-  // "Authorizations",
+  // "Authorisations",
   "Payments",
 ] as const;
 

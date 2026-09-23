@@ -85,9 +85,9 @@ export const homeContent = {
     },
     {
       icon: "shield" as const,
-      title: "Medical Authorizations",
+      title: "Medical Authorisations",
       description:
-        "Review your pre-authorizations and track whether each one is pending or authorised.",
+        "Review your pre-authorisations and track whether each one is pending or authorised.",
       href: "/individual/medical-authorizations",
       highlighted: false,
     },

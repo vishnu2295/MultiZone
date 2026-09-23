@@ -9,12 +9,12 @@ export default function HomeGreeting() {
 
   return (
     <section className="relative overflow-hidden pt-[72px]">
-      <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 pb-12 pt-14 sm:px-6 lg:px-14">
+      <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4  pt-14 sm:px-6 lg:px-14">
         <p className="text-[15.8px] leading-[19px] text-[#13537B]">
           {homeContent.greeting}
         </p>
 
-        <h1 className="mt-2 max-w-[500px] text-[clamp(2.2rem,4.5vw,3rem)] font-normal leading-[1.2] text-[#24577A]">
+        <h1 className="mt-2 max-w-[700px] text-[clamp(2.2rem,4.5vw,3rem)] font-bold leading-[1.2] text-[#24577A]">
           {isLoading ? (
             <span
               aria-hidden
