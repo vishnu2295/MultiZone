@@ -34,9 +34,9 @@ export interface ApiPreAuthorizationsResponse {
 export const medicalAuthorizationsContent = {
   backLabel: "Back",
   backHref: "/individual",
-  title: "Medical Authorizations",
+  title: "Medical Authorisations",
   statusLabel: "Status",
-  emptyMessage: "You have no medical authorizations yet.",
+  emptyMessage: "You have no medical authorisations yet.",
 };
 
 /** Tailwind text colour per status, used by the status column on each card. */

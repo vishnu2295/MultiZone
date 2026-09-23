@@ -151,7 +151,7 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
           {activeTab}
         </h2>
 
-        {activeTab === "Invoices" &&
+        {/* {activeTab === "Invoices" &&
           (isLoadingDocuments ? (
             <PanelSkeleton />
           ) : invoiceDocuments.length === 0 ? (
@@ -164,9 +164,9 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
                 <DocumentRow key={document.name} document={document} />
               ))}
             </div>
-          ))}
+          ))} */}
         {activeTab === "Medical Invoices" && <InvoicesPanel invoices={[]} />}
-        {/* {activeTab === "Authorizations" &&
+        {/* {activeTab === "Authorisations" &&
           (isLoadingAuthorizations ? (
             <PanelSkeleton />
           ) : (

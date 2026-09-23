@@ -20,6 +20,35 @@ import {
   type ClaimMedicalReport,
   type ClaimMedicalReports,
 } from "@/content/claimDetails";
+import { DocumentStatusEnum } from "@/lib/constants";
+
+const DOCUMENT_STATUS_STYLES: Record<
+  DocumentStatusEnum,
+  { label: string; className: string }
+> = {
+  [DocumentStatusEnum.Uploaded]: {
+    label: "Uploaded",
+    className: "bg-[#94A3B8]",
+  },
+  [DocumentStatusEnum.Awaiting]: {
+    label: "Awaiting",
+    className: "bg-[#ECB143]", 
+  },
+  [DocumentStatusEnum.Deleted]: { label: "Deleted", className: "bg-[#58585B]" },
+  [DocumentStatusEnum.Waived]: { label: "Waived", className: "bg-[#EF6D21]" },
+  [DocumentStatusEnum.Received]: {
+    label: "Received",
+    className: "bg-[#51B2E0]",
+  },
+  [DocumentStatusEnum.Accepted]: {
+    label: "Accepted",
+    className: "bg-[#10AD5E]",
+  },
+  [DocumentStatusEnum.Rejected]: {
+    label: "Rejected",
+    className: "bg-[##CB1334]",
+  },
+};
 
 const EMPTY_MEDICAL_REPORTS: ClaimMedicalReports = {
   firstMedicalReport: [],
@@ -198,8 +227,10 @@ function ReportDetailsDrawer({
 }
 
 export default function MedicalReportsPanel({ claimId }: { claimId: string }) {
-  const { token, rolePlayerId ,} = useCompanyProfile();
-  const [reports, setReports] = useState<ClaimMedicalReports>(EMPTY_MEDICAL_REPORTS);
+  const { token, rolePlayerId } = useCompanyProfile();
+  const [reports, setReports] = useState<ClaimMedicalReports>(
+    EMPTY_MEDICAL_REPORTS,
+  );
   const [documents, setDocuments] = useState<ClaimMedicalDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -211,19 +242,20 @@ export default function MedicalReportsPanel({ claimId }: { claimId: string }) {
 
     async function loadMedicalReports() {
       try {
-        const [documentsResult, medicalReportsResult] = await Promise.allSettled([
-          apiService.get<ApiPagedResponse<ApiClaimDocument>>(
-            `/employer/${rolePlayerId}/documents`,
-            {
-              token: token ?? undefined,
-              params: { keyName: "claimId", keyValue: claimId },
-            },
-          ),
-          apiService.get<ApiMedicalReportsResponse>(
-            `/employer/${rolePlayerId}/medicalRecords/${claimId}`,
-            { token: token ?? undefined },
-          ),
-        ]);
+        const [documentsResult, medicalReportsResult] =
+          await Promise.allSettled([
+            apiService.get<ApiPagedResponse<ApiClaimDocument>>(
+              `/employer/${rolePlayerId}/documents`,
+              {
+                token: token ?? undefined,
+                params: { keyName: "claimId", keyValue: claimId },
+              },
+            ),
+            apiService.get<ApiMedicalReportsResponse>(
+              `/employer/${rolePlayerId}/medicalRecords/${claimId}`,
+              { token: token ?? undefined },
+            ),
+          ]);
 
         if (cancelled) return;
 
@@ -238,7 +270,10 @@ export default function MedicalReportsPanel({ claimId }: { claimId: string }) {
         if (medicalReportsResult.status === "fulfilled") {
           setReports(mapApiMedicalReports(medicalReportsResult.value));
         } else {
-          console.error("Failed to load medical reports:", medicalReportsResult.reason);
+          console.error(
+            "Failed to load medical reports:",
+            medicalReportsResult.reason,
+          );
         }
       } catch (error) {
         console.error("Failed to load medical reports panel:", error);
@@ -300,50 +335,53 @@ export default function MedicalReportsPanel({ claimId }: { claimId: string }) {
             No {activeTab.label.toLowerCase()} to display.
           </div>
         ) : (
-          activeReports.map((report, index) => (
-            <div
-              key={`${report.healthcareProviderName}-${index}`}
-              className="flex flex-col gap-3 rounded-xl bg-white px-4 py-3.5 shadow-[0px_2px_16px_rgba(218,218,218,0.08)] sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex flex-col">
-                <span className="text-[13.5px] font-semibold leading-[22px] text-[#13537B]">
-                  {report.healthcareProviderName}
-                </span>
+          activeReports.map((report, index) => {
+            const statusStyle =
+              DOCUMENT_STATUS_STYLES[
+                Number(report.status) as DocumentStatusEnum
+              ];
 
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] leading-[18px] text-[#64748B]">
-                  <span>
-                    HCP Number
-                    <span className="">
-                      {" "}
-                      : {report.practiceNumber}
-                    </span>
+            return (
+              <div
+                key={`${report.healthcareProviderName}-${index}`}
+                className="flex flex-col gap-3 rounded-xl bg-white px-4 py-3.5 shadow-[0px_2px_16px_rgba(218,218,218,0.08)] sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex flex-col">
+                  <span className="text-[13.5px] font-semibold leading-[22px] text-[#13537B]">
+                    {report.healthcareProviderName}
                   </span>
-                  <span>
-                    Consultation Date
-                    <span className="">
-                      {" "}
-                      : {report.consultationDate}
+
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] leading-[18px] text-[#64748B]">
+                    <span>
+                      HCP Number
+                      <span className=""> : {report.practiceNumber}</span>
                     </span>
-                  </span>
+                    <span>
+                      Consultation Date
+                      <span className=""> : {report.consultationDate}</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2.5">
+                  {statusStyle && (
+                    <span
+                      className={`rounded-full ${statusStyle.className} px-3 py-1 text-[12px] font-bold italic leading-[15px] text-white`}
+                    >
+                      {statusStyle.label}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setViewingReport(report)}
+                    className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md border-[0.625px] border-[rgba(7,193,233,0.12)] bg-[#F0FAFE] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#E4F5FC]"
+                  >
+                    View Details
+                  </button>
                 </div>
               </div>
-
-              <div className="flex shrink-0 items-center gap-2.5">
-                {report.status && (
-                  <span className="rounded-full bg-[#51B2E0] px-3 py-1 text-[12px] font-bold italic leading-[15px] text-white">
-                    {report.status}
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setViewingReport(report)}
-                  className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md border-[0.625px] border-[rgba(7,193,233,0.12)] bg-[#F0FAFE] px-5 py-2.5 text-[12.5px] font-semibold leading-[19px] text-[#13537B] transition hover:bg-[#E4F5FC]"
-                >
-                  View Details
-                </button>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
