@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth0, canAccessZone, getRoleHomePath, ZONE_ROLES } from "@/lib/auth0";
 
-// Zones gated by the roles claim - typing /company or /individual straight
+// Zones gated by the roles claim - typing /company or /claimant straight
 // into the URL bar must only work if the member actually holds that zone's
 // role (a member can hold both), and never work at all if they're signed out.
 const ROLE_ZONES = Object.keys(ZONE_ROLES);
@@ -107,6 +107,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|(?:company|individual)\\/.*\\.(?:svg|png|jpe?g|gif|ico|ttf|otf|woff2?)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|(?:company|claimant|individual)\\/.*\\.(?:svg|png|jpe?g|gif|ico|ttf|otf|woff2?)$).*)",
   ],
 };

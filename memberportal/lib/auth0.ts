@@ -22,7 +22,7 @@ function decodeAccessTokenClaims(accessToken: string): Record<string, unknown> {
 // this is a membership check per zone, not a single computed "home".
 export const ZONE_ROLES: Record<string, string> = {
   "/company": "Organization",
-  "/individual": "Individual",
+  "/claimant": "Individual",
 };
 
 export function getRoles(accessToken: string | undefined): string[] {
@@ -48,7 +48,7 @@ export function getRoleHomePath(
 ): string | null {
   const roles = getRoles(accessToken);
   if (roles.includes("Organization")) return "/company";
-  if (roles.includes("Individual")) return "/individual";
+  if (roles.includes("Individual")) return "/claimant";
   return null;
 }
 
