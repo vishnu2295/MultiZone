@@ -34,11 +34,11 @@ export default function HomeNavbar() {
   // The full "My Profile" card (with the Switch Profile selector) shows
   // across the whole /company zone, not just the dashboard root.
   const showProfileCard = isAuthenticated && pathname?.startsWith("/company");
-  // Both portals are separate apps mounted at /company and /individual, so
+  // Both portals are separate apps mounted at /company and /claimant, so
   // the logo should return to whichever zone the user is currently in
   // rather than a shared "/" that neither app actually serves.
-  const logoHref = pathname?.startsWith("/individual")
-    ? "/individual"
+  const logoHref = pathname?.startsWith("/claimant")
+    ? "/claimant"
     : "/company";
 
   // Close the profile dropdown on outside click or Escape.

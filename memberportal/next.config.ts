@@ -16,9 +16,9 @@ const BROKER_DOMAIN = zoneOrigin("BROKER_DOMAIN", "http://localhost:4200");
 // Group Life Broker/Admin portals (basePath /brokerPortal and /adminPortal).
 const BROKER_PORTAL_ORIGIN = zoneOrigin("BROKER_PORTAL_ORIGIN", "http://localhost:3003");
 const ADMIN_PORTAL_ORIGIN = zoneOrigin("ADMIN_PORTAL_ORIGIN", "http://localhost:3004");
-// Company and Individual portals (assetPrefix /company-static, /individual-static).
+// Company and Claimant portals (assetPrefix /company-static, /claimant-static).
 const COMPANY_PORTAL_ORIGIN = zoneOrigin("COMPANY_PORTAL_ORIGIN", "http://localhost:3001");
-const INDIVIDUAL_PORTAL_ORIGIN = zoneOrigin("INDIVIDUAL_PORTAL_ORIGIN", "http://localhost:3002");
+const CLAIMANT_PORTAL_ORIGIN = zoneOrigin("CLAIMANT_PORTAL_ORIGIN", "http://localhost:3002");
 
 const nextConfig: NextConfig = {
   async rewrites() {
@@ -59,31 +59,31 @@ const nextConfig: NextConfig = {
         source: "/api/:path*",
         destination: `${BROKER_DOMAIN}/broker/api/:path*`,
       },
-      {
-        source: "/company/:path*",
-        destination: `${COMPANY_PORTAL_ORIGIN}/company/:path*`,
-      },
-      {
-        source: "/company-static/:path*",
-        destination: `${COMPANY_PORTAL_ORIGIN}/company-static/:path*`,
-      },
-      {
-        source: "/_next/image",
-        destination: `${COMPANY_PORTAL_ORIGIN}/_next/image`,
-      },
-      // Individual Portal
-      {
-        source: "/individual",
-        destination: `${INDIVIDUAL_PORTAL_ORIGIN}/individual`,
-      },
-      {
-        source: "/individual/:path*",
-        destination: `${INDIVIDUAL_PORTAL_ORIGIN}/individual/:path*`,
-      },
-      {
-        source: "/individual-static/:path*",
-        destination: `${INDIVIDUAL_PORTAL_ORIGIN}/individual-static/:path*`,
-      },
+      // {
+      //   source: "/company/:path*",
+      //   destination: `${COMPANY_PORTAL_ORIGIN}/company/:path*`,
+      // },
+      // {
+      //   source: "/company-static/:path*",
+      //   destination: `${COMPANY_PORTAL_ORIGIN}/company-static/:path*`,
+      // },
+      // {
+      //   source: "/_next/image",
+      //   destination: `${COMPANY_PORTAL_ORIGIN}/_next/image`,
+      // },
+      // // Claimant Portal
+      // {
+      //   source: "/claimant",
+      //   destination: `${CLAIMANT_PORTAL_ORIGIN}/claimant`,
+      // },
+      // {
+      //   source: "/claimant/:path*",
+      //   destination: `${CLAIMANT_PORTAL_ORIGIN}/claimant/:path*`,
+      // },
+      // {
+      //   source: "/claimant-static/:path*",
+      //   destination: `${CLAIMANT_PORTAL_ORIGIN}/claimant-static/:path*`,
+      // },
     ];
   },
 };
