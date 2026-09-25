@@ -22,7 +22,6 @@ export const profileMenu = {
   initials: "JD",
   switchProfileLabel: "Switch Profile",
   logoutLabel: "Logout",
-  logoutHref: "/auth/logout",
 };
 
 export interface ApiOrganizationProfileResponse {

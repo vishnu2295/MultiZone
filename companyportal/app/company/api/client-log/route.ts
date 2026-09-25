@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth0 } from "@/lib/auth0";
+import { getServerCognitoSession } from "@/lib/auth/cognitoSession.server";
 import { logger } from "@/lib/logger";
 
 // Receives entries from the browser and writes them to CloudWatch: backend API
@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
     return new NextResponse(null, { status: 400 });
   }
 
-  const session = await auth0.getSession().catch(() => null);
-  const userId = session?.user.sub;
+  const { accessTokenClaims } = await getServerCognitoSession().catch(() => ({ accessTokenClaims: undefined }));
+  const userId = typeof accessTokenClaims?.sub === "string" ? accessTokenClaims.sub : undefined;
   const page = asString(payload.page, 500)?.split("?")[0];
 
   // Manual entry from clientLogger.

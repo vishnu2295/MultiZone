@@ -3,29 +3,55 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useUser } from "@auth0/nextjs-auth0";
 import Button from "@/components/ui/Button";
-import LoginMenu from "@/components/ui/LoginMenu";
+import AuthModal from "@/components/auth/AuthModal";
 import { siteContent } from "@/content/site";
+import { cognitoLogout, useCognitoUser } from "@/lib/useCognitoUser";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user } = useUser();
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
+  const [loggingOut, setLoggingOut] = useState(false);
+  const { signedIn: isAuthenticated } = useCognitoUser();
 
-  const authControl = user ? (
+  function openAuth(mode: "login" | "signup") {
+    setAuthMode(mode);
+    setAuthOpen(true);
+  }
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    await cognitoLogout();
+    window.location.href = "/";
+  }
+
+  const authControl = isAuthenticated ? (
     <Button
-      href="/auth/logout"
-      external
+      type="button"
+      onClick={handleLogout}
+      disabled={loggingOut}
       className="h-8 min-w-[100px] px-4 text-[12px] font-semibold"
     >
-      Logout
+      {loggingOut ? "Logging out..." : "Logout"}
     </Button>
   ) : (
-    <LoginMenu
-      label={siteContent.loginButton}
-      options={siteContent.loginOptions}
-      className="h-8 min-w-[100px] px-4 text-[12px] font-semibold"
-    />
+    <div className="flex items-center gap-4">
+      <button
+        type="button"
+        onClick={() => openAuth("login")}
+        className="text-[12px] cursor-pointer font-semibold text-[#13537B] underline underline-offset-2 hover:opacity-80"
+      >
+        Login
+      </button>
+      <Button
+        type="button"
+        onClick={() => openAuth("signup")}
+        className="h-8 min-w-32.5 px-4 cursor-pointer text-[12px] font-semibold"
+      >
+        New Here? Sign Up
+      </Button>
+    </div>
   );
 
   return (
@@ -137,6 +163,12 @@ export default function Navbar() {
           </aside>
         </>
       ) : null}
+
+      <AuthModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        initialMode={authMode}
+      />
     </header>
   );
 }

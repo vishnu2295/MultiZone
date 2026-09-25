@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth0, canAccessZone, getRoleHomePath, ZONE_ROLES } from "@/lib/auth0";
+import { getRolesFromAccessToken, getServerCognitoSession } from "@/lib/cognitoSession";
+import { canAccessZone, getRoleHomePath, ZONE_ROLES } from "@/lib/roles";
 import { logger } from "@/lib/logger";
 
 // Zones gated by the roles claim - typing /company or /claimant straight
@@ -14,17 +15,10 @@ function matchZone(pathname: string): string | undefined {
   );
 }
 
-// Copies the rolling-session cookies auth0.middleware just set onto a
-// redirect response, so redirecting doesn't drop the refreshed session.
-function withAuthCookies(response: NextResponse, authResponse: NextResponse) {
-  authResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
-  return response;
-}
-
 // Paths next.config.ts rewrites to ClientConnectFrontEnd (BROKER_DOMAIN). Its
 // auth handler builds redirect_uri/returnTo from x-forwarded-host and
-// x-forwarded-proto, so whatever we forward is where Auth0 sends the user
-// back to after login.
+// x-forwarded-proto, so whatever we forward is where it sends the user back
+// to after login.
 const CCFE_PATHS = ["/broker", "/api"];
 
 function isCcfePath(pathname: string): boolean {
@@ -38,31 +32,23 @@ function isCcfePath(pathname: string): boolean {
 // Next's external-rewrite proxy then forwards x-forwarded-host = that Host,
 // so CCFE bounced users to the ALB URL after login. Override both from
 // APP_BASE_URL - the one place that knows the public origin - before the
-// rewrite runs. Only applies to a pass-through (NextResponse.next) response;
-// anything else auth0.middleware returned is left untouched.
-function withPublicOrigin(request: NextRequest, authResponse: NextResponse) {
-  if (authResponse.headers.get("x-middleware-next") !== "1") {
-    return authResponse;
-  }
+// rewrite runs.
+function withPublicOrigin(request: NextRequest) {
   let publicUrl: URL;
   try {
     publicUrl = new URL(process.env.APP_BASE_URL ?? "");
   } catch {
-    return authResponse;
+    return NextResponse.next();
   }
   const headers = new Headers(request.headers);
   headers.set("host", publicUrl.host);
   headers.set("x-forwarded-host", publicUrl.host);
   headers.set("x-forwarded-proto", publicUrl.protocol.replace(/:$/, ""));
-  return withAuthCookies(
-    NextResponse.next({ request: { headers } }),
-    authResponse,
-  );
+  return NextResponse.next({ request: { headers } });
 }
 
-// Next.js 16 renamed `middleware` to `proxy`. This mounts the Auth0 routes
-// (/auth/login, /auth/logout, /auth/callback, /auth/profile, /auth/access-token)
-// and keeps the rolling session cookie fresh on every request.
+// Next.js 16 renamed `middleware` to `proxy`. Gates "/" and the role zones on
+// the Cognito session the browser's Amplify client stores in cookies.
 export async function proxy(request: NextRequest) {
   const startedAt = Date.now();
   const response = await handleRequest(request);
@@ -78,50 +64,40 @@ export async function proxy(request: NextRequest) {
 }
 
 async function handleRequest(request: NextRequest) {
-  const authResponse = await auth0.middleware(request);
+  // const authResponse = await auth0.middleware(request);
 
   const { pathname } = request.nextUrl;
-  if (pathname.startsWith("/auth/")) {
-    return authResponse;
-  }
 
   const matchedZone = matchZone(pathname);
   if (pathname !== "/" && !matchedZone) {
-    return isCcfePath(pathname)
-      ? withPublicOrigin(request, authResponse)
-      : authResponse;
+    return isCcfePath(pathname) ? withPublicOrigin(request) : NextResponse.next();
   }
 
-  const session = await auth0.getSession(request);
+  const cognitoSession = await getServerCognitoSession(request);
+  const hasSession = Boolean(cognitoSession.accessToken);
+  const roles = getRolesFromAccessToken(cognitoSession.accessToken);
 
-  if (matchedZone && !session) {
-    const loginUrl = new URL("/auth/login", request.url);
-    loginUrl.searchParams.set("returnTo", pathname);
-    return withAuthCookies(NextResponse.redirect(loginUrl), authResponse);
+  // Signed-out visitors land on "/", where the navbar's Login opens the
+  // Cognito auth modal.
+  if (matchedZone && !hasSession) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
-  const accessToken = session?.tokenSet.accessToken;
-  const roleHomePath = getRoleHomePath(accessToken);
+  const roleHomePath = getRoleHomePath(roles);
 
   if (pathname === "/" && roleHomePath) {
-    return withAuthCookies(
-      NextResponse.redirect(new URL(roleHomePath, request.url)),
-      authResponse,
-    );
+    return NextResponse.redirect(new URL(roleHomePath, request.url));
   }
 
-  if (matchedZone && !canAccessZone(accessToken, matchedZone)) {
-    return withAuthCookies(
-      NextResponse.redirect(new URL(roleHomePath ?? "/", request.url)),
-      authResponse,
-    );
+  if (matchedZone && !canAccessZone(roles, matchedZone)) {
+    return NextResponse.redirect(new URL(roleHomePath ?? "/", request.url));
   }
 
-  return authResponse;
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|(?:company|claimant|individual)\\/.*\\.(?:svg|png|jpe?g|gif|ico|ttf|otf|woff2?)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|(?:company|claimant)\\/.*\\.(?:svg|png|jpe?g|gif|ico|ttf|otf|woff2?)$).*)",
   ],
 };

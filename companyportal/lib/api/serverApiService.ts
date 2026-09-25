@@ -1,23 +1,28 @@
-import { auth0 } from "@/lib/auth0";
+import { getServerCognitoSession } from "@/lib/auth/cognitoSession.server";
 import { logger } from "@/lib/logger";
-import apiService, { ApiError, resolveApiUrl, type ApiRequestOptions } from "./apiService";
+import apiService, {
+  ApiError,
+  resolveApiUrl,
+  type ApiRequestOptions,
+} from "./apiService";
 import { summarizeRequestBody } from "./summarizeRequestBody";
 
 /**
- * Server-side wrapper around `apiService` that attaches the Auth0 access token
- * automatically. Use this from server components, server actions and route
- * handlers so the token never reaches the browser.
- *
- * Requires AUTH0_AUDIENCE to be set, otherwise Auth0 issues no access token.
+ * Server-side wrapper around `apiService` that attaches the Cognito access
+ * token automatically. Use this from server components, server actions and
+ * route handlers so the token never reaches the browser.
  *
  * Note: server components cannot write cookies, so a token refreshed here is
  * not persisted - the proxy refreshes it on the next request.
  */
-async function withToken(options: ApiRequestOptions = {}): Promise<ApiRequestOptions> {
+async function withToken(
+  options: ApiRequestOptions = {},
+): Promise<ApiRequestOptions> {
   if (options.skipAuth || options.token) return options;
 
-  const { token } = await auth0.getAccessToken();
-  return { ...options, token };
+  const { accessToken } = await getServerCognitoSession();
+  if (!accessToken) throw new Error("No active Cognito session.");
+  return { ...options, token: accessToken };
 }
 
 // Logs every backend call's outcome, full URL and duration, plus the request
@@ -28,7 +33,7 @@ async function logged<TResponse>(
   path: string,
   options: ApiRequestOptions | undefined,
   body: unknown,
-  call: () => Promise<TResponse>
+  call: () => Promise<TResponse>,
 ): Promise<TResponse> {
   const startedAt = Date.now();
   const details = () => ({
@@ -56,45 +61,51 @@ async function logged<TResponse>(
 }
 
 export const serverApiService = {
-  async get<TResponse>(path: string, options?: ApiRequestOptions): Promise<TResponse> {
+  async get<TResponse>(
+    path: string,
+    options?: ApiRequestOptions,
+  ): Promise<TResponse> {
     return logged("GET", path, options, undefined, async () =>
-      apiService.get<TResponse>(path, await withToken(options))
+      apiService.get<TResponse>(path, await withToken(options)),
     );
   },
 
   async post<TResponse>(
     path: string,
     body?: unknown,
-    options?: ApiRequestOptions
+    options?: ApiRequestOptions,
   ): Promise<TResponse> {
     return logged("POST", path, options, body, async () =>
-      apiService.post<TResponse>(path, body, await withToken(options))
+      apiService.post<TResponse>(path, body, await withToken(options)),
     );
   },
 
   async put<TResponse>(
     path: string,
     body?: unknown,
-    options?: ApiRequestOptions
+    options?: ApiRequestOptions,
   ): Promise<TResponse> {
     return logged("PUT", path, options, body, async () =>
-      apiService.put<TResponse>(path, body, await withToken(options))
+      apiService.put<TResponse>(path, body, await withToken(options)),
     );
   },
 
   async patch<TResponse>(
     path: string,
     body?: unknown,
-    options?: ApiRequestOptions
+    options?: ApiRequestOptions,
   ): Promise<TResponse> {
     return logged("PATCH", path, options, body, async () =>
-      apiService.patch<TResponse>(path, body, await withToken(options))
+      apiService.patch<TResponse>(path, body, await withToken(options)),
     );
   },
 
-  async delete<TResponse>(path: string, options?: ApiRequestOptions): Promise<TResponse> {
+  async delete<TResponse>(
+    path: string,
+    options?: ApiRequestOptions,
+  ): Promise<TResponse> {
     return logged("DELETE", path, options, undefined, async () =>
-      apiService.delete<TResponse>(path, await withToken(options))
+      apiService.delete<TResponse>(path, await withToken(options)),
     );
   },
 };

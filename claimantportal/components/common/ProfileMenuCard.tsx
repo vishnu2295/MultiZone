@@ -1,17 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { mapProfile, profileMenu } from "@/content/site";
 import { LogoutIcon } from "@/components/common/icons";
 import { useProfile } from "@/lib/profile/ProfileContext";
+import { cognitoLogout } from "@/lib/auth/cognitoClient";
 
 export interface ProfileMenuCardProps {
   name?: string;
   email?: string;
   initials?: string;
   logoutLabel?: string;
-  logoutHref?: string;
-  /** Called after the logout link is clicked (used to close the menu/drawer). */
+  /** Called when logout is clicked (used to close the menu/drawer). */
   onLogout?: () => void;
   className?: string;
 }
@@ -34,7 +33,6 @@ export default function ProfileMenuCard({
   email: emailProp,
   initials = profileMenu.initials,
   logoutLabel = profileMenu.logoutLabel,
-  logoutHref = profileMenu.logoutHref,
   onLogout,
   className = "",
 }: ProfileMenuCardProps) {
@@ -90,14 +88,17 @@ export default function ProfileMenuCard({
         aria-hidden
       />
 
-      <Link
-        href={logoutHref}
-        onClick={onLogout}
-        className="flex items-center gap-3 rounded-lg px-1 py-1 text-[15px] font-medium text-[#D9534F] transition hover:opacity-80 sm:text-[17px]"
+      <button
+        type="button"
+        onClick={() => {
+          onLogout?.();
+          cognitoLogout();
+        }}
+        className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-1 py-1 text-[15px] font-medium text-[#D9534F] transition hover:opacity-80 sm:text-[17px]"
       >
         <LogoutIcon className="h-5 w-5 sm:h-6 sm:w-6" />
         {logoutLabel}
-      </Link>
+      </button>
     </div>
   );
 }

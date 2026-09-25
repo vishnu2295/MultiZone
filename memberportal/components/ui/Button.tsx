@@ -6,8 +6,9 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "ghost";
   href?: string;
   /**
-   * Render a plain <a> instead of next/link. Required for the Auth0 routes
-   * (/auth/login, /auth/logout) - client-side navigation breaks the redirect.
+   * Render a plain <a> instead of next/link. Required for links into the
+   * other zones (/broker, /company, ...) - they're separate apps reached
+   * through the proxy rewrite, so client-side navigation can't reach them.
    */
   external?: boolean;
 };
@@ -21,7 +22,7 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const base =
-    "inline-flex items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00bbe6]";
+    "inline-flex items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold transition cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00bbe6]";
 
   const styles =
     variant === "primary"
