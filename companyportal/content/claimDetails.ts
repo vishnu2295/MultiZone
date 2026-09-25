@@ -29,6 +29,29 @@ export type ClaimInvoice = {
   status: string;
 };
 
+export type ApiClaimMedicalInvoice = {
+  invoiceId: number;
+  practitionerNumber: string;
+  invoiceNumber: string;
+  invoiceDate: string | null;
+  dateSubmitted: string | null;
+  invoiceStatus: string;
+  invoiceAmount: number;
+  invoiceTotalInclusive: number;
+  isPreauthorised: boolean;
+  claimReferenceNumber: string;
+  insuredLifeId: number;
+  employeeName: string | null;
+  employeeSaId: string | null;
+  employerName: string | null;
+  claimType: string | null;
+  hcpInvoiceNumber: string;
+  dateAdmitted: string | null;
+  dateReceived: string | null;
+  paymentConfirmationDate: string | null;
+  invoiceVat: number;
+};
+
 export type ClaimAuthorization = {
   authorizationNumber: string;
   treatmentType: string;
@@ -142,6 +165,30 @@ export function mapApiClaimPayments(
   response: ApiClaimPayment[],
 ): ClaimPayment[] {
   return response.map(mapApiClaimPayment);
+}
+
+/** An API medical invoice with its fields formatted for display. */
+export type ClaimMedicalInvoice = Omit<ApiClaimMedicalInvoice, "invoiceAmount"> & {
+  invoiceAmount: string;
+};
+
+export function mapApiClaimMedicalInvoice(
+  invoice: ApiClaimMedicalInvoice,
+): ClaimMedicalInvoice {
+  return {
+    ...invoice,
+    claimType: checkPaymentValueExists(invoice.claimType),
+    practitionerNumber: checkPaymentValueExists(invoice.practitionerNumber),
+    invoiceDate: formatPreAuthDate(invoice.invoiceDate),
+    invoiceAmount: formatPaymentAmount(invoice.invoiceAmount),
+    invoiceStatus: checkPaymentValueExists(invoice.invoiceStatus),
+  };
+}
+
+export function mapApiClaimMedicalInvoices(
+  response: ApiClaimMedicalInvoice[],
+): ClaimMedicalInvoice[] {
+  return response.map(mapApiClaimMedicalInvoice);
 }
 
 export type ClaimantTab =
