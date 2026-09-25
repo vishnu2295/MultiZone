@@ -61,6 +61,7 @@ export function CompanyProfileProvider({ children }: { children: ReactNode }) {
     async function loadProfile() {
       try {
         const { token: accessToken, coidId } = await getEmployerCoidId();
+        console.log("[Cognito] Access token (companyportal):", accessToken, { coidId });
         if (!coidId) return;
 
         const response = await apiService.get<ApiOrganizationProfileResponse>(

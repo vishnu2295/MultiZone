@@ -27,10 +27,9 @@ export interface ApiRequestOptions extends Omit<RequestInit, "body" | "method"> 
   /**
    * Access token to send as `Authorization: Bearer <token>`.
    *
-   * Auth0 keeps tokens in an encrypted httpOnly cookie, so they can't be read
-   * from JS. Get one with `auth0.getAccessToken()` on the server (see
-   * `serverApiService`), or `getAccessToken()` from `@auth0/nextjs-auth0` in a
-   * client component.
+   * The Cognito access token: `getCognitoTokens()` (lib/auth/cognitoClient.ts)
+   * in a client component, or `getServerCognitoSession()`
+   * (lib/auth/cognitoSession.server.ts) on the server.
    */
   token?: string;
   /** Skip auto-attaching the Authorization header for this request. */

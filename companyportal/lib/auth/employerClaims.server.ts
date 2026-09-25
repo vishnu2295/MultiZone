@@ -1,10 +1,10 @@
 import { cookies } from "next/headers";
-import { auth0 } from "@/lib/auth0";
 import serverApiService from "@/lib/api/serverApiService";
 import { API_ROOT_BASE_URL } from "@/lib/api/apiService";
 import { mapEmployerProfiles, type ApiOrganizationProfileResponse } from "@/content/site";
 import { SELECTED_ROLE_PLAYER_COOKIE } from "./companyProfileCookie";
-import { classifyRmaRole, decodeJwtPayload, findRmaId, type RmaId } from "./employerClaims";
+import { getServerCognitoSession } from "./cognitoSession.server";
+import { classifyRmaRole, findRmaId, getRmaIds } from "./rmaClaims";
 
 /**
  * Server-side counterpart to CompanyProfileProvider's selection: reads the
@@ -17,7 +17,8 @@ export async function getSelectedRolePlayerIdServer(): Promise<{
   token: string;
   rolePlayerId: number | undefined;
 }> {
-  const { token } = await auth0.getAccessToken();
+  const { accessToken: token, accessTokenClaims } = await getServerCognitoSession();
+  if (!token) throw new Error("No active Cognito session.");
 
   const cookieStore = await cookies();
   const cookieValue = cookieStore.get(SELECTED_ROLE_PLAYER_COOKIE)?.value;
@@ -25,12 +26,7 @@ export async function getSelectedRolePlayerIdServer(): Promise<{
     return { token, rolePlayerId: Number(cookieValue) };
   }
 
-  const claims = decodeJwtPayload(token);
-  const rmaIds =
-    (claims[process.env.NEXT_PUBLIC_AUTH0_IDENTIFIER as string] as
-      | RmaId[]
-      | undefined) ?? [];
-  const coidId = findRmaId(rmaIds, "organization")?.coidId;
+  const coidId = findRmaId(getRmaIds(accessTokenClaims), "organization")?.coidId;
   if (!coidId) return { token, rolePlayerId: undefined };
 
   const response = await serverApiService.get<ApiOrganizationProfileResponse>(
@@ -48,16 +44,6 @@ export async function getSelectedRolePlayerIdServer(): Promise<{
  * individual/employee profile (or no profile at all).
  */
 export async function hasOrganizationAccessServer(): Promise<boolean> {
-  try {
-    const { token } = await auth0.getAccessToken();
-    const claims = decodeJwtPayload(token);
-    const rmaIds =
-      (claims[process.env.NEXT_PUBLIC_AUTH0_IDENTIFIER as string] as
-        | RmaId[]
-        | undefined) ?? [];
-
-    return rmaIds.some((entry) => classifyRmaRole(entry.role) === "organization");
-  } catch {
-    return false;
-  }
+  const { accessTokenClaims } = await getServerCognitoSession();
+  return getRmaIds(accessTokenClaims).some((entry) => classifyRmaRole(entry.role) === "organization");
 }

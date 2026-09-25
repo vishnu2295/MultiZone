@@ -4,9 +4,10 @@ import { useState } from "react";
 import { homeContent, profileMenu } from "@/content/site";
 import { ChevronDownIcon, LogoutIcon } from "@/components/home/icons";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import { cognitoLogout } from "@/lib/auth/cognitoClient";
 
 export interface ProfileMenuCardProps {
-  /** Called after the logout link is clicked (used to close the menu/drawer). */
+  /** Called when logout is clicked (used to close the menu/drawer). */
   onLogout?: () => void;
   className?: string;
 }
@@ -147,19 +148,17 @@ export default function ProfileMenuCard({
         aria-hidden
       />
 
-      {/* Plain <a>, not next/link: Link prefetches its href as soon as it
-          mounts in the viewport, which for an Auth0 route with side effects
-          (session teardown + IdP redirect) fires the logout as a background
-          fetch the instant this menu opens - see Button.tsx's `external`
-          prop in memberportal for the same fix applied there. */}
-      <a
-        href={profileMenu.logoutHref}
-        onClick={onLogout}
-        className="flex items-center gap-3 rounded-lg px-1 py-1 text-[15px] font-medium text-[#D9534F] transition hover:opacity-80 sm:text-[17px]"
+      <button
+        type="button"
+        onClick={() => {
+          onLogout?.();
+          cognitoLogout();
+        }}
+        className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-1 py-1 text-[15px] font-medium text-[#D9534F] transition hover:opacity-80 sm:text-[17px]"
       >
         <LogoutIcon className="h-5 w-5 sm:h-6 sm:w-6" />
         {profileMenu.logoutLabel}
-      </a>
+      </button>
     </div>
   );
 }
