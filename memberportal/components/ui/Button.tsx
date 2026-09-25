@@ -6,8 +6,9 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "ghost";
   href?: string;
   /**
-   * Render a plain <a> instead of next/link. Required for the Auth0 routes
-   * (/auth/login, /auth/logout) - client-side navigation breaks the redirect.
+   * Render a plain <a> instead of next/link. Required for links into the
+   * other zones (/broker, /company, ...) - they're separate apps reached
+   * through the proxy rewrite, so client-side navigation can't reach them.
    */
   external?: boolean;
 };

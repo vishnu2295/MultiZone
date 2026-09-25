@@ -4,33 +4,28 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useUser } from "@auth0/nextjs-auth0";
 import { homeContent } from "@/content/site";
 import { ChevronDownIcon, CloseIcon, MenuIcon } from "@/components/home/icons";
 import ProfileMenuCard from "@/components/home/ProfileMenuCard";
+import { cognitoLogout } from "@/lib/auth/cognitoClient";
+import { useCognitoUser } from "@/lib/auth/useCognitoUser";
 
 export default function HomeNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const mobileProfileRef = useRef<HTMLDivElement>(null);
-  const { user } = useUser();
+  const { signedIn: isAuthenticated } = useCognitoUser();
   const pathname = usePathname();
 
-  // useUser() is backed by SWR, which revalidates /auth/profile in the
-  // background (e.g. on window refocus). A transient revalidation error
-  // makes the hook return `user: null` even after a successful load, which
-  // would otherwise flicker the profile card back to a plain "Logout" link.
-  // Once we've seen a real user, keep treating the session as authenticated
-  // client-side - an actual logout is a full page navigation anyway.
-  const [hasAuthenticated, setHasAuthenticated] = useState(false);
-  useEffect(() => {
-    if (user) setHasAuthenticated(true);
-  }, [user]);
-  const isAuthenticated = Boolean(user) || hasAuthenticated;
-
-  const authHref = isAuthenticated ? "/auth/logout" : "/auth/login";
   const authLabel = isAuthenticated ? "Logout" : homeContent.profileLabel;
+  // Signed in: sign out of Cognito. Signed out: memberportal's landing page
+  // ("/"), where Login opens the auth modal.
+  function handleAuthClick(event: React.MouseEvent<HTMLAnchorElement>) {
+    if (!isAuthenticated) return;
+    event.preventDefault();
+    cognitoLogout();
+  }
   // The full "My Profile" card (with the Switch Profile selector) shows
   // across the whole /company zone, not just the dashboard root.
   const showProfileCard = isAuthenticated && pathname?.startsWith("/company");
@@ -126,12 +121,11 @@ export default function HomeNavbar() {
               )}
             </div>
           ) : (
-            // Plain <a>, not next/link: when isAuthenticated this points at
-            // /auth/logout, an Auth0 route with side effects. A Link mounted
-            // in the viewport gets prefetched immediately, which fires the
-            // logout as a background fetch before the user clicks anything.
+            // Plain <a>, not next/link: "/" is memberportal's page, reached
+            // through the gateway rather than this app's router.
             <a
-              href={authHref}
+              href="/"
+              onClick={handleAuthClick}
               className="flex items-center gap-1 text-[14px] font-normal leading-[17px] text-[#F3F7FA] opacity-90 transition hover:opacity-100"
             >
               {authLabel}
@@ -225,8 +219,11 @@ export default function HomeNavbar() {
           ) : (
             // Plain <a>, not next/link - see the desktop fallback above.
             <a
-              href={authHref}
-              onClick={() => setIsMenuOpen(false)}
+              href="/"
+              onClick={(event) => {
+                setIsMenuOpen(false);
+                handleAuthClick(event);
+              }}
               className="flex items-center gap-1 text-[15px] font-normal text-white/90 transition hover:text-white"
             >
               {authLabel}

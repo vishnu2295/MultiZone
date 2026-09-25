@@ -1,12 +1,10 @@
-import { auth0 } from "@/lib/auth0";
+import { getServerCognitoSession } from "@/lib/auth/cognitoSession.server";
 import apiService, { type ApiRequestOptions } from "./apiService";
 
 /**
- * Server-side wrapper around `apiService` that attaches the Auth0 access token
- * automatically. Use this from server components, server actions and route
- * handlers so the token never reaches the browser.
- *
- * Requires AUTH0_AUDIENCE to be set, otherwise Auth0 issues no access token.
+ * Server-side wrapper around `apiService` that attaches the Cognito access
+ * token automatically. Use this from server components, server actions and
+ * route handlers so the token never reaches the browser.
  *
  * Note: server components cannot write cookies, so a token refreshed here is
  * not persisted - the proxy refreshes it on the next request.
@@ -14,8 +12,9 @@ import apiService, { type ApiRequestOptions } from "./apiService";
 async function withToken(options: ApiRequestOptions = {}): Promise<ApiRequestOptions> {
   if (options.skipAuth || options.token) return options;
 
-  const { token } = await auth0.getAccessToken();
-  return { ...options, token };
+  const { accessToken } = await getServerCognitoSession();
+  if (!accessToken) throw new Error("No active Cognito session.");
+  return { ...options, token: accessToken };
 }
 
 export const serverApiService = {

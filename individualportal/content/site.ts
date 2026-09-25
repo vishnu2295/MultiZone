@@ -14,7 +14,6 @@ export const profileMenu = {
   /** Falls back to initials derived from `name` when omitted. */
   initials: "",
   logoutLabel: "Logout",
-  logoutHref: "/auth/logout",
 };
 
 export interface ApiProfileResponse {

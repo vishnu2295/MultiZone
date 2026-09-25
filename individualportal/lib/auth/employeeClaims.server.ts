@@ -1,5 +1,5 @@
-import { auth0 } from "@/lib/auth0";
-import { classifyRmaRole, decodeJwtPayload, findRmaId, type RmaId } from "./employeeClaims";
+import { getServerCognitoSession } from "./cognitoSession.server";
+import { classifyRmaRole, findRmaId, getRmaIds } from "./rmaClaims";
 
 /**
  * Server-only counterpart to getEmployeeCoidId(). Derives the employee coidId
@@ -10,14 +10,10 @@ export async function getEmployeeCoidIdServer(): Promise<{
   token: string;
   coidId: string | undefined;
 }> {
-  const { token } = await auth0.getAccessToken();
-  const claims = decodeJwtPayload(token);
-  const rmaIds =
-    (claims[process.env.NEXT_PUBLIC_AUTH0_IDENTIFIER as string] as
-      | RmaId[]
-      | undefined) ?? [];
+  const { accessToken: token, accessTokenClaims } = await getServerCognitoSession();
+  if (!token) throw new Error("No active Cognito session.");
 
-  return { token, coidId: findRmaId(rmaIds, "individual")?.coidId };
+  return { token, coidId: findRmaId(getRmaIds(accessTokenClaims), "individual")?.coidId };
 }
 
 /**
@@ -27,16 +23,6 @@ export async function getEmployeeCoidIdServer(): Promise<{
  * an organization/employer profile (or no profile at all).
  */
 export async function hasIndividualAccessServer(): Promise<boolean> {
-  try {
-    const { token } = await auth0.getAccessToken();
-    const claims = decodeJwtPayload(token);
-    const rmaIds =
-      (claims[process.env.NEXT_PUBLIC_AUTH0_IDENTIFIER as string] as
-        | RmaId[]
-        | undefined) ?? [];
-
-    return rmaIds.some((entry) => classifyRmaRole(entry.role) === "individual");
-  } catch {
-    return false;
-  }
+  const { accessTokenClaims } = await getServerCognitoSession();
+  return getRmaIds(accessTokenClaims).some((entry) => classifyRmaRole(entry.role) === "individual");
 }

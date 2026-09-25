@@ -30,6 +30,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     async function loadProfile() {
       try {
         const { token, coidId } = await getEmployeeCoidId();
+        console.log("[Cognito] Access token (individualportal):", token, { coidId });
         if (!coidId) return;
 
         const response = await apiService.get<ApiProfileResponse>(

@@ -120,6 +120,7 @@ export default function RegisterFlow({ persona }: RegisterFlowProps) {
         persona: persona.slug,
         email: identifier.email,
         phone: identifier.phone,
+        idValue: identifier.idValue,
         password: nextPassword,
       });
       setStep("otp");
@@ -142,8 +143,8 @@ export default function RegisterFlow({ persona }: RegisterFlowProps) {
       });
       await logCognitoSessionTokens();
       // Full navigation on purpose - the destination is a separate app
-      // reached through the proxy rewrite, same convention as the Auth0
-      // and broker links.
+      // reached through the proxy rewrite, same convention as the broker
+      // links.
       window.location.href = persona.destination;
     } catch (err) {
       setError(describeCognitoError(err, "That code didn't work. Please try again."));

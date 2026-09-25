@@ -3,29 +3,37 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useUser } from "@auth0/nextjs-auth0";
 import Button from "@/components/ui/Button";
 import AuthModal from "@/components/auth/AuthModal";
 import { siteContent } from "@/content/site";
+import { cognitoLogout, useCognitoUser } from "@/lib/useCognitoUser";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
-  const { user } = useUser();
+  const [loggingOut, setLoggingOut] = useState(false);
+  const { signedIn: isAuthenticated } = useCognitoUser();
 
   function openAuth(mode: "login" | "signup") {
     setAuthMode(mode);
     setAuthOpen(true);
   }
 
-  const authControl = user ? (
+  async function handleLogout() {
+    setLoggingOut(true);
+    await cognitoLogout();
+    window.location.href = "/";
+  }
+
+  const authControl = isAuthenticated ? (
     <Button
-      href="/auth/logout"
-      external
+      type="button"
+      onClick={handleLogout}
+      disabled={loggingOut}
       className="h-8 min-w-[100px] px-4 text-[12px] font-semibold"
     >
-      Logout
+      {loggingOut ? "Logging out..." : "Logout"}
     </Button>
   ) : (
     <div className="flex items-center gap-4">

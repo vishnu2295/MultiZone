@@ -25,11 +25,13 @@ import {
   cognitoConfirmSignUp,
   cognitoForgotPassword,
   cognitoLogin,
+  cognitoResendSignUpCode,
   cognitoSignUp,
   describeCognitoError,
   ensureProfileNotRegistered,
   logCognitoSessionTokens,
   ProfileAlreadyExistsError,
+  registerCognitoProfile,
   validateWithRMA,
 } from "@/lib/registrationService";
 
@@ -113,6 +115,21 @@ export default function AuthModal({
   }
 
   function handleSelectPersona(nextPersona: PersonaConfig) {
+    // Switching persona (e.g. Employee -> Employer) starts the forms over -
+    // what was typed for one persona (ID vs member number, etc.) doesn't
+    // carry over. Re-picking the same persona keeps the drafts.
+    if (persona && persona.slug !== nextPersona.slug) {
+      setIdentifier(null);
+      setResetEmail("");
+      setResetOtp("");
+      setPendingLoginCreds(null);
+      setSmsOtpDestination("");
+      setIdentifierDraft(undefined);
+      setLoginDraft(undefined);
+      setPasswordDraft(undefined);
+      setResetPasswordDraft(undefined);
+      setForgotEmailDraft("");
+    }
     setPersona(nextPersona);
     setError(null);
     setLoginSuccess(null);
@@ -129,6 +146,16 @@ export default function AuthModal({
     }
   }
 
+  // Closes the modal and lands on "/" - proxy.ts then forwards the member to
+  // their role's zone (rma_roles claim: Organization -> /company, Individual
+  // -> /individual). Full navigation on purpose: the zones are separate apps
+  // reached through the proxy rewrite, and the proxy needs the fresh session
+  // cookies on the request.
+  function goToRoleHome() {
+    onClose();
+    window.location.href = "/";
+  }
+
   async function handleLoginSubmit(loginIdentifier: string, password: string) {
     if (!persona) return;
     setSubmitting(true);
@@ -140,7 +167,8 @@ export default function AuthModal({
         password,
       });
       if (isSignedIn) {
-        window.location.href = persona.destination;
+        await logCognitoSessionTokens();
+        goToRoleHome();
       } else if (nextStep.signInStep === "CONFIRM_SIGN_IN_WITH_SMS_CODE") {
         setPendingLoginCreds({ identifier: loginIdentifier, password });
         setSmsOtpDestination(nextStep.codeDeliveryDetails?.destination ?? "");
@@ -168,7 +196,8 @@ export default function AuthModal({
     try {
       const { isSignedIn } = await cognitoConfirmSignInWithSms(otp);
       if (isSignedIn) {
-        window.location.href = persona.destination;
+        await logCognitoSessionTokens();
+        goToRoleHome();
       } else {
         setError("Additional verification is required to finish logging in.");
         setSubmitting(false);
@@ -231,6 +260,7 @@ export default function AuthModal({
         persona: persona.slug,
         email: identifier.email,
         phone: identifier.phone,
+        idValue: identifier.idValue,
         password: nextPassword,
       });
       setStep("otp");
@@ -248,18 +278,41 @@ export default function AuthModal({
     setSubmitting(true);
     setError(null);
     try {
-      await cognitoConfirmSignUp({
+      const { autoSignInFailed } = await cognitoConfirmSignUp({
         persona: persona.slug,
         identifier: identifier.email,
         otp,
       });
+
+      if (autoSignInFailed) {
+        // The code was correct and the account is confirmed - there's just
+        // no session yet. Send them to log in manually rather than showing
+        // an error that would incorrectly imply the code was wrong.
+        setLoginSuccess("Your account is confirmed. Please log in to continue.");
+        setStep("login");
+        setSubmitting(false);
+        return;
+      }
+
       await logCognitoSessionTokens();
-      window.location.href = persona.destination;
+      await registerCognitoProfile();
+      goToRoleHome();
     } catch (err) {
       setError(
         describeCognitoError(err, "That code didn't work. Please try again."),
       );
       setSubmitting(false);
+    }
+  }
+
+  async function handleResendOtp() {
+    if (!identifier) return;
+    try {
+      await cognitoResendSignUpCode(identifier.email);
+    } catch (err) {
+      setError(
+        describeCognitoError(err, "We couldn't resend the code. Please try again."),
+      );
     }
   }
 
@@ -476,6 +529,7 @@ export default function AuthModal({
                 identifierValue={identifier?.email ?? ""}
                 submitting={submitting}
                 onSubmit={handleOtpSubmit}
+                onResend={handleResendOtp}
               />
             ) : null}
 

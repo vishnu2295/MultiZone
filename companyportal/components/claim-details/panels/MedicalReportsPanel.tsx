@@ -46,7 +46,7 @@ const DOCUMENT_STATUS_STYLES: Record<
   },
   [DocumentStatusEnum.Rejected]: {
     label: "Rejected",
-    className: "bg-[##CB1334]",
+    className: "bg-[#CB1334]",
   },
 };
 
