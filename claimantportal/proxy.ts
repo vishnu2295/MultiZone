@@ -29,7 +29,7 @@ async function handleRequest(request: NextRequest) {
   // origin too - guard /claimant here as well so that path isn't a bypass.
   // API routes are excluded: redirecting a fetch() to "/" (a page this app
   // doesn't have) surfaces as a bare 404 to the caller instead of a usable
-  // error, and each route already enforces auth via auth0.getAccessToken().
+  // error, and each route already enforces auth via getServerCognitoSession().
   if (
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/claimant/api/") ||
@@ -51,8 +51,8 @@ async function handleRequest(request: NextRequest) {
 export const config = {
   // Runs on everything except static assets and metadata files. The broad
   // matcher is required for rolling sessions to work. Static files under
-  // /individual/ (images, icons, fonts) must stay excluded too, or they get
-  // caught by the "!pathname.startsWith('/individual')" check above and
+  // /claimant/ (images, icons, fonts) must stay excluded too, or they get
+  // caught by the "!pathname.startsWith('/claimant')" check above and
   // redirected to login for anyone without the Individual role.
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|claimant-static|claimant\\/.*\\.(?:svg|png|jpe?g|gif|ico|ttf|otf|woff2?)$).*)",

@@ -7,7 +7,7 @@
 // this is a membership check per zone, not a single computed "home".
 export const ZONE_ROLES: Record<string, string> = {
   "/company": "Organization",
-  "/individual": "Individual",
+  "/claimant": "Individual",
 };
 
 // Takes an already-resolved roles array (see getRolesFromAccessToken below).
@@ -22,7 +22,7 @@ export function canAccessZone(roles: string[], zone: string): boolean {
 // to gate access (see canAccessZone for that).
 export function getRoleHomePath(roles: string[]): string | null {
   if (roles.includes("Organization")) return "/company";
-  if (roles.includes("Individual")) return "/individual";
+  if (roles.includes("Individual")) return "/claimant";
   return null;
 }
 

@@ -21,11 +21,12 @@ import type { PersonaConfig } from "@/lib/personas";
 import { maskEmail } from "@/lib/format";
 import {
   cognitoConfirmForgotPassword,
-  cognitoConfirmSignInWithSms,
+  cognitoConfirmSignInWithCode,
   cognitoConfirmSignUp,
   cognitoForgotPassword,
   cognitoLogin,
   cognitoResendSignUpCode,
+  cognitoSelectMfaType,
   cognitoSignUp,
   describeCognitoError,
   ensureProfileNotRegistered,
@@ -36,13 +37,15 @@ import {
 } from "@/lib/registrationService";
 
 type Mode = "login" | "signup";
+type MfaChannel = "sms" | "email";
+type SignInNextStep = Awaited<ReturnType<typeof cognitoLogin>>["nextStep"];
 type Step =
   | "welcome"
   | "login"
   | "identifier"
   | "password"
   | "otp"
-  | "sms-otp"
+  | "mfa-otp"
   | "forgot-email"
   | "forgot-otp"
   | "forgot-password";
@@ -64,11 +67,14 @@ export default function AuthModal({
   const [identifier, setIdentifier] = useState<IdentifierResult | null>(null);
   const [resetEmail, setResetEmail] = useState("");
   const [resetOtp, setResetOtp] = useState("");
+  // Where Cognito says it sent the reset code (masked email or phone).
+  const [resetDestination, setResetDestination] = useState("");
   const [pendingLoginCreds, setPendingLoginCreds] = useState<{
     identifier: string;
     password: string;
   } | null>(null);
-  const [smsOtpDestination, setSmsOtpDestination] = useState("");
+  const [mfaChannel, setMfaChannel] = useState<MfaChannel>("sms");
+  const [mfaDestination, setMfaDestination] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loginSuccess, setLoginSuccess] = useState<string | null>(null);
@@ -97,8 +103,9 @@ export default function AuthModal({
       setIdentifier(null);
       setResetEmail("");
       setResetOtp("");
+      setResetDestination("");
       setPendingLoginCreds(null);
-      setSmsOtpDestination("");
+      setMfaDestination("");
       setSubmitting(false);
       setError(null);
       setLoginSuccess(null);
@@ -122,8 +129,9 @@ export default function AuthModal({
       setIdentifier(null);
       setResetEmail("");
       setResetOtp("");
+      setResetDestination("");
       setPendingLoginCreds(null);
-      setSmsOtpDestination("");
+      setMfaDestination("");
       setIdentifierDraft(undefined);
       setLoginDraft(undefined);
       setPasswordDraft(undefined);
@@ -148,12 +156,41 @@ export default function AuthModal({
 
   // Closes the modal and lands on "/" - proxy.ts then forwards the member to
   // their role's zone (rma_roles claim: Organization -> /company, Individual
-  // -> /individual). Full navigation on purpose: the zones are separate apps
+  // -> /claimant). Full navigation on purpose: the zones are separate apps
   // reached through the proxy rewrite, and the proxy needs the fresh session
   // cookies on the request.
   function goToRoleHome() {
     onClose();
     window.location.href = "/";
+  }
+
+  // Shows the OTP screen for the MFA challenge Cognito returned after the
+  // password. Returns false for sign-in steps this modal doesn't handle.
+  async function showMfaStep(nextStep: SignInNextStep): Promise<boolean> {
+    switch (nextStep.signInStep) {
+      case "CONFIRM_SIGN_IN_WITH_SMS_CODE":
+      case "CONFIRM_SIGN_IN_WITH_EMAIL_CODE":
+        setMfaChannel(
+          nextStep.signInStep === "CONFIRM_SIGN_IN_WITH_EMAIL_CODE" ? "email" : "sms",
+        );
+        setMfaDestination(nextStep.codeDeliveryDetails?.destination ?? "");
+        setStep("mfa-otp");
+        return true;
+      case "CONTINUE_SIGN_IN_WITH_MFA_SELECTION": {
+        // User has both SMS and email MFA enabled - prefer email.
+        const allowed = nextStep.allowedMFATypes ?? [];
+        const preferred = allowed.includes("EMAIL")
+          ? "EMAIL"
+          : allowed.includes("SMS")
+            ? "SMS"
+            : undefined;
+        if (!preferred) return false;
+        const { nextStep: afterSelection } = await cognitoSelectMfaType(preferred);
+        return showMfaStep(afterSelection);
+      }
+      default:
+        return false;
+    }
   }
 
   async function handleLoginSubmit(loginIdentifier: string, password: string) {
@@ -169,10 +206,8 @@ export default function AuthModal({
       if (isSignedIn) {
         await logCognitoSessionTokens();
         goToRoleHome();
-      } else if (nextStep.signInStep === "CONFIRM_SIGN_IN_WITH_SMS_CODE") {
+      } else if (await showMfaStep(nextStep)) {
         setPendingLoginCreds({ identifier: loginIdentifier, password });
-        setSmsOtpDestination(nextStep.codeDeliveryDetails?.destination ?? "");
-        setStep("sms-otp");
         setSubmitting(false);
       } else {
         setError("Additional verification is required to finish logging in.");
@@ -189,12 +224,12 @@ export default function AuthModal({
     }
   }
 
-  async function handleSmsOtpSubmit(otp: string) {
+  async function handleMfaOtpSubmit(otp: string) {
     if (!persona) return;
     setSubmitting(true);
     setError(null);
     try {
-      const { isSignedIn } = await cognitoConfirmSignInWithSms(otp);
+      const { isSignedIn } = await cognitoConfirmSignInWithCode(otp);
       if (isSignedIn) {
         await logCognitoSessionTokens();
         goToRoleHome();
@@ -210,7 +245,7 @@ export default function AuthModal({
     }
   }
 
-  async function handleResendSmsOtp() {
+  async function handleResendMfaOtp() {
     if (!persona || !pendingLoginCreds) return;
     try {
       const { nextStep } = await cognitoLogin({
@@ -218,9 +253,7 @@ export default function AuthModal({
         identifier: pendingLoginCreds.identifier,
         password: pendingLoginCreds.password,
       });
-      if (nextStep.signInStep === "CONFIRM_SIGN_IN_WITH_SMS_CODE") {
-        setSmsOtpDestination(nextStep.codeDeliveryDetails?.destination ?? "");
-      }
+      await showMfaStep(nextStep);
     } catch (err) {
       setError(
         describeCognitoError(
@@ -317,6 +350,10 @@ export default function AuthModal({
   }
 
   function handleForgotPassword() {
+    // Each forgot-password attempt starts clean - don't carry over the
+    // code or new password typed during an earlier reset.
+    setResetOtp("");
+    setResetPasswordDraft(undefined);
     setError(null);
     setStep("forgot-email");
   }
@@ -326,8 +363,12 @@ export default function AuthModal({
     setSubmitting(true);
     setError(null);
     try {
-      await cognitoForgotPassword({ persona: persona.slug, email });
+      const { nextStep } = await cognitoForgotPassword({
+        persona: persona.slug,
+        email,
+      });
       setResetEmail(email);
+      setResetDestination(nextStep.codeDeliveryDetails?.destination ?? "");
       setStep("forgot-otp");
     } catch (err) {
       setError(
@@ -344,7 +385,11 @@ export default function AuthModal({
   async function handleResendResetCode() {
     if (!persona || !resetEmail) return;
     try {
-      await cognitoForgotPassword({ persona: persona.slug, email: resetEmail });
+      const { nextStep } = await cognitoForgotPassword({
+        persona: persona.slug,
+        email: resetEmail,
+      });
+      setResetDestination(nextStep.codeDeliveryDetails?.destination ?? "");
     } catch (err) {
       setError(
         describeCognitoError(
@@ -372,6 +417,8 @@ export default function AuthModal({
         otp: resetOtp,
         newPassword,
       });
+      setResetOtp("");
+      setResetPasswordDraft(undefined);
       setLoginSuccess(
         "Your password has been reset. Please log in with your new password.",
       );
@@ -383,6 +430,14 @@ export default function AuthModal({
           "We couldn't reset your password. Please try again.",
         ),
       );
+      // Cognito only checks the reset code here, together with the new
+      // password - there's no way to verify it on the OTP screen. Send the
+      // user back there when it's the code that's wrong.
+      const name = err instanceof Error ? err.name : undefined;
+      if (name === "CodeMismatchException" || name === "ExpiredCodeException") {
+        setResetOtp("");
+        setStep("forgot-otp");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -398,7 +453,7 @@ export default function AuthModal({
       setStep("identifier");
     } else if (step === "otp") {
       setStep("password");
-    } else if (step === "sms-otp") {
+    } else if (step === "mfa-otp") {
       setPendingLoginCreds(null);
       setStep("login");
     } else if (step === "forgot-email") {
@@ -440,11 +495,13 @@ export default function AuthModal({
       subtitle: `Enter the OTP we sent to ${identifier?.email ?? "your email"}.`,
       divider: true,
     },
-    "sms-otp": {
+    "mfa-otp": {
       title: "OTP Verification",
-      subtitle: smsOtpDestination
-        ? `Enter the OTP we sent to ${smsOtpDestination}.`
-        : "Enter the OTP we sent to your registered mobile number.",
+      subtitle: mfaDestination
+        ? `Enter the OTP we sent to ${mfaDestination}.`
+        : `Enter the OTP we sent to your registered ${
+            mfaChannel === "email" ? "email address" : "mobile number"
+          }.`,
       backLabel: "Back to Login",
       divider: true,
     },
@@ -457,7 +514,9 @@ export default function AuthModal({
     },
     "forgot-otp": {
       title: "OTP Verification",
-      subtitle: `Enter the OTP we have shared on ${maskEmail(resetEmail)}!`,
+      subtitle: `Enter the OTP we have shared on ${
+        resetDestination || maskEmail(resetEmail)
+      }!`,
       backLabel: "Back to Login",
       divider: true,
     },
@@ -533,11 +592,11 @@ export default function AuthModal({
               />
             ) : null}
 
-            {step === "sms-otp" ? (
+            {step === "mfa-otp" ? (
               <ResetOtpStep
                 submitting={submitting}
-                onSubmit={handleSmsOtpSubmit}
-                onResend={handleResendSmsOtp}
+                onSubmit={handleMfaOtpSubmit}
+                onResend={handleResendMfaOtp}
               />
             ) : null}
 

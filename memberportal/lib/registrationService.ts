@@ -60,6 +60,11 @@ export function describeCognitoError(error: unknown, fallback: string): string {
     case "InvalidPasswordException":
       return "That password doesn't meet the required strength.";
     case "InvalidParameterException":
+      // ForgotPassword raises this when the user has no verified email/phone
+      // to deliver the code to (e.g. the account was never confirmed).
+      if (error instanceof Error && /no registered\/verified email or phone_number/i.test(error.message)) {
+        return "This account hasn't been verified yet, so we can't send a reset code. Please complete sign-up verification first.";
+      }
       return "Enter a valid email and phone number (phone must include country code, e.g. +27...).";
     case "CodeMismatchException":
       return "That code didn't match. Please try again.";
@@ -301,7 +306,7 @@ export async function registerCognitoProfile(): Promise<unknown> {
 /**
  * Picks the zone to land on from the current session's access token
  * https://rma.com/claims/rma_roles claim (Organization -> /company,
- * Individual -> /individual), or null when the token carries no recognised role. Call after
+ * Individual -> /claimant), or null when the token carries no recognised role. Call after
  * registerCognitoProfile() so the session already holds the refreshed tokens -
  * fetchAuthSession() here just reads them back, no extra network call.
  */
@@ -339,9 +344,22 @@ export async function cognitoLogin(input: {
   }
 }
 
-export async function cognitoConfirmSignInWithSms(otp: string) {
+/** Answers the sign-in MFA challenge with the SMS or email OTP. */
+export async function cognitoConfirmSignInWithCode(otp: string) {
   const { isSignedIn, nextStep } = await confirmSignIn({
     challengeResponse: otp,
+  });
+  return { isSignedIn, nextStep };
+}
+
+/**
+ * Picks the MFA channel when the user has more than one enabled
+ * (CONTINUE_SIGN_IN_WITH_MFA_SELECTION). Cognito then sends the code and
+ * returns the matching CONFIRM_SIGN_IN_WITH_*_CODE step.
+ */
+export async function cognitoSelectMfaType(type: "EMAIL" | "SMS") {
+  const { isSignedIn, nextStep } = await confirmSignIn({
+    challengeResponse: type,
   });
   return { isSignedIn, nextStep };
 }
@@ -350,8 +368,13 @@ export async function cognitoForgotPassword(input: {
   persona: PersonaSlug;
   email: string;
 }) {
-  const output = await resetPassword({ username: input.email });
-  return output;
+  try {
+    const output = await resetPassword({ username: input.email });
+    return output;
+  } catch (err) {
+    console.error("[Cognito] resetPassword failed:", err);
+    throw err;
+  }
 }
 
 export async function cognitoConfirmForgotPassword(input: {

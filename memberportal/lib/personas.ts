@@ -18,7 +18,7 @@ export const PERSONAS: Record<PersonaSlug, PersonaConfig> = {
     identifierKind: "id-number",
     identifierLabel: "South African ID (SA id) / Passport no.",
     identifierPlaceholder: "Enter your SA Id or passport no.",
-    destination: "/individual",
+    destination: "/claimant",
   },
   employer: {
     slug: "employer",

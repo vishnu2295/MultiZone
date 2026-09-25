@@ -1,6 +1,4 @@
 import { getServerCognitoSession } from "@/lib/auth/cognitoSession.server";
-import apiService, { type ApiRequestOptions } from "./apiService";
-import { auth0 } from "@/lib/auth0";
 import { logger } from "@/lib/logger";
 import apiService, {
   ApiError,
