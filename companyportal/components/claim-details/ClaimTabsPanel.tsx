@@ -7,22 +7,33 @@ import DocumentRow from "@/components/claim-details/panels/DocumentRow";
 import InvoicesPanel from "@/components/claim-details/panels/InvoicesPanel";
 import PaymentsPanel from "@/components/claim-details/panels/PaymentsPanel";
 import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
+import Pagination from "@/components/ui/Pagination";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import { computePageCount } from "@/lib/utils/pagination";
 import type { ApiPagedResponse } from "@/content/companyDetails";
+import type { ApiClaim } from "@/content/claims";
 import {
   claimTabs,
+  mapApiClaimMedicalInvoice,
+  mapApiClaimMedicalInvoices,
   mapApiClaimPayments,
   mapApiDocuments,
   mapApiPreAuthorizations,
   type ApiClaimDocument,
+  type ApiClaimMedicalInvoice,
+  type ClaimMedicalInvoice,
   type ApiClaimPayment,
   type ApiPreAuthorizationDetailsResponse,
   type ClaimAuthorization,
+  type ClaimInvoice,
   type ClaimMedicalDocument,
   type ClaimPayment,
   type ClaimTab,
 } from "@/content/claimDetails";
+import MedicalInvoicesPanel from "@/components/claim-details/panels/InvoicesPanel";
+
+const MEDICAL_INVOICES_PAGE_SIZE = 10;
 
 export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
   const { token, rolePlayerId } = useCompanyProfile();
@@ -36,6 +47,13 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
 
   const [authorizations, setAuthorizations] = useState<ClaimAuthorization[]>([]);
   const [isLoadingAuthorizations, setIsLoadingAuthorizations] = useState(true);
+
+  const [medicalInvoices, setMedicalInvoices] = useState<ClaimMedicalInvoice[]>([]);
+  const [isLoadingMedicalInvoices, setIsLoadingMedicalInvoices] =
+    useState(true);
+  const [personEventId, setPersonEventId] = useState<number | null>(null);
+  const [medicalInvoicesPage, setMedicalInvoicesPage] = useState(1);
+  const [medicalInvoicesPageCount, setMedicalInvoicesPageCount] = useState(1);
 
   const [payments, setPayments] = useState<ClaimPayment[]>([]);
   const [isLoadingPayments, setIsLoadingPayments] = useState(true);
@@ -100,6 +118,77 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
   //   };
   // }, [ref, rolePlayerId, token]);
 
+  // The invoices endpoint is keyed by personEventId, which only the claim
+  // itself carries - look it up from the claim reference once, then page
+  // through invoices below without refetching the claim.
+  useEffect(() => {
+    if (!token || !rolePlayerId || !ref) {
+      setIsLoadingMedicalInvoices(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsLoadingMedicalInvoices(true);
+    async function loadPersonEventId() {
+      try {
+        const claim = await apiService.get<ApiClaim>(`/employer/claim/${ref}`, {
+          token: token ?? undefined,
+          params: { rolePlayerId },
+        });
+        if (cancelled) return;
+        if (claim.personEventId) {
+          setPersonEventId(claim.personEventId);
+        } else {
+          setIsLoadingMedicalInvoices(false);
+        }
+      } catch (error) {
+        console.error("Failed to load claim for medical invoices:", error);
+        if (!cancelled) setIsLoadingMedicalInvoices(false);
+      }
+    }
+
+    loadPersonEventId();
+    return () => {
+      cancelled = true;
+    };
+  }, [ref, rolePlayerId, token]);
+
+  useEffect(() => {
+    if (!token || !rolePlayerId || !personEventId) return;
+
+    let cancelled = false;
+    setIsLoadingMedicalInvoices(true);
+    async function loadMedicalInvoices() {
+      try {
+        const response = await apiService.get<
+          ApiPagedResponse<ApiClaimMedicalInvoice>
+        >(`/employer/${rolePlayerId}/invoices/${personEventId}`, {
+          token: token ?? undefined,
+          params: {
+            page: medicalInvoicesPage,
+            pageSize: MEDICAL_INVOICES_PAGE_SIZE,
+            invoiceNumber: "",
+          },
+        });
+        if (!cancelled) {
+          setMedicalInvoices(mapApiClaimMedicalInvoices(response.data ?? []));
+          setMedicalInvoicesPageCount(
+            computePageCount(response.rowCount, MEDICAL_INVOICES_PAGE_SIZE),
+          );
+        }
+      } catch (error) {
+        console.error("Failed to load medical invoices:", error);
+      } finally {
+        if (!cancelled) setIsLoadingMedicalInvoices(false);
+      }
+    }
+
+    loadMedicalInvoices();
+    return () => {
+      cancelled = true;
+    };
+  }, [medicalInvoicesPage, personEventId, rolePlayerId, token]);
+
   useEffect(() => {
     if (!token || !rolePlayerId) {
       setIsLoadingPayments(false);
@@ -136,10 +225,11 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className={`shrink-0 whitespace-nowrap rounded-md px-4 py-1.5 text-[12px] font-semibold leading-[18px] transition cursor-pointer ${activeTab === tab
+            className={`shrink-0 whitespace-nowrap rounded-md px-4 py-1.5 text-[12px] font-semibold leading-[18px] transition cursor-pointer ${
+              activeTab === tab
                 ? "bg-[#F59E0B] text-white shadow-[0px_4px_12px_rgba(10,102,255,0.25)]"
                 : "border border-black/8 bg-white text-[#64748B] hover:text-[#13537B]"
-              }`}
+            }`}
           >
             {tab}
           </button>
@@ -165,7 +255,21 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
               ))}
             </div>
           ))} */}
-        {activeTab === "Medical Invoices" && <InvoicesPanel invoices={[]} />}
+        {activeTab === "Medical Invoices" &&
+          (isLoadingMedicalInvoices ? (
+            <PanelSkeleton />
+          ) : (
+            <div className="flex flex-col gap-3">
+              <MedicalInvoicesPanel
+                invoices={medicalInvoices}
+              />
+              <Pagination
+                page={medicalInvoicesPage}
+                pageCount={medicalInvoicesPageCount}
+                onPageChange={setMedicalInvoicesPage}
+              />
+            </div>
+          ))}
         {/* {activeTab === "Authorisations" &&
           (isLoadingAuthorizations ? (
             <PanelSkeleton />
