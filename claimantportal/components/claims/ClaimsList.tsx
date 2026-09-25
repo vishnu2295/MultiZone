@@ -12,6 +12,7 @@ import Pagination from "@/components/ui/Pagination";
 import Skeleton from "@/components/ui/Skeleton";
 import { SearchIcon } from "@/components/common/icons";
 import apiService from "@/lib/api/apiService";
+import { clientLogger } from "@/lib/clientLogger";
 import { getEmployeeCoidId } from "@/lib/auth/employeeClaims";
 
 const PAGE_SIZE = 10;
@@ -72,8 +73,17 @@ export default function ClaimsList() {
           setClaims(response.data.map(mapApiClaim));
           setPageCount(response.pageCount || 1);
         }
+        clientLogger.info("Claims loaded", {
+          page,
+          count: response.data.length,
+          searched: !!claimReferenceNumber,
+        });
       } catch (error) {
-        console.error("Failed to load claims:", error);
+        clientLogger.error("Failed to load claims", {
+          page,
+          searched: !!claimReferenceNumber,
+          error,
+        });
       } finally {
         if (!cancelled) setIsLoading(false);
       }

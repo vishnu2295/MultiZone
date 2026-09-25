@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Auth0Client } from "@auth0/nextjs-auth0/server";
 import { apiService } from "./api/apiService";
+import { logger } from "./logger";
 
 const RMA_ROLES_CLAIM = "https://rma.com/claims/rma_roles";
 const PROFILE_STATUS_CLAIM = "https://rma.com/claims/profile_status";
@@ -64,10 +65,8 @@ export const auth0 = new Auth0Client({
   },
   async onCallback(error, ctx, session) {
     const baseUrl = ctx.appBaseUrl ?? process.env.APP_BASE_URL ?? "";
-    const token = session?.tokenSet.accessToken;
-    console.log(token);
     if (error) {
-      console.log("Auth0 callback error", error);
+      logger.error("Auth0 callback error", { error });
       return NextResponse.redirect(`${baseUrl}/auth/login`);
     }
 
@@ -78,12 +77,10 @@ export const auth0 = new Auth0Client({
           | string
           | undefined)
       : undefined;
-    console.log("Profile Status:", profileStatus);
     // Missing claim (undefined) is treated the same as "not linked yet" -
     // register whenever profileStatus isn't explicitly "Linked".
     const needsRegistration = !profileStatus || profileStatus !== "Linked";
     if (accessToken && refreshToken && needsRegistration) {
-      console.log("Calling registration API:", REGISTRATION_URL);
       try {
         const registrationResponse = await apiService.post<{
           access_token: string;
@@ -92,7 +89,11 @@ export const auth0 = new Auth0Client({
           { accessToken, refreshToken, SourceChannel: "ClientPortal" },
           { skipAuth: true },
         );
-        console.log("Registration API response:", registrationResponse);
+        logger.info("Registration API call succeeded during login callback", {
+          userId: session?.user.sub,
+          profileStatus,
+          issuedAccessToken: !!registrationResponse.access_token,
+        });
 
         // The registration API issues its own access token - use it for all
         // further API calls in place of Auth0's, by overwriting it on the
@@ -103,20 +104,24 @@ export const auth0 = new Auth0Client({
           accessToken = registrationResponse.access_token;
         }
       } catch (registrationError) {
-        console.error(
-          "Registration API call failed during login callback",
-          registrationError,
-        );
+        logger.error("Registration API call failed during login callback", {
+          userId: session?.user.sub,
+          profileStatus,
+          error: registrationError,
+        });
         return NextResponse.redirect(`${baseUrl}/auth/login`);
       }
     } else {
-      console.log("Registration API not called. Conditions:", {
+      logger.info("Registration API not called", {
+        userId: session?.user.sub,
+        profileStatus,
         hasAccessToken: !!accessToken,
         hasRefreshToken: !!refreshToken,
         needsRegistration,
       });
     }
     const returnTo = getRoleHomePath(accessToken) ?? ctx.returnTo ?? "/";
+    logger.info("User logged in", { userId: session?.user.sub, returnTo });
 
     return NextResponse.redirect(`${baseUrl}${returnTo}`);
   },

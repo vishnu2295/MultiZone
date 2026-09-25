@@ -1,11 +1,26 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth0, hasIndividualRole } from "@/lib/auth0";
+import { logger } from "@/lib/logger";
 
 // Next.js 16 renamed `middleware` to `proxy`. This mounts the Auth0 routes
 // (/auth/login, /auth/logout, /auth/callback, /auth/profile, /auth/access-token)
 // and keeps the rolling session cookie fresh on every request.
 export async function proxy(request: NextRequest) {
+  const startedAt = Date.now();
+  const response = await handleRequest(request);
+  // One access-log line per request. The query string is dropped in case it
+  // carries personal data; redirects record where the user was sent.
+  logger.info("Request", {
+    method: request.method,
+    path: request.nextUrl.pathname,
+    redirectTo: response.headers.get("location")?.split("?")[0],
+    durationMs: Date.now() - startedAt,
+  });
+  return response;
+}
+
+async function handleRequest(request: NextRequest) {
   const authResponse = await auth0.middleware(request);
 
   const { pathname } = request.nextUrl;

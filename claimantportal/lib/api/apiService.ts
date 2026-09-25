@@ -1,5 +1,7 @@
 
 
+import { reportApiCall } from "./apiCallReporter";
+
 const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 /**
@@ -133,19 +135,41 @@ async function request<TResponse>(
     requestHeaders.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(url, {
-    ...fetchOptions,
-    method,
-    headers: requestHeaders,
-    body:
-      body === undefined
-        ? undefined
-        : body instanceof FormData
-          ? body
-          : JSON.stringify(body),
-  });
+  const startedAt = Date.now();
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...fetchOptions,
+      method,
+      headers: requestHeaders,
+      body:
+        body === undefined
+          ? undefined
+          : body instanceof FormData
+            ? body
+            : JSON.stringify(body),
+    });
+  } catch (error) {
+    reportApiCall({
+      method,
+      url,
+      status: 0,
+      startedAt,
+      body,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 
   const data = await parseResponseBody(response);
+  reportApiCall({
+    method,
+    url,
+    status: response.status,
+    statusText: response.statusText,
+    startedAt,
+    body,
+  });
 
   if (!response.ok) {
     throw new ApiError(
