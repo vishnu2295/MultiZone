@@ -59,31 +59,31 @@ const nextConfig: NextConfig = {
         source: "/api/:path*",
         destination: `${BROKER_DOMAIN}/broker/api/:path*`,
       },
-      // {
-      //   source: "/company/:path*",
-      //   destination: `${COMPANY_PORTAL_ORIGIN}/company/:path*`,
-      // },
-      // {
-      //   source: "/company-static/:path*",
-      //   destination: `${COMPANY_PORTAL_ORIGIN}/company-static/:path*`,
-      // },
-      // {
-      //   source: "/_next/image",
-      //   destination: `${COMPANY_PORTAL_ORIGIN}/_next/image`,
-      // },
-      // // Claimant Portal
-      // {
-      //   source: "/claimant",
-      //   destination: `${CLAIMANT_PORTAL_ORIGIN}/claimant`,
-      // },
-      // {
-      //   source: "/claimant/:path*",
-      //   destination: `${CLAIMANT_PORTAL_ORIGIN}/claimant/:path*`,
-      // },
-      // {
-      //   source: "/claimant-static/:path*",
-      //   destination: `${CLAIMANT_PORTAL_ORIGIN}/claimant-static/:path*`,
-      // },
+      {
+        source: "/company/:path*",
+        destination: `${COMPANY_PORTAL_ORIGIN}/company/:path*`,
+      },
+      {
+        source: "/company-static/:path*",
+        destination: `${COMPANY_PORTAL_ORIGIN}/company-static/:path*`,
+      },
+      {
+        source: "/_next/image",
+        destination: `${COMPANY_PORTAL_ORIGIN}/_next/image`,
+      },
+      // Claimant Portal
+      {
+        source: "/claimant",
+        destination: `${CLAIMANT_PORTAL_ORIGIN}/claimant`,
+      },
+      {
+        source: "/claimant/:path*",
+        destination: `${CLAIMANT_PORTAL_ORIGIN}/claimant/:path*`,
+      },
+      {
+        source: "/claimant-static/:path*",
+        destination: `${CLAIMANT_PORTAL_ORIGIN}/claimant-static/:path*`,
+      },
     ];
   },
 };

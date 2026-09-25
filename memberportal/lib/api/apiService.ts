@@ -79,6 +79,11 @@ function buildUrl(path: string, baseUrl: string, params?: Record<string, QueryPa
   return url.toString();
 }
 
+/** The full URL `request` calls for this path and options (used for logging). */
+export function resolveApiUrl(path: string, options: ApiRequestOptions = {}): string {
+  return buildUrl(path, options.baseUrl ?? DEFAULT_BASE_URL, options.params);
+}
+
 async function parseResponseBody(response: Response): Promise<unknown> {
   if (response.status === 204 || response.status === 205) return undefined;
 

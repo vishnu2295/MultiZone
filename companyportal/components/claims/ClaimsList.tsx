@@ -10,6 +10,7 @@ import {
 import ClaimCard from "@/components/claims/ClaimCard";
 import Pagination from "@/components/ui/Pagination";
 import apiService from "@/lib/api/apiService";
+import { clientLogger } from "@/lib/clientLogger";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
 import Skeleton from "../ui/Skeleton";
 
@@ -85,6 +86,12 @@ export default function ClaimsList() {
           setClaims(response.data.map(mapApiClaim));
           setPageCount(response.pageCount || 1);
         }
+        clientLogger.info("Claims loaded", {
+            tab: activeTab,
+          page,
+          count: response.data.length,
+          searched: !!claimReferenceNumber,
+        });
       } catch (error) {
         console.error("Failed to load claims:", error);
       } finally {
