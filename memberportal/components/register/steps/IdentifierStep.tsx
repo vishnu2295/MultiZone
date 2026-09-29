@@ -20,7 +20,7 @@ const DIAL_CODES = [
 export type IdentifierResult = {
   idValue: string;
   email: string;
-  /** E.164, e.g. "+27821234567". */
+  /** E.164, e.g. "+27821234567", or "" when not provided. */
   phone: string;
 };
 
@@ -86,7 +86,8 @@ export default function IdentifierStep({
     if (!EMAIL_RE.test(trimmedEmail)) {
       nextErrors.email = "Enter a valid email address.";
     }
-    if (!localNumber || !PHONE_RE.test(combinedPhone)) {
+    // Phone is optional - only validate it when something was entered.
+    if (localNumber && !PHONE_RE.test(combinedPhone)) {
       nextErrors.phone = "Enter a valid phone number.";
     }
 
@@ -96,7 +97,11 @@ export default function IdentifierStep({
     }
 
     setErrors({});
-    onSubmit({ idValue: trimmedId, email: trimmedEmail, phone: combinedPhone });
+    onSubmit({
+      idValue: trimmedId,
+      email: trimmedEmail,
+      phone: localNumber ? combinedPhone : "",
+    });
   }
 
   return (
@@ -143,7 +148,7 @@ export default function IdentifierStep({
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="phone" className={labelClass}>
-          Phone Number
+          Phone Number (optional)
         </label>
         <div className="flex gap-2">
           <select

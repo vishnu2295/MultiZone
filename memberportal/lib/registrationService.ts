@@ -4,12 +4,15 @@ import {
   confirmResetPassword,
   confirmSignIn,
   confirmSignUp,
+  confirmUserAttribute,
   fetchAuthSession,
   resendSignUpCode,
   resetPassword,
+  sendUserAttributeVerificationCode,
   signIn,
   signOut,
   signUp,
+  updateMFAPreference,
 } from "aws-amplify/auth";
 import type { PersonaSlug } from "@/lib/personas";
 import { decodeJwt } from "@/lib/jwt";
@@ -102,7 +105,7 @@ export async function validateWithRMA(
 }
 
 type ValidateProfileResponse = {
-  isAuth0Registered: boolean;
+  isCognitoRegistered: boolean;
   isRmaRegistered: boolean;
   isSelectedPersona: boolean;
 };
@@ -130,7 +133,7 @@ export async function ensureProfileNotRegistered(
   if (!response.ok) return;
 
   const data: ValidateProfileResponse = await response.json();
-  if (data.isRmaRegistered) {
+  if (data.isRmaRegistered && data.isCognitoRegistered) {
     throw new ProfileAlreadyExistsError();
   }
 }
@@ -149,7 +152,8 @@ export async function cognitoSignUp(input: {
     options: {
       userAttributes: {
         email: input.email,
-        phone_number: input.phone,
+        // Phone is optional; Cognito rejects an empty phone_number.
+        ...(input.phone ? { phone_number: input.phone } : {}),
         "custom:identifier": input.idValue,
       },
       // Lets confirmSignUp's nextStep be COMPLETE_AUTO_SIGN_IN, so we can
@@ -157,6 +161,7 @@ export async function cognitoSignUp(input: {
       // again - otherwise Cognito confirms the account but never
       // establishes a session, and fetchAuthSession() stays empty.
       autoSignIn: true,
+      // { authFlowType: "USER_AUTH" },
     },
   });
   return { isSignUpComplete, nextStep };
@@ -166,7 +171,16 @@ export async function cognitoConfirmSignUp(input: {
   persona: PersonaSlug;
   identifier: string;
   otp: string;
-}): Promise<{ isSignUpComplete: boolean; autoSignInFailed: boolean }> {
+}): Promise<{
+  isSignUpComplete: boolean;
+  autoSignInFailed: boolean;
+  /**
+   * Set when autoSignIn ran but Cognito answered with a further challenge
+   * (e.g. MFA) instead of tokens - the caller must complete that step
+   * before a session exists.
+   */
+  signInNextStep?: Awaited<ReturnType<typeof autoSignIn>>["nextStep"];
+}> {
   // confirmSignUp succeeding means the code was correct and the account is
   // now confirmed - that's already true by the time we get here. autoSignIn
   // is a separate, subsequent call to establish a session for the
@@ -178,16 +192,25 @@ export async function cognitoConfirmSignUp(input: {
   });
 
   let autoSignInFailed = false;
+  let signInNextStep:
+    | Awaited<ReturnType<typeof autoSignIn>>["nextStep"]
+    | undefined;
   if (nextStep.signUpStep === "COMPLETE_AUTO_SIGN_IN") {
     try {
-      await autoSignIn();
+      const result = await autoSignIn();
+      if (!result.isSignedIn) {
+        signInNextStep = result.nextStep;
+      }
     } catch (err) {
       autoSignInFailed = true;
       console.error(
         "[Cognito] autoSignIn failed after a successful confirmSignUp (account is confirmed, no session was established):",
         err,
       );
-      if (err instanceof Error && err.name === "UserAlreadyAuthenticatedException") {
+      if (
+        err instanceof Error &&
+        err.name === "UserAlreadyAuthenticatedException"
+      ) {
         // autoSignIn is one-shot and can't be retried once it's failed (see
         // AutoSignInException on a second attempt) - but a stale session
         // (e.g. from an earlier test in this browser, since there's no
@@ -198,11 +221,78 @@ export async function cognitoConfirmSignUp(input: {
     }
   }
 
-  return { isSignUpComplete, autoSignInFailed };
+  return { isSignUpComplete, autoSignInFailed, signInNextStep };
 }
 
 export async function cognitoResendSignUpCode(identifier: string): Promise<void> {
   await resendSignUpCode({ username: identifier });
+}
+
+/**
+ * Sends an SMS code to verify the signed-in user's phone_number. signUp only
+ * verifies the email, so the phone is confirmed as a separate step once a
+ * session exists (this call needs the access token). Also used for resend.
+ * Returns the masked destination Cognito reports, e.g. "+27*****4567".
+ */
+export async function cognitoSendPhoneVerificationCode(): Promise<string> {
+  try {
+    const { destination } = await sendUserAttributeVerificationCode({
+      userAttributeKey: "phone_number",
+    });
+    return destination ?? "";
+  } catch (err) {
+    // Log Cognito's own message - the UI copy is generic, and send failures
+    // here are usually pool-side SMS setup (SNS role, spend limit, sandbox).
+    console.error("[Cognito] sendUserAttributeVerificationCode(phone_number) failed:", err);
+    throw err;
+  }
+}
+
+/**
+ * User-facing copy for the phone verification step. The number was already
+ * accepted by signUp, so describeCognitoError's InvalidParameterException copy
+ * ("enter a valid email and phone number") would be misleading here - Cognito
+ * raises that when it can't deliver the SMS, not because the input is wrong.
+ */
+export function describePhoneVerificationError(error: unknown, fallback: string): string {
+  const name = error instanceof Error ? error.name : undefined;
+  switch (name) {
+    case "CodeMismatchException":
+    case "ExpiredCodeException":
+    case "LimitExceededException":
+    case "TooManyRequestsException":
+      return describeCognitoError(error, fallback);
+    default:
+      return fallback;
+  }
+}
+
+/**
+ * Turns on email MFA for the signed-in user. The pool's MFA is "Optional", so
+ * a brand-new user has none - that's what lets autoSignIn right after sign-up
+ * go straight through without a second code. Called at the end of sign-up so
+ * every login after that is challenged. Never throws: failing to enable MFA
+ * shouldn't block a registration that has otherwise succeeded.
+ */
+export async function cognitoEnableEmailMfa(): Promise<void> {
+  try {
+    await updateMFAPreference({ email: "PREFERRED" });
+  } catch (err) {
+    console.error("[Cognito] Couldn't enable email MFA after sign-up:", err);
+  }
+}
+
+/** Confirms the phone_number SMS code; Cognito then sets phone_number_verified. */
+export async function cognitoConfirmPhone(otp: string): Promise<void> {
+  try {
+    await confirmUserAttribute({
+      userAttributeKey: "phone_number",
+      confirmationCode: otp,
+    });
+  } catch (err) {
+    console.error("[Cognito] confirmUserAttribute(phone_number) failed:", err);
+    throw err;
+  }
 }
 
 /**

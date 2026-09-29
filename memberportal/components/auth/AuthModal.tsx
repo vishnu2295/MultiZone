@@ -21,14 +21,18 @@ import type { PersonaConfig } from "@/lib/personas";
 import { maskEmail } from "@/lib/format";
 import {
   cognitoConfirmForgotPassword,
+  cognitoConfirmPhone,
   cognitoConfirmSignInWithCode,
   cognitoConfirmSignUp,
+  cognitoEnableEmailMfa,
   cognitoForgotPassword,
   cognitoLogin,
   cognitoResendSignUpCode,
   cognitoSelectMfaType,
+  cognitoSendPhoneVerificationCode,
   cognitoSignUp,
   describeCognitoError,
+  describePhoneVerificationError,
   ensureProfileNotRegistered,
   logCognitoSessionTokens,
   ProfileAlreadyExistsError,
@@ -45,6 +49,7 @@ type Step =
   | "identifier"
   | "password"
   | "otp"
+  | "phone-otp"
   | "mfa-otp"
   | "forgot-email"
   | "forgot-otp"
@@ -73,8 +78,13 @@ export default function AuthModal({
     identifier: string;
     password: string;
   } | null>(null);
+  // True when the MFA step was reached from sign-up (autoSignIn hit an MFA
+  // challenge), so v2/register still has to run once MFA completes.
+  const [mfaFromSignup, setMfaFromSignup] = useState(false);
   const [mfaChannel, setMfaChannel] = useState<MfaChannel>("sms");
   const [mfaDestination, setMfaDestination] = useState("");
+  // Masked number Cognito sent the phone verification SMS to.
+  const [phoneDestination, setPhoneDestination] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loginSuccess, setLoginSuccess] = useState<string | null>(null);
@@ -105,7 +115,9 @@ export default function AuthModal({
       setResetOtp("");
       setResetDestination("");
       setPendingLoginCreds(null);
+      setMfaFromSignup(false);
       setMfaDestination("");
+      setPhoneDestination("");
       setSubmitting(false);
       setError(null);
       setLoginSuccess(null);
@@ -131,6 +143,7 @@ export default function AuthModal({
       setResetOtp("");
       setResetDestination("");
       setPendingLoginCreds(null);
+      setMfaFromSignup(false);
       setMfaDestination("");
       setIdentifierDraft(undefined);
       setLoginDraft(undefined);
@@ -171,7 +184,9 @@ export default function AuthModal({
       case "CONFIRM_SIGN_IN_WITH_SMS_CODE":
       case "CONFIRM_SIGN_IN_WITH_EMAIL_CODE":
         setMfaChannel(
-          nextStep.signInStep === "CONFIRM_SIGN_IN_WITH_EMAIL_CODE" ? "email" : "sms",
+          nextStep.signInStep === "CONFIRM_SIGN_IN_WITH_EMAIL_CODE"
+            ? "email"
+            : "sms",
         );
         setMfaDestination(nextStep.codeDeliveryDetails?.destination ?? "");
         setStep("mfa-otp");
@@ -185,7 +200,8 @@ export default function AuthModal({
             ? "SMS"
             : undefined;
         if (!preferred) return false;
-        const { nextStep: afterSelection } = await cognitoSelectMfaType(preferred);
+        const { nextStep: afterSelection } =
+          await cognitoSelectMfaType(preferred);
         return showMfaStep(afterSelection);
       }
       default:
@@ -204,10 +220,15 @@ export default function AuthModal({
         password,
       });
       if (isSignedIn) {
+        // No MFA challenge means this user has no MFA yet (pool MFA is
+        // "Optional") - e.g. they signed up but never reached the end of
+        // sign-up. Switch it on so their next login is challenged.
+        await cognitoEnableEmailMfa();
         await logCognitoSessionTokens();
         goToRoleHome();
       } else if (await showMfaStep(nextStep)) {
         setPendingLoginCreds({ identifier: loginIdentifier, password });
+        setMfaFromSignup(false);
         setSubmitting(false);
       } else {
         setError("Additional verification is required to finish logging in.");
@@ -232,6 +253,10 @@ export default function AuthModal({
       const { isSignedIn } = await cognitoConfirmSignInWithCode(otp);
       if (isSignedIn) {
         await logCognitoSessionTokens();
+        if (mfaFromSignup) {
+          await finishSignup();
+          return;
+        }
         goToRoleHome();
       } else {
         setError("Additional verification is required to finish logging in.");
@@ -296,6 +321,12 @@ export default function AuthModal({
         idValue: identifier.idValue,
         password: nextPassword,
       });
+      // Kept so "resend" on the MFA step can re-run sign-in if autoSignIn
+      // after confirmation lands on an MFA challenge.
+      setPendingLoginCreds({
+        identifier: identifier.email,
+        password: nextPassword,
+      });
       setStep("otp");
     } catch (err) {
       setError(
@@ -311,30 +342,107 @@ export default function AuthModal({
     setSubmitting(true);
     setError(null);
     try {
-      const { autoSignInFailed } = await cognitoConfirmSignUp({
+      const { autoSignInFailed, signInNextStep } = await cognitoConfirmSignUp({
         persona: persona.slug,
         identifier: identifier.email,
         otp,
       });
 
+      if (signInNextStep) {
+        // autoSignIn got an MFA challenge instead of tokens - finish it on
+        // the MFA step, which calls v2/register once signed in.
+        if (await showMfaStep(signInNextStep)) {
+          setMfaFromSignup(true);
+          setSubmitting(false);
+          return;
+        }
+        setLoginSuccess(
+          "Your account is confirmed. Please log in to continue.",
+        );
+        setStep("login");
+        setSubmitting(false);
+        return;
+      }
+
       if (autoSignInFailed) {
         // The code was correct and the account is confirmed - there's just
         // no session yet. Send them to log in manually rather than showing
         // an error that would incorrectly imply the code was wrong.
-        setLoginSuccess("Your account is confirmed. Please log in to continue.");
+        setLoginSuccess(
+          "Your account is confirmed. Please log in to continue.",
+        );
         setStep("login");
         setSubmitting(false);
         return;
       }
 
       await logCognitoSessionTokens();
-      await registerCognitoProfile();
-      goToRoleHome();
+      await finishSignup();
     } catch (err) {
       setError(
         describeCognitoError(err, "That code didn't work. Please try again."),
       );
       setSubmitting(false);
+    }
+  }
+
+  // Runs once sign-up has a session (email confirmed, plus MFA if the pool
+  // asked for it). If a phone number was given it must be verified too, so
+  // send its SMS code and stop on the phone step; otherwise register now.
+  async function finishSignup() {
+    if (identifier?.phone) {
+      try {
+        setPhoneDestination(await cognitoSendPhoneVerificationCode());
+      } catch (err) {
+        // Still show the phone step - its resend button retries the send.
+        setError(
+          describePhoneVerificationError(
+            err,
+            "We couldn't send a code to your phone. Please tap Resend OTP.",
+          ),
+        );
+      }
+      setStep("phone-otp");
+      setSubmitting(false);
+      return;
+    }
+    await completeRegistration();
+  }
+
+  // Last step of sign-up. MFA is "Optional" on the pool, so the new user had
+  // none for this first sign-in; switch email MFA on now so every later login
+  // asks for a code. Then link the profile (v2/register) and go home.
+  async function completeRegistration() {
+    await cognitoEnableEmailMfa();
+    await registerCognitoProfile();
+    goToRoleHome();
+  }
+
+  async function handlePhoneOtpSubmit(otp: string) {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await cognitoConfirmPhone(otp);
+      await completeRegistration();
+    } catch (err) {
+      setError(
+        describePhoneVerificationError(err, "That code didn't work. Please try again."),
+      );
+      setSubmitting(false);
+    }
+  }
+
+  async function handleResendPhoneOtp() {
+    setError(null);
+    try {
+      setPhoneDestination(await cognitoSendPhoneVerificationCode());
+    } catch (err) {
+      setError(
+        describePhoneVerificationError(
+          err,
+          "We couldn't resend the code. Please try again.",
+        ),
+      );
     }
   }
 
@@ -344,7 +452,10 @@ export default function AuthModal({
       await cognitoResendSignUpCode(identifier.email);
     } catch (err) {
       setError(
-        describeCognitoError(err, "We couldn't resend the code. Please try again."),
+        describeCognitoError(
+          err,
+          "We couldn't resend the code. Please try again.",
+        ),
       );
     }
   }
@@ -466,10 +577,13 @@ export default function AuthModal({
     }
   }
 
+  // A phone number adds a fourth step: verifying it after the email.
+  const signupSteps = identifier?.phone ? 4 : 3;
   const signupStepLabel: Partial<Record<Step, string>> = {
-    identifier: "Step 1/3",
-    password: "Step 2/3",
-    otp: "Step 3/3",
+    identifier: `Step 1/${signupSteps}`,
+    password: `Step 2/${signupSteps}`,
+    otp: `Step 3/${signupSteps}`,
+    "phone-otp": `Step 4/${signupSteps}`,
   };
 
   const headerByStep: Record<
@@ -493,6 +607,13 @@ export default function AuthModal({
     otp: {
       title: "OTP Verification",
       subtitle: `Enter the OTP we sent to ${identifier?.email ?? "your email"}.`,
+      divider: true,
+    },
+    "phone-otp": {
+      title: "Verify Phone Number",
+      subtitle: `Enter the OTP we sent to ${
+        phoneDestination || identifier?.phone || "your mobile number"
+      }.`,
       divider: true,
     },
     "mfa-otp": {
@@ -543,7 +664,9 @@ export default function AuthModal({
             <AuthHeader
               title={headerByStep[step].title}
               subtitle={headerByStep[step].subtitle}
-              onBack={handleBack}
+              // No going back from phone verification - the account is
+              // already created and signed in by then.
+              onBack={step === "phone-otp" ? undefined : handleBack}
               backLabel={headerByStep[step].backLabel}
               stepLabel={signupStepLabel[step]}
               divider={headerByStep[step].divider}
@@ -589,6 +712,18 @@ export default function AuthModal({
                 submitting={submitting}
                 onSubmit={handleOtpSubmit}
                 onResend={handleResendOtp}
+                submitLabel={identifier?.phone ? "Verify Email" : undefined}
+              />
+            ) : null}
+
+            {step === "phone-otp" ? (
+              <OtpStep
+                identifierValue={phoneDestination || identifier?.phone || ""}
+                submitting={submitting}
+                onSubmit={handlePhoneOtpSubmit}
+                onResend={handleResendPhoneOtp}
+                label="Phone OTP"
+                fallbackTarget="your mobile number"
               />
             ) : null}
 
