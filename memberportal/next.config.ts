@@ -67,11 +67,11 @@ const nextConfig: NextConfig = {
       //   source: "/company-static/:path*",
       //   destination: `${COMPANY_PORTAL_ORIGIN}/company-static/:path*`,
       // },
-      {
-        source: "/_next/image",
-        destination: `${COMPANY_PORTAL_ORIGIN}/_next/image`,
-      },
-      // Claimant Portal
+      // {
+      //   source: "/_next/image",
+      //   destination: `${COMPANY_PORTAL_ORIGIN}/_next/image`,
+      // },
+      // // Claimant Portal
       // {
       //   source: "/claimant",
       //   destination: `${CLAIMANT_PORTAL_ORIGIN}/claimant`,
@@ -80,10 +80,10 @@ const nextConfig: NextConfig = {
       //   source: "/claimant/:path*",
       //   destination: `${CLAIMANT_PORTAL_ORIGIN}/claimant/:path*`,
       // },
-      {
-        source: "/claimant-static/:path*",
-        destination: `${CLAIMANT_PORTAL_ORIGIN}/claimant-static/:path*`,
-      },
+      // {
+      //   source: "/claimant-static/:path*",
+      //   destination: `${CLAIMANT_PORTAL_ORIGIN}/claimant-static/:path*`,
+      // },
     ];
   },
 };
