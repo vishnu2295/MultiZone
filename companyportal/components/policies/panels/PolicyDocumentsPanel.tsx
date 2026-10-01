@@ -7,7 +7,7 @@ import {
   type ApiPagedResponse,
   type CompanyDocument,
 } from "@/content/companyDetails";
-import type { ApiDocumentDownload } from "@/components/claim-details/panels/DocumentRow";
+import type { ApiStoredDocumentDownload } from "@/components/claim-details/panels/DocumentRow";
 import { DocumentIcon, DownloadIcon } from "@/components/home/icons";
 import Pagination from "@/components/ui/Pagination";
 import Skeleton from "@/components/ui/Skeleton";
@@ -81,11 +81,11 @@ export default function PolicyDocumentsPanel({ policyId }: { policyId: string })
 
   async function handleDownload(document: CompanyDocument) {
     try {
-      const response = await apiService.get<ApiDocumentDownload>(
+      const response = await apiService.get<ApiStoredDocumentDownload>(
         `/employer/${rolePlayerId}/documents/${document.uuid}/download`,
         { token: token ?? undefined },
       );
-      downloadBase64File(response.fileName, response.fileType, response.content);
+      downloadBase64File(response.fileName, response.contentType, response.base64Content);
     } catch (error) {
       console.error("Failed to download policy document:", error);
     }

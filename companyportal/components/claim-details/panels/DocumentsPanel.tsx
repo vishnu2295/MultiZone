@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import DocumentRow from "@/components/claim-details/panels/DocumentRow";
 import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
-import { DocumentSetEnum, documentSetOptions } from "@/lib/constants";
+import { documentSetLabel } from "@/lib/constants";
 import type { ApiPagedResponse } from "@/content/companyDetails";
 import type { ApiClaim } from "@/content/claims";
 import {
-  mapApiDocuments,
-  type ApiClaimDocument,
+  mapApiLetters,
+  type ApiClaimDocumentGroup,
   type ClaimMedicalDocument,
 } from "@/content/claimDetails";
 
@@ -19,7 +19,9 @@ export default function DocumentsPanel({ claimId }: { claimId: string }) {
   const { token, rolePlayerId } = useCompanyProfile();
   const searchParams = useSearchParams();
   const ref = searchParams.get("ref");
-  const [documents, setDocuments] = useState<ClaimMedicalDocument[]>([]);
+  const [groupedDocuments, setGroupedDocuments] = useState<
+    Array<{ documentSet: number; label: string; documents: ClaimMedicalDocument[] }>
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -36,20 +38,29 @@ export default function DocumentsPanel({ claimId }: { claimId: string }) {
         });
 
         const response = await apiService.get<
-          ApiPagedResponse<ApiClaimDocument>
+          ApiPagedResponse<ApiClaimDocumentGroup>
         >(`/employer/${rolePlayerId}/documents`, {
           token: token ?? undefined,
           params: {
             keyName: "PersonEventId",
             keyValue: claim.personEventId,
-            documentSet: DocumentSetEnum.ClaimsAdditionalDocuments,
+            // 0 returns every document set, grouped by set.
+            documentSet: 0,
             page: 1,
             pageSize: 10,
           },
         });
         if (!cancelled)
-          setDocuments(
-            mapApiDocuments(response.data).documentGroups[0]?.documents ?? [],
+          setGroupedDocuments(
+            response.data
+              .map((group) => ({
+                documentSet: group.documentSet,
+                label: documentSetLabel(group.documentSet),
+                documents: mapApiLetters(
+                  (group.documents ?? []).filter((doc) => !doc.isDeleted),
+                ),
+              }))
+              .filter((group) => group.documents.length > 0),
           );
       } catch (error) {
         console.error("Failed to load documents:", error);
@@ -63,24 +74,6 @@ export default function DocumentsPanel({ claimId }: { claimId: string }) {
       cancelled = true;
     };
   }, [claimId, ref, rolePlayerId, token]);
-
-  const groupedDocuments = useMemo(() => {
-    const groups = new Map<number, ClaimMedicalDocument[]>();
-    for (const document of documents) {
-      const key = document.documentSet ?? -1;
-      const group = groups.get(key);
-      if (group) group.push(document);
-      else groups.set(key, [document]);
-    }
-
-    return Array.from(groups.entries()).map(([documentSet, docs]) => ({
-      documentSet,
-      label:
-        documentSetOptions.find((option) => option.value === documentSet)?.label ??
-        "Other",
-      documents: docs,
-    }));
-  }, [documents]);
 
   if (isLoading) {
     return <PanelSkeleton />;

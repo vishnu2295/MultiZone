@@ -1,15 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   mapApiEmployerDocuments,
   type ApiDocumentSet,
-  type ApiEmployerDocument,
+  type ApiEmployerDocumentGroup,
   type ApiPagedResponse,
   type CompanyDocument,
 } from "@/content/companyDetails";
 import type { ApiSaveDocumentRequest, ApiSavedDocument } from "@/content/claimDetails";
-import type { ApiDocumentDownload } from "@/components/claim-details/panels/DocumentRow";
+import type { ApiStoredDocumentDownload } from "@/components/claim-details/panels/DocumentRow";
 import { DocumentIcon, DownloadIcon, UploadIcon } from "@/components/home/icons";
 import UploadDocumentModal from "@/components/company-details/UploadDocumentModal";
 import Pagination from "@/components/ui/Pagination";
@@ -20,6 +20,7 @@ import {
   DocumentSetEnum,
   DocumentStatusEnum,
   DocumentSystemNameEnum,
+  documentSetLabel,
   documentSetOptions,
 } from "@/lib/constants";
 import { downloadBase64File } from "@/lib/utils/downloadFile";
@@ -45,7 +46,9 @@ const PAGE_SIZE = 10;
 
 export default function DocumentsPanel() {
   const { token, rolePlayerId } = useCompanyProfile();
-  const [documents, setDocuments] = useState<CompanyDocument[]>([]);
+  const [groupedDocuments, setGroupedDocuments] = useState<
+    Array<{ documentSet: number; label: string; documents: CompanyDocument[] }>
+  >([]);
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,11 +64,12 @@ export default function DocumentsPanel() {
     async function loadDocuments() {
       try {
         const response = await apiService.get<
-          ApiPagedResponse<ApiEmployerDocument>
+          ApiPagedResponse<ApiEmployerDocumentGroup>
         >(`/employer/${rolePlayerId}/documents`, {
           token: token ?? undefined,
           params: {
-            documentSet: DocumentSetEnum.MemberDocumentSet,
+            // 0 returns every document set, grouped by set.
+            documentSet: 0,
             keyName: "RolePlayerId",
             keyValue: rolePlayerId,
             page,
@@ -74,7 +78,15 @@ export default function DocumentsPanel() {
         });
 
         if (!cancelled) {
-          setDocuments(mapApiEmployerDocuments(response.data));
+          setGroupedDocuments(
+            response.data
+              .map((group) => ({
+                documentSet: group.documentSet,
+                label: documentSetLabel(group.documentSet),
+                documents: mapApiEmployerDocuments(group.documents ?? []),
+              }))
+              .filter((group) => group.documents.length > 0),
+          );
           setPageCount(computePageCount(response.rowCount, PAGE_SIZE));
         }
       } catch (error) {
@@ -91,12 +103,12 @@ export default function DocumentsPanel() {
   }, [page, reloadToken, rolePlayerId, token]);
 
   async function handleDownload(document: CompanyDocument) {
-    const response = await apiService.get<ApiDocumentDownload>(
+    const response = await apiService.get<ApiStoredDocumentDownload>(
       `/employer/${rolePlayerId}/documents/${document.uuid}/download`,
       { token: token ?? undefined },
     );
 
-    downloadBase64File(response.fileName, response.fileType, response.content);
+    downloadBase64File(response.fileName, response.contentType, response.base64Content);
   }
 
   const fetchDocumentTypes = useCallback(
@@ -106,23 +118,6 @@ export default function DocumentsPanel() {
       }),
     [token],
   );
-
-  const groupedDocuments = useMemo(() => {
-    const groups = new Map<number, CompanyDocument[]>();
-    for (const document of documents) {
-      const group = groups.get(document.documentSet);
-      if (group) group.push(document);
-      else groups.set(document.documentSet, [document]);
-    }
-
-    return Array.from(groups.entries()).map(([documentSet, docs]) => ({
-      documentSet,
-      label:
-        documentSetOptions.find((option) => option.value === documentSet)?.label ??
-        String(documentSet),
-      documents: docs,
-    }));
-  }, [documents]);
 
   return (
     <div>
@@ -146,7 +141,7 @@ export default function DocumentsPanel() {
           Array.from({ length: 3 }).map((_, index) => (
             <DocumentRowSkeleton key={index} />
           ))
-        ) : documents.length === 0 ? (
+        ) : groupedDocuments.length === 0 ? (
           <div className="rounded-2xl bg-white p-6 text-center text-[13px] font-normal text-[#64748B] shadow-[0px_2px_16px_rgba(218,218,218,0.08)]">
             There are no documents to display.
           </div>
@@ -194,7 +189,7 @@ export default function DocumentsPanel() {
         )}
       </div>
 
-      {!isLoading && documents.length > 0 && (
+      {!isLoading && groupedDocuments.length > 0 && (
         <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
       )}
 
