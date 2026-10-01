@@ -65,6 +65,7 @@ export default function DocumentsPanel() {
         >(`/employer/${rolePlayerId}/documents`, {
           token: token ?? undefined,
           params: {
+            documentSet: DocumentSetEnum.MemberDocumentSet,
             keyName: "RolePlayerId",
             keyValue: rolePlayerId,
             page,

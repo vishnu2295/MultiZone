@@ -12,6 +12,7 @@ import Pagination from "@/components/ui/Pagination";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import { DocumentSetEnum } from "@/lib/constants";
 import { downloadFileFromUrl } from "@/lib/utils/downloadFile";
 import { computePageCount } from "@/lib/utils/pagination";
 
@@ -54,6 +55,7 @@ export default function PolicyDocumentsPanel({ policyId }: { policyId: string })
           params: {
             keyName: "policyId",
             keyValue: policyId,
+            documentSet: DocumentSetEnum.PolicyDocuments,
             page,
             pageSize: PAGE_SIZE,
           },

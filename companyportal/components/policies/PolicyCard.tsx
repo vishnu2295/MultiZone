@@ -14,6 +14,7 @@ import type {
 } from "@/content/policies";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import { DocumentSetEnum } from "@/lib/constants";
 import { downloadBase64File } from "@/lib/utils/downloadFile";
 import DownloadRemittanceModal, {
   type RemittanceDownloadFilters,
@@ -120,6 +121,7 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
         params: {
           keyName: "PolicyId",
           keyValue: policy.policyId,
+          documentSet: DocumentSetEnum.PolicyDocuments,
           page: 1,
           pageSize: 10,
         },
