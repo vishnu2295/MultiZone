@@ -13,6 +13,13 @@ export interface ApiDocumentDownload {
   content: string;
 }
 
+/** Response of `/employer/{rolePlayerId}/documents/{id}/download`. */
+export interface ApiStoredDocumentDownload {
+  fileName: string;
+  contentType: string;
+  base64Content: string;
+}
+
 export default function DocumentRow({
   document,
   onDownload,
@@ -39,15 +46,15 @@ export default function DocumentRow({
 
     setIsDownloading(true);
     try {
-      const response = await apiService.get<ApiDocumentDownload>(
+      const response = await apiService.get<ApiStoredDocumentDownload>(
         `/employer/${rolePlayerId}/documents/${document.documentId}/download`,
         { token: token ?? undefined },
       );
 
       downloadBase64File(
         response.fileName,
-        response.fileType,
-        response.content,
+        response.contentType,
+        response.base64Content,
       );
     } catch (error) {
       console.error("Failed to download document:", error);

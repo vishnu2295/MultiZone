@@ -57,7 +57,11 @@ export default function EarningsPanel({ claimId }: { claimId: string }) {
               `/employer/${rolePlayerId}/documents`,
               {
                 token: token ?? undefined,
-                params: { keyName: "claimId", keyValue: claimId },
+                params: {
+                  keyName: "claimId",
+                  keyValue: claimId,
+                  documentSet: DocumentSetEnum.EmployeeEarningsDocuments,
+                },
               },
             ),
             apiService.get<ApiDocumentSet[]>(

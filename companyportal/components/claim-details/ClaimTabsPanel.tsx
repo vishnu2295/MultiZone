@@ -10,6 +10,7 @@ import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
 import Pagination from "@/components/ui/Pagination";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import { DocumentSetEnum } from "@/lib/constants";
 import { computePageCount } from "@/lib/utils/pagination";
 import type { ApiPagedResponse } from "@/content/companyDetails";
 import type { ApiClaim } from "@/content/claims";
@@ -70,7 +71,11 @@ export default function ClaimTabsPanel({ claimId }: { claimId: string }) {
           ApiPagedResponse<ApiClaimDocument>
         >(`/employer/${rolePlayerId}/documents`, {
           token: token ?? undefined,
-          params: { keyName: "claimId", keyValue: claimId },
+          params: {
+            keyName: "claimId",
+            keyValue: claimId,
+            documentSet: DocumentSetEnum.MedicareMedicalInvoice,
+          },
         });
         if (!cancelled) {
           setInvoiceDocuments(mapApiDocuments(response.data).invoiceDocuments);

@@ -2,6 +2,7 @@ import {
   ClaimRequirementsDocumentsEnum,
   DocumentStatusEnum,
   DocumentSystemNameEnum,
+  documentTypeLabel,
 } from "@/lib/constants";
 import type { ApiDocumentSet } from "@/content/companyDetails";
 
@@ -412,11 +413,21 @@ export type ApiClaimDocument = {
   documentId: number;
   documentKeySet: string;
   documentKey: string;
-  documentType: string;
+  /** Not returned when documents are requested grouped by set (`documentSet: 0`). */
+  documentType?: string;
+  documentTypeId?: number;
   fileName: string;
-  uploadedDate: string;
+  uploadedDate: string | null;
+  createdDate?: string | null;
   fileContent?: string;
   documentSet: number;
+  isDeleted?: boolean;
+};
+
+/** One group from `/employer/{rolePlayerId}/documents` when requested with `documentSet: 0` (all sets). */
+export type ApiClaimDocumentGroup = {
+  documentSet: number;
+  documents: ApiClaimDocument[];
 };
 
 function formatDocumentLabel(documentType: string): string {
@@ -445,9 +456,11 @@ export function formatDocumentTimestamp(value: string): string {
 
 function toClaimMedicalDocument(doc: ApiClaimDocument): ClaimMedicalDocument {
   return {
-    name: formatDocumentLabel(doc.documentType),
+    name:
+      documentTypeLabel(doc.documentTypeId) ??
+      (doc.documentType ? formatDocumentLabel(doc.documentType) : doc.fileName),
     documentType: doc.fileName,
-    uploadedAt: formatDocumentTimestamp(doc.uploadedDate),
+    uploadedAt: formatDocumentTimestamp(doc.uploadedDate ?? doc.createdDate ?? ""),
     documentId: doc.documentId,
     documentSet: doc.documentSet,
   };
@@ -535,7 +548,7 @@ export function mapEarningsDocuments(
   const uploaded = new Map(
     response
       .filter((doc) => doc.documentKeySet === EARNINGS_DOCUMENT_KEY_SET)
-      .map((doc) => [formatDocumentLabel(doc.documentType), doc] as const),
+      .map((doc) => [formatDocumentLabel(doc.documentType ?? ""), doc] as const),
   );
 
   return documentTypes.map((type) => {
@@ -546,7 +559,7 @@ export function mapEarningsDocuments(
           docTypeId: type.id,
           documentId: doc.documentId,
           fileName: doc.fileName,
-          uploadedAt: formatDocumentTimestamp(doc.uploadedDate),
+          uploadedAt: formatDocumentTimestamp(doc.uploadedDate ?? ""),
         }
       : { name: type.name, docTypeId: type.id };
   });

@@ -14,6 +14,7 @@ import type {
 } from "@/content/policies";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import { DocumentSetEnum } from "@/lib/constants";
 import { downloadBase64File } from "@/lib/utils/downloadFile";
 import DownloadRemittanceModal, {
   type RemittanceDownloadFilters,
@@ -120,6 +121,7 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
         params: {
           keyName: "PolicyId",
           keyValue: policy.policyId,
+          documentSet: DocumentSetEnum.PolicyDocuments,
           page: 1,
           pageSize: 10,
         },
@@ -144,6 +146,9 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
     }
   }
 
+  // Only COID policies have a details page.
+  const hasDetails = /coid/i.test(policy.productOption ?? "");
+
   const actionHandlers: Record<string, () => void> = {
     Remittance: () => setIsRemittanceModalOpen(true),
     "Letter of Good Standing": handleLetterOfGoodStandingDownload,
@@ -153,12 +158,9 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
   return (
     <article className="w-full rounded-2xl bg-white p-4 shadow-[0px_2px_16px_rgba(0,0,0,0.07)] sm:p-6">
       <div className="flex flex-wrap items-center gap-2">
-        <Link
-          href={`/company/policies/${policy.policyId}`}
-          className="font-sans text-[16px] font-extrabold leading-[24px] text-[#24577A] hover:underline sm:text-[18px] sm:leading-[27px]"
-        >
+        <h3 className="font-sans text-[16px] font-extrabold leading-[24px] text-[#24577A] sm:text-[18px] sm:leading-[27px]">
           {policy.title}
-        </Link>
+        </h3>
         {/* <pre>{JSON.stringify(policy, null, 2)}</pre> */}
         {policy.complianceStatus && (
           <span className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF5] px-2.5 py-1 text-[11px] font-bold leading-4 text-[#14B86A]">
@@ -200,6 +202,14 @@ export default function PolicyCard({ policy }: { policy: Policy }) {
             </button>
           );
         })}
+        {hasDetails && (
+          <Link
+            href={`/company/policies/${policy.policyId}`}
+            className="ml-auto inline-flex items-center rounded-lg bg-[#51B2E0] px-4 py-2 text-[12px] font-bold leading-[18px] text-white shadow-[0px_4px_16px_rgba(7,193,233,0.35)] transition hover:brightness-95"
+          >
+            View Details
+          </Link>
+        )}
       </div>
 
       <DownloadRemittanceModal

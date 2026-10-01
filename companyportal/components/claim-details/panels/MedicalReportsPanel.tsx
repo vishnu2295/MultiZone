@@ -20,7 +20,7 @@ import {
   type ClaimMedicalReport,
   type ClaimMedicalReports,
 } from "@/content/claimDetails";
-import { DocumentStatusEnum } from "@/lib/constants";
+import { DocumentSetEnum, DocumentStatusEnum } from "@/lib/constants";
 
 const DOCUMENT_STATUS_STYLES: Record<
   DocumentStatusEnum,
@@ -248,7 +248,11 @@ export default function MedicalReportsPanel({ claimId }: { claimId: string }) {
               `/employer/${rolePlayerId}/documents`,
               {
                 token: token ?? undefined,
-                params: { keyName: "claimId", keyValue: claimId },
+                params: {
+                  keyName: "claimId",
+                  keyValue: claimId,
+                  documentSet: DocumentSetEnum.MedicalReports,
+                },
               },
             ),
             apiService.get<ApiMedicalReportsResponse>(

@@ -14,9 +14,22 @@ type OtpStepProps = {
   submitting: boolean;
   onSubmit: (otp: string) => void;
   onResend?: () => void;
+  /** Field label - "Email OTP" by default; "Phone OTP" for the SMS step. */
+  label?: string;
+  /** Shown in place of identifierValue when it's empty. */
+  fallbackTarget?: string;
+  submitLabel?: string;
 };
 
-export default function OtpStep({ identifierValue, submitting, onSubmit, onResend }: OtpStepProps) {
+export default function OtpStep({
+  identifierValue,
+  submitting,
+  onSubmit,
+  onResend,
+  label = "Email OTP",
+  fallbackTarget = "your email",
+  submitLabel = "Verify and Sign up",
+}: OtpStepProps) {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [resendKey, setResendKey] = useState(0);
@@ -50,9 +63,9 @@ export default function OtpStep({ identifierValue, submitting, onSubmit, onResen
   return (
     <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <label className={labelClass}>Email OTP</label>
+        <label className={labelClass}>{label}</label>
         <p className="text-[12px] text-[#98A2B3]">
-          We sent a {OTP_LENGTH}-digit code to {identifierValue || "your email"}.
+          We sent a {OTP_LENGTH}-digit code to {identifierValue || fallbackTarget}.
         </p>
 
         <OtpDigitsInput key={resendKey} length={OTP_LENGTH} onChange={setOtp} />
@@ -69,7 +82,7 @@ export default function OtpStep({ identifierValue, submitting, onSubmit, onResen
       </button>
 
       <Button type="submit" disabled={submitting} className="mt-auto w-full">
-        {submitting ? "Verifying..." : "Verify and Sign up"}
+        {submitting ? "Verifying..." : submitLabel}
       </Button>
     </form>
   );

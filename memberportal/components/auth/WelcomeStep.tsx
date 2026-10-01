@@ -13,19 +13,36 @@ type WelcomeStepProps = {
   initialPersona?: PersonaConfig | null;
 };
 
+// Brokers log in through their own app (CCFE under /broker), not this
+// modal's Cognito flow, so it's a login-only option that just navigates there.
+const BROKER_LOGIN_HREF = "/broker";
+
+const optionClass = (isSelected: boolean) =>
+  `w-full cursor-pointer rounded-xl px-5 py-4 text-center text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00bbe6] ${
+    isSelected
+      ? "bg-[#E5F6FB] text-[#13537B] ring-2 ring-inset ring-[#00BBE6]"
+      : "bg-[#F0F5F8] text-[#13537B] hover:bg-[#E5F6FB]"
+  }`;
+
 export default function WelcomeStep({
   mode,
   onSelectPersona,
   onSwitchMode,
   initialPersona = null,
 }: WelcomeStepProps) {
-  const [selected, setSelected] = useState<PersonaConfig | null>(
+  const [choice, setSelected] = useState<PersonaConfig | "broker" | null>(
     initialPersona,
   );
+  // Broker is only offered on login - drop it if the user switches to sign-up.
+  const selected = mode === "signup" && choice === "broker" ? null : choice;
 
   function handleNext(event: React.FormEvent) {
     event.preventDefault();
-    if (selected) onSelectPersona(selected);
+    if (selected === "broker") {
+      window.location.href = BROKER_LOGIN_HREF;
+    } else if (selected) {
+      onSelectPersona(selected);
+    }
   }
 
   return (
@@ -45,23 +62,30 @@ export default function WelcomeStep({
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
         {Object.values(PERSONAS).map((persona) => {
-          const isSelected = selected?.slug === persona.slug;
+          const isSelected =
+            selected !== "broker" && selected?.slug === persona.slug;
           return (
             <button
               key={persona.slug}
               type="button"
               onClick={() => setSelected(persona)}
               aria-pressed={isSelected}
-              className={`w-full cursor-pointer rounded-xl px-5 py-4 text-center text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00bbe6] ${
-                isSelected
-                  ? "bg-[#E5F6FB] text-[#13537B] ring-2 ring-inset ring-[#00BBE6]"
-                  : "bg-[#F0F5F8] text-[#13537B] hover:bg-[#E5F6FB]"
-              }`}
+              className={optionClass(isSelected)}
             >
               {persona.label}
             </button>
           );
         })}
+        {mode === "login" ? (
+          <button
+            type="button"
+            onClick={() => setSelected("broker")}
+            aria-pressed={selected === "broker"}
+            className={optionClass(selected === "broker")}
+          >
+            Broker
+          </button>
+        ) : null}
       </div>
 
       <Button

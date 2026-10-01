@@ -637,12 +637,27 @@ export enum DocumentSetEnum {
   GPAPolicySchedule = 151,
 }
 
+/** A numeric enum's key for `value`, spaced for display ("ClaimMedicalDocuments" -> "Claim Medical Documents"). */
+function enumKeyLabel(enumObject: Record<number, string>, value: number): string | undefined {
+  return enumObject[value]?.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+}
+
+/** The `DocumentSetEnum` key for a document set value, spaced for display. */
+export function documentSetLabel(documentSet: number): string {
+  return enumKeyLabel(DocumentSetEnum, documentSet) ?? String(documentSet);
+}
+
+/** The `DocumentTypeEnum` key for a document type id, spaced for display; undefined when the id isn't in the enum. */
+export function documentTypeLabel(documentTypeId: number | undefined): string | undefined {
+  return documentTypeId === undefined ? undefined : enumKeyLabel(DocumentTypeEnum, documentTypeId);
+}
+
 /** `DocumentSetEnum` entries as select options, for pickers that let the user choose a document set. */
 export const documentSetOptions: Array<{ label: string; value: DocumentSetEnum }> =
   Object.entries(DocumentSetEnum)
     .filter((entry): entry is [string, number] => Number.isNaN(Number(entry[0])))
-    .map(([key, value]) => ({
-      label: key.replace(/([a-z0-9])([A-Z])/g, "$1 $2"),
+    .map(([, value]) => ({
+      label: documentSetLabel(value),
       value: value as DocumentSetEnum,
     }));
 

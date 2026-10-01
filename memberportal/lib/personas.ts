@@ -14,7 +14,7 @@ export type PersonaConfig = {
 export const PERSONAS: Record<PersonaSlug, PersonaConfig> = {
   employee: {
     slug: "employee",
-    label: "Employee",
+    label: "Claimant",
     identifierKind: "id-number",
     identifierLabel: "South African ID (SA id) / Passport no.",
     identifierPlaceholder: "Enter your SA Id or passport no.",

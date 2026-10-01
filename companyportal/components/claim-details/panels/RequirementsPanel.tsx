@@ -5,6 +5,7 @@ import DocumentUploadList from "@/components/claim-details/panels/DocumentUpload
 import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
+import { DocumentSetEnum } from "@/lib/constants";
 import type { ApiPagedResponse } from "@/content/companyDetails";
 import {
   mapApiDocuments,
@@ -29,7 +30,11 @@ export default function RequirementsPanel({ claimId }: { claimId: string }) {
           ApiPagedResponse<ApiClaimDocument>
         >(`/employer/${rolePlayerId}/documents`, {
           token: token ?? undefined,
-          params: { keyName: "claimId", keyValue: claimId },
+          params: {
+            keyName: "claimId",
+            keyValue: claimId,
+            documentSet: DocumentSetEnum.ClaimRequirementsDocuments,
+          },
         });
         if (!cancelled)
           setRequirements(mapApiDocuments(response.data).requirements);

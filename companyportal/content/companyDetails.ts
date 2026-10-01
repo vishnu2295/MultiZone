@@ -1,3 +1,5 @@
+import { documentTypeLabel } from "@/lib/constants";
+
 export type CompanyAddress = {
   type: "Postal" | "Physical" | "Delivery";
   line: string;
@@ -241,11 +243,17 @@ export interface ApiEmployerDocument {
   documentUri: string;
   isDeleted: boolean;
   createdBy: string;
-  uploadedDate: string;
+  uploadedDate: string | null;
   createdDate: string;
   modifiedBy: string;
   modifiedDate: string;
   fileContent: string;
+}
+
+/** One group from `/employer/{rolePlayerId}/documents` when requested with `documentSet: 0` (all sets). */
+export interface ApiEmployerDocumentGroup {
+  documentSet: number;
+  documents: ApiEmployerDocument[];
 }
 
 const INVOICE_STATUS_LABEL: Record<number, string> = {
@@ -347,8 +355,8 @@ export function mapApiEmployerDocuments(
     .filter((doc) => !doc.isDeleted)
     .map((doc) => ({
       name: doc.fileName,
-      documentType: doc.documentType,
-      date: `${new Date(doc.uploadedDate).toLocaleDateString("en-GB", {
+      documentType: documentTypeLabel(doc.documentTypeId) ?? checkValueExists(doc.documentType),
+      date: `${new Date(doc.uploadedDate ?? doc.createdDate).toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
         year: "numeric",

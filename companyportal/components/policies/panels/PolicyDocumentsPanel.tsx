@@ -7,12 +7,14 @@ import {
   type ApiPagedResponse,
   type CompanyDocument,
 } from "@/content/companyDetails";
+import type { ApiStoredDocumentDownload } from "@/components/claim-details/panels/DocumentRow";
 import { DocumentIcon, DownloadIcon } from "@/components/home/icons";
 import Pagination from "@/components/ui/Pagination";
 import Skeleton from "@/components/ui/Skeleton";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
-import { downloadFileFromUrl } from "@/lib/utils/downloadFile";
+import { DocumentSetEnum } from "@/lib/constants";
+import { downloadBase64File } from "@/lib/utils/downloadFile";
 import { computePageCount } from "@/lib/utils/pagination";
 
 function DocumentRowSkeleton() {
@@ -54,6 +56,7 @@ export default function PolicyDocumentsPanel({ policyId }: { policyId: string })
           params: {
             keyName: "policyId",
             keyValue: policyId,
+            documentSet: DocumentSetEnum.PolicyDocuments,
             page,
             pageSize: PAGE_SIZE,
           },
@@ -76,9 +79,16 @@ export default function PolicyDocumentsPanel({ policyId }: { policyId: string })
     };
   }, [page, policyId, rolePlayerId, token]);
 
-  function handleDownload(document: CompanyDocument) {
-    if (!document.documentUri) return;
-    downloadFileFromUrl(document.documentUri, document.name);
+  async function handleDownload(document: CompanyDocument) {
+    try {
+      const response = await apiService.get<ApiStoredDocumentDownload>(
+        `/employer/${rolePlayerId}/documents/${document.uuid}/download`,
+        { token: token ?? undefined },
+      );
+      downloadBase64File(response.fileName, response.contentType, response.base64Content);
+    } catch (error) {
+      console.error("Failed to download policy document:", error);
+    }
   }
 
   return (
@@ -115,7 +125,7 @@ export default function PolicyDocumentsPanel({ policyId }: { policyId: string })
               <button
                 type="button"
                 aria-label={`Download ${document.name}`}
-                disabled={!document.documentUri}
+                disabled={!document.uuid}
                 onClick={() => handleDownload(document)}
                 className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-black/8 text-[#13537B] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-50"
               >
