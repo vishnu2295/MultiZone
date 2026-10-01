@@ -36,8 +36,8 @@ function delay(ms: number) {
 // .env.local.example). Used to check whether a profile already exists
 // before letting a signup proceed to the Password step.
 const REGISTER_API_DOMAIN = process.env.NEXT_PUBLIC_REGISTER_API_DOMAIN ?? "";
-const VALIDATE_PROFILE_URL = `${REGISTER_API_DOMAIN}/api/mobileApp/public/registration/validate/profile`;
-const REGISTER_PROFILE_URL = `${REGISTER_API_DOMAIN}/api/mobileApp/public/registration/v2/register`;
+const VALIDATE_PROFILE_URL = `${REGISTER_API_DOMAIN}/api/selfService/public/registration/validate/profile`;
+const REGISTER_PROFILE_URL = `${REGISTER_API_DOMAIN}/api/selfService/public/registration/v2/register`;
 
 // Maps our PersonaSlug onto the backend's PersonaType enum (Unknown | Person
 // | Company | HealthCareProvider | Pensioner).

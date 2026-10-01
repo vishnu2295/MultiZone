@@ -6,7 +6,7 @@ import DocumentRow from "@/components/claim-details/panels/DocumentRow";
 import PanelSkeleton from "@/components/claim-details/panels/PanelSkeleton";
 import apiService from "@/lib/api/apiService";
 import { useCompanyProfile } from "@/lib/context/CompanyProfileContext";
-import { documentSetOptions } from "@/lib/constants";
+import { DocumentSetEnum, documentSetOptions } from "@/lib/constants";
 import type { ApiPagedResponse } from "@/content/companyDetails";
 import type { ApiClaim } from "@/content/claims";
 import {
@@ -42,6 +42,7 @@ export default function DocumentsPanel({ claimId }: { claimId: string }) {
           params: {
             keyName: "PersonEventId",
             keyValue: claim.personEventId,
+            documentSet: DocumentSetEnum.ClaimsAdditionalDocuments,
             page: 1,
             pageSize: 10,
           },
